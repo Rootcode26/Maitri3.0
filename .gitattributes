@@ -1,0 +1,22 @@
+# Normalize text files across Windows, macOS, and Linux.
+* text=auto eol=lf
+
+# Windows-native scripts require CRLF in some environments.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Treat common media, archives, fonts, and documents as binary.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.7z binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
