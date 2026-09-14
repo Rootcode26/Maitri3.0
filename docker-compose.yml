@@ -1,0 +1,74 @@
+name: maitri-3
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:?POSTGRES_IMAGE is required}
+    container_name: maitri-3-postgres
+    restart: unless-stopped
+    init: true
+    environment:
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
+    ports:
+      - "${DB_HOST:?DB_HOST is required}:${DB_PORT:?DB_PORT is required}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          pg_isready --host=127.0.0.1 --port=5432 --username=$$POSTGRES_USER
+          --dbname=$$POSTGRES_DB &&
+          psql --host=127.0.0.1 --port=5432 --username=$$POSTGRES_USER
+          --dbname=$$POSTGRES_DB --tuples-only --no-align --command='SELECT 1'
+          | grep -q '^1$$'
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    stop_grace_period: 30s
+    shm_size: 128mb
+    networks:
+      - database
+
+  redis:
+    image: ${REDIS_IMAGE:?REDIS_IMAGE is required}
+    container_name: maitri-3-redis
+    restart: unless-stopped
+    init: true
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    command:
+      - /bin/sh
+      - -ec
+      - >-
+        exec redis-server --appendonly yes --appendfsync everysec
+        --requirepass "$$REDISCLI_AUTH"
+    ports:
+      - "${REDIS_HOST:?REDIS_HOST is required}:${REDIS_PORT:?REDIS_PORT is required}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [CMD-SHELL, "redis-cli -h 127.0.0.1 -p 6379 ping | grep -q '^PONG$$'"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    stop_grace_period: 30s
+    networks:
+      - cache
+
+volumes:
+  postgres_data:
+    name: maitri-3-postgres-data
+  redis_data:
+    name: maitri-3-redis-data
+
+networks:
+  database:
+    name: maitri-3-database
+    driver: bridge
+  cache:
+    name: maitri-3-cache
+    driver: bridge
