@@ -4,6 +4,8 @@
 UdyogSetu/
 ├── .github/
 │   └── workflows/                  CI/CD workflows
+├── .env.example                    Shared local infrastructure variables
+├── docker-compose.yml              Local PostgreSQL and Redis services
 ├── apps/
 │   └── web/                        Next.js frontend
 │       ├── public/                 Static frontend assets
@@ -27,33 +29,58 @@ UdyogSetu/
 │       └── tests/
 │           ├── e2e/                Browser workflow tests
 │           └── unit/               Component and utility tests
+├── node-backend/                   Express TypeScript main backend
+│   ├── .env.example                Backend environment-variable template
+│   ├── .gitignore                  Backend-specific ignored files
+│   ├── .npmrc                      pnpm and package-management settings
+│   ├── .prettierignore             Prettier exclusions
+│   ├── .prettierrc.json            Code-formatting rules
+│   ├── eslint.config.js            ESLint configuration
+│   ├── migrations/                 Versioned PostgreSQL schema changes
+│   ├── package.json                Dependencies and backend scripts
+│   ├── pnpm-lock.yaml              Exact dependency lockfile
+│   ├── pnpm-workspace.yaml         pnpm workspace and build policy
+│   ├── src/
+│   │   ├── app.ts                  Express middleware and route composition
+│   │   ├── cache/                  Redis client, health checks and lifecycle
+│   │   ├── config/                 Validated runtime configuration
+│   │   ├── controllers/            HTTP request and response handling
+│   │   ├── database/               PostgreSQL pool and typed queries
+│   │   ├── errors/                 Application error types
+│   │   ├── integrations/
+│   │   │   ├── rules-engine/       Private FastAPI client
+│   │   │   ├── s3/                 Private document storage client
+│   │   │   └── sms/                OTP and alert provider abstraction
+│   │   ├── jobs/                   Deadline, expiry and cleanup jobs
+│   │   ├── messaging/              Queue-provider-neutral messaging boundary
+│   │   │   ├── adapters/           BullMQ or RabbitMQ implementation
+│   │   │   ├── consumers/          Background message handlers
+│   │   │   └── producers/          Typed message publishers
+│   │   ├── middleware/             Auth, authorization, security and errors
+│   │   ├── modules/
+│   │   │   ├── applications/       Application workflow and state
+│   │   │   ├── audit/              Append-only audit events
+│   │   │   ├── auth/               Password, OTP and sessions
+│   │   │   ├── businesses/         Business records
+│   │   │   ├── certificates/       Issuance and public verification
+│   │   │   ├── documents/          Metadata, versions and S3 coordination
+│   │   │   ├── inspections/        Inspection records
+│   │   │   ├── notifications/      Alerts and delivery records
+│   │   │   └── users/              Users and role assignments
+│   │   ├── repositories/           Persistence and dependency access
+│   │   ├── routes/                 Versioned Express route registration
+│   │   ├── services/               Application and orchestration logic
+│   │   ├── shared/                 Common TypeScript utilities and types
+│   │   └── server.ts               Startup and graceful shutdown lifecycle
+│   ├── tests/
+│   │   ├── *.test.ts               Current automated test suites
+│   │   ├── fixtures/               Reusable test data and builders
+│   │   ├── integration/            API and database tests
+│   │   └── unit/                   Controller, service and repository tests
+│   ├── tsconfig.build.json         Production TypeScript build settings
+│   ├── tsconfig.json               TypeScript project settings
+│   └── vitest.config.ts            Test-runner configuration
 ├── services/
-│   ├── nodejs-backend/             Express TypeScript main backend
-│   │   ├── src/
-│   │   │   ├── config/             Validated runtime configuration
-│   │   │   ├── db/
-│   │   │   │   ├── migrations/     Versioned database changes
-│   │   │   │   └── queries/        Typed database access
-│   │   │   ├── integrations/
-│   │   │   │   ├── rules-engine/   Private FastAPI client
-│   │   │   │   ├── s3/             Private document storage client
-│   │   │   │   └── sms/            OTP and alert provider abstraction
-│   │   │   ├── jobs/               Deadline, expiry and cleanup jobs
-│   │   │   ├── middleware/         Auth, authorization, security and errors
-│   │   │   ├── modules/
-│   │   │   │   ├── applications/   Application workflow and state
-│   │   │   │   ├── audit/          Append-only audit events
-│   │   │   │   ├── auth/           Password, OTP and sessions
-│   │   │   │   ├── businesses/     Business records
-│   │   │   │   ├── certificates/   Issuance and public verification
-│   │   │   │   ├── documents/      Metadata, versions and S3 coordination
-│   │   │   │   ├── inspections/    Inspection records
-│   │   │   │   ├── notifications/  Alerts and delivery records
-│   │   │   │   └── users/          Users and role assignments
-│   │   │   └── shared/              Common TypeScript utilities
-│   │   └── tests/
-│   │       ├── integration/         API and database tests
-│   │       └── unit/                Domain unit tests
 │   └── python-backend/             Internal FastAPI service
 │       ├── app/
 │       │   ├── api/routes/          Internal HTTP endpoints
