@@ -40,18 +40,22 @@ jobs:
       REDIS_PASSWORD: test
       REDIS_DB: 0
       REDIS_URL: redis://:test@localhost:6379/0
+      JWT_ACCESS_SECRET: ci-test-access-secret-change-before-production
+      JWT_REFRESH_SECRET: ci-test-refresh-secret-change-before-production
+      OTP_SECRET: ci-test-otp-secret-change-before-production
+      OTP_DEVELOPMENT_CODE: "123456"
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@v4
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.1.0
+        uses: pnpm/action-setup@v4
         with:
           version: 11.26.0
           run_install: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v7.0.0
+        uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm

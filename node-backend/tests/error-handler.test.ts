@@ -1,4 +1,5 @@
 import express from 'express';
+import { JsonWebTokenError, NotBeforeError, TokenExpiredError } from 'jsonwebtoken';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -32,6 +33,15 @@ const createTestApp = () => {
       expose: true,
     });
     throw error;
+  });
+  app.get('/jwt-expired', () => {
+    throw new TokenExpiredError('jwt expired', new Date());
+  });
+  app.get('/jwt-not-active', () => {
+    throw new NotBeforeError('jwt not active', new Date());
+  });
+  app.get('/jwt-invalid', () => {
+    throw new JsonWebTokenError('invalid signature');
   });
   app.post('/json', (_request, response) => {
     response.status(204).send();
@@ -129,5 +139,16 @@ describe('error handler', () => {
       code: 'PAYLOAD_TOO_LARGE',
       message: 'Request body exceeds the allowed size',
     });
+  });
+
+  it.each([
+    ['/jwt-expired', 'JWT_EXPIRED', 'Authentication token has expired'],
+    ['/jwt-not-active', 'JWT_NOT_ACTIVE', 'Authentication token is not active yet'],
+    ['/jwt-invalid', 'JWT_INVALID', 'Authentication token is invalid'],
+  ])('maps %s to a safe unauthorized response', async (path, code, message) => {
+    const response = await request(createTestApp()).get(path);
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ status: 'error', code, message });
   });
 });

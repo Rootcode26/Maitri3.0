@@ -1,9 +1,12 @@
 import type { ErrorRequestHandler } from 'express';
+import jwt from 'jsonwebtoken';
 import { z, ZodError } from 'zod';
 
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
 import { AppError } from '../errors/app-error.js';
+
+const { JsonWebTokenError, NotBeforeError, TokenExpiredError } = jwt;
 
 interface ErrorResponse {
   status: 'error';
@@ -53,6 +56,27 @@ export const errorHandler: ErrorRequestHandler = (error, request, response, next
       code: error.code,
       message: error.message,
       ...(error.details === undefined ? {} : { details: error.details }),
+    };
+  } else if (error instanceof TokenExpiredError) {
+    statusCode = 401;
+    body = {
+      status: 'error',
+      code: 'JWT_EXPIRED',
+      message: 'Authentication token has expired',
+    };
+  } else if (error instanceof NotBeforeError) {
+    statusCode = 401;
+    body = {
+      status: 'error',
+      code: 'JWT_NOT_ACTIVE',
+      message: 'Authentication token is not active yet',
+    };
+  } else if (error instanceof JsonWebTokenError) {
+    statusCode = 401;
+    body = {
+      status: 'error',
+      code: 'JWT_INVALID',
+      message: 'Authentication token is invalid',
     };
   } else if (error instanceof ZodError) {
     statusCode = 400;
