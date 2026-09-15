@@ -41,8 +41,11 @@ describe('log redaction', () => {
   it('redacts root and nested credential fields', () => {
     const output = writeLog({
       password: 'root-password',
+      otp: '123456',
+      otpHash: 'hashed-otp-value',
       user: {
         accessToken: 'access-token',
+        idToken: 'identity-token',
         credentials: {
           refreshToken: 'refresh-token',
           clientSecret: 'client-secret',
@@ -53,7 +56,10 @@ describe('log redaction', () => {
 
     for (const secret of [
       'root-password',
+      '123456',
+      'hashed-otp-value',
       'access-token',
+      'identity-token',
       'refresh-token',
       'client-secret',
       'postgresql://user:password@localhost/database',
