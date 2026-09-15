@@ -43,6 +43,7 @@ jobs:
       JWT_ACCESS_SECRET: ci-test-access-secret-change-before-production
       JWT_REFRESH_SECRET: ci-test-refresh-secret-change-before-production
       OTP_SECRET: ci-test-otp-secret-change-before-production
+      OTP_DEVELOPMENT_CODE: "123456"
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
