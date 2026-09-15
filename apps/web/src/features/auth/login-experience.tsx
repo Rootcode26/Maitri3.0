@@ -93,10 +93,12 @@ export function LoginExperience({ mode }: { mode: LoginMode }) {
             </div>
           </div>
           <div className="absolute top-20 right-6 flex flex-col items-center gap-1.5 xl:top-24 xl:right-8">
-            <img
+            <Image
               src="/images/emblem-india.svg"
               alt="National Emblem of India"
-              className="size-14 brightness-0 invert xl:size-16"
+              width={56}
+              height={56}
+              className="brightness-0 invert xl:size-16"
             />
             <p className="text-[9px] font-semibold tracking-[0.12em] text-white/90 uppercase">
               Government of India

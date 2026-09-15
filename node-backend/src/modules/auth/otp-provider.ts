@@ -24,7 +24,9 @@ class TwilioOtpProvider implements OtpProvider {
 
   constructor() {
     if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN || !env.TWILIO_PHONE_NUMBER) {
-      throw new Error('TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_PHONE_NUMBER must be set when OTP_PROVIDER=twilio');
+      throw new Error(
+        'TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_PHONE_NUMBER must be set when OTP_PROVIDER=twilio',
+      );
     }
     this.client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
   }
@@ -36,10 +38,7 @@ class TwilioOtpProvider implements OtpProvider {
       to: phoneNumber,
     });
 
-    logger.info(
-      { phoneNumberSuffix: phoneNumber.slice(-4) },
-      'OTP sent via Twilio',
-    );
+    logger.info({ phoneNumberSuffix: phoneNumber.slice(-4) }, 'OTP sent via Twilio');
   }
 }
 
