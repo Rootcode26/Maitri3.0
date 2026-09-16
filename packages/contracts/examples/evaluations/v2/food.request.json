@@ -1,0 +1,77 @@
+{
+  "requestId": "req-food-001",
+  "applicationId": "app-test-001",
+  "applicationVersion": 1,
+  "evaluationDate": "2026-09-16",
+  "businessProfile": {
+    "legalName": "TEST ONLY Example Foods",
+    "organisationType": "private_limited",
+    "industrySector": "food",
+    "registrationNumber": null,
+    "pan": "ABCDE1234F",
+    "gstin": null,
+    "udyamRegistrationNumber": null
+  },
+  "location": {
+    "stateCode": "MH",
+    "district": "Pune",
+    "taluka": null,
+    "postalCode": "411001",
+    "industrialArea": null,
+    "plotNumber": null,
+    "plotAreaBand": "from_500_to_2000",
+    "builtUpAreaBand": "from_250_to_1000",
+    "landStatus": "leased"
+  },
+  "operations": {
+    "primaryActivity": "bakery_confectionery",
+    "projectStage": "new_unit",
+    "investmentBand": "up_to_100_lakh",
+    "installedCapacity": {
+      "rawText": "Example output; unit not supplied"
+    },
+    "operatingShifts": 1,
+    "hasBoilerOrPressureVessel": true,
+    "boilerCapacityBand": "from_1_to_5",
+    "boilerWorkingPressureKgCm2": 4.5,
+    "handlesHazardousChemicals": false,
+    "processesUsed": [
+      "manufacturing_processing",
+      "packaging_storage",
+      "boiler_operation"
+    ]
+  },
+  "utilities": {
+    "electricityDemandBand": "from_100_to_500",
+    "dgSetCapacityBand": "none",
+    "dailyWaterUseBand": "from_10_to_50",
+    "waterSource": "midc_supply",
+    "wastewaterDischarge": "onsite_treatment_plant",
+    "generatesHazardousWaste": false
+  },
+  "workforce": {
+    "permanentEmployeeBand": "from_20_to_49",
+    "contractWorkerBand": "none",
+    "womenEmployedInNightShift": false,
+    "workerAccommodation": "not_provided"
+  },
+  "sectorDetails": {
+    "sector": "food",
+    "fssaiLicenceCategory": "state_licence",
+    "coldStorageCapacityBand": "up_to_50"
+  },
+  "documents": [
+    {
+      "documentId": "doc-test-001",
+      "documentType": "business_registration",
+      "version": 1,
+      "fileName": "test-registration.pdf",
+      "mimeType": "application/pdf",
+      "sizeBytes": 1024,
+      "verificationStatus": "uploaded",
+      "expiresOn": null,
+      "extractedData": null
+    }
+  ],
+  "completedApprovalCodes": []
+}
