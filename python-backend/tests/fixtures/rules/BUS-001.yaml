@@ -1,0 +1,21 @@
+id: BUS-001
+version: 1
+
+when:
+  all:
+    - field: operations.projectStage
+      in:
+        - new_unit
+        - expansion
+        - modernisation
+
+then:
+  recommend: BUSINESS_REGISTRATION
+
+explanation: "The business project requires basic business registration."
+
+requiredDocuments:
+  - owner_authorised_person_identity
+  - business_registration
+  - pan
+  - address_or_lease_proof

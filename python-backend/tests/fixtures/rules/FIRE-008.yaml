@@ -1,0 +1,25 @@
+id: FIRE-008
+version: 1
+
+when:
+  any:
+    - field: location.builtUpAreaBand
+      in:
+        - from_1000_to_5000
+        - above_5000
+
+    - field: operations.hasBoilerOrPressureVessel
+      equals: true
+
+    - field: utilities.electricityDemandBand
+      in:
+        - from_500_to_1000
+        - above_1000
+
+then:
+  recommend: FIRE_SAFETY
+
+explanation: "Large built-up area, boiler or pressure-vessel use, or high electricity demand indicates that fire safety review is required."
+
+requiredDocuments:
+  - fire_safety_plan

@@ -1,0 +1,29 @@
+id: FACT-001
+version: 1
+
+when:
+  any:
+    - field: workforce.permanentEmployeeBand
+      in:
+        - from_20_to_49
+        - from_50_to_99
+        - from_100_to_499
+        - 500_or_more
+
+    - field: utilities.electricityDemandBand
+      in:
+        - from_100_to_500
+        - from_500_to_1000
+        - above_1000
+
+    - field: operations.hasBoilerOrPressureVessel
+      equals: true
+
+then:
+  recommend: FACTORY_LABOUR
+
+explanation: "Workforce size, electricity demand, or boiler or pressure-vessel use indicates that factory and labour review is required."
+
+requiredDocuments:
+  - site_floor_layout
+  - machinery_process_description
