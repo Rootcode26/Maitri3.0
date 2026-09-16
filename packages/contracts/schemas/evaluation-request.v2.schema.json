@@ -1,0 +1,1104 @@
+{
+  "$defs": {
+    "BusinessProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "legalName": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Legalname"
+        },
+        "organisationType": {
+          "anyOf": [
+            {
+              "enum": [
+                "private_limited",
+                "public_limited",
+                "partnership",
+                "proprietorship",
+                "llp"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Organisationtype"
+        },
+        "industrySector": {
+          "anyOf": [
+            {
+              "enum": [
+                "food",
+                "textile",
+                "steel"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Industrysector"
+        },
+        "registrationNumber": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Registrationnumber"
+        },
+        "pan": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z]{5}[0-9]{4}[A-Z]$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pan"
+        },
+        "gstin": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Gstin"
+        },
+        "udyamRegistrationNumber": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Udyamregistrationnumber"
+        }
+      },
+      "title": "BusinessProfile",
+      "type": "object"
+    },
+    "DocumentMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "documentId": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Documentid",
+          "type": "string"
+        },
+        "documentType": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Documenttype",
+          "type": "string"
+        },
+        "version": {
+          "exclusiveMinimum": 0,
+          "title": "Version",
+          "type": "integer"
+        },
+        "fileName": {
+          "maxLength": 255,
+          "minLength": 1,
+          "pattern": "^[^/\\\\]+$",
+          "title": "Filename",
+          "type": "string"
+        },
+        "mimeType": {
+          "maxLength": 100,
+          "minLength": 3,
+          "title": "Mimetype",
+          "type": "string"
+        },
+        "sizeBytes": {
+          "exclusiveMinimum": 0,
+          "title": "Sizebytes",
+          "type": "integer"
+        },
+        "verificationStatus": {
+          "enum": [
+            "uploaded",
+            "awaiting_verification",
+            "verified",
+            "rejected",
+            "expired"
+          ],
+          "title": "Verificationstatus",
+          "type": "string"
+        },
+        "expiresOn": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expireson"
+        },
+        "extractedData": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExtractedDocumentData"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "documentId",
+        "documentType",
+        "version",
+        "fileName",
+        "mimeType",
+        "sizeBytes",
+        "verificationStatus"
+      ],
+      "title": "DocumentMetadata",
+      "type": "object"
+    },
+    "ExtractedDocumentData": {
+      "additionalProperties": false,
+      "properties": {
+        "legalName": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Legalname"
+        },
+        "address": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Address"
+        },
+        "registrationNumber": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Registrationnumber"
+        },
+        "pan": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pan"
+        },
+        "gstin": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Gstin"
+        }
+      },
+      "title": "ExtractedDocumentData",
+      "type": "object"
+    },
+    "FoodDetails": {
+      "additionalProperties": false,
+      "properties": {
+        "sector": {
+          "const": "food",
+          "title": "Sector",
+          "type": "string"
+        },
+        "fssaiLicenceCategory": {
+          "anyOf": [
+            {
+              "enum": [
+                "central_licence",
+                "state_licence",
+                "basic_registration"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fssailicencecategory"
+        },
+        "coldStorageCapacityBand": {
+          "anyOf": [
+            {
+              "enum": [
+                "none",
+                "up_to_50",
+                "from_50_to_500",
+                "from_500_to_2000",
+                "above_2000"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coldstoragecapacityband"
+        }
+      },
+      "required": [
+        "sector"
+      ],
+      "title": "FoodDetails",
+      "type": "object"
+    },
+    "InstalledCapacity": {
+      "additionalProperties": false,
+      "properties": {
+        "rawText": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rawtext"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "enum": [
+                "kg",
+                "tonnes",
+                "litres",
+                "metres",
+                "units"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "period": {
+          "anyOf": [
+            {
+              "enum": [
+                "day",
+                "month",
+                "year"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Period"
+        }
+      },
+      "title": "InstalledCapacity",
+      "type": "object"
+    },
+    "Location": {
+      "additionalProperties": false,
+      "properties": {
+        "stateCode": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z]{2}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Statecode"
+        },
+        "district": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "District"
+        },
+        "taluka": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Taluka"
+        },
+        "postalCode": {
+          "anyOf": [
+            {
+              "pattern": "^[1-9][0-9]{5}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Postalcode"
+        },
+        "industrialArea": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Industrialarea"
+        },
+        "plotNumber": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Plotnumber"
+        },
+        "plotAreaBand": {
+          "anyOf": [
+            {
+              "enum": [
+                "up_to_500",
+                "from_500_to_2000",
+                "from_2000_to_5000",
+                "from_5000_to_10000",
+                "above_10000"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Plotareaband"
+        },
+        "builtUpAreaBand": {
+          "anyOf": [
+            {
+              "enum": [
+                "up_to_250",
+                "from_250_to_1000",
+                "from_1000_to_5000",
+                "above_5000"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Builtupareaband"
+        },
+        "landStatus": {
+          "anyOf": [
+            {
+              "enum": [
+                "owned",
+                "leased",
+                "midc_allotted",
+                "under_acquisition"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Landstatus"
+        }
+      },
+      "title": "Location",
+      "type": "object"
+    },
+    "Operations": {
+      "additionalProperties": false,
+      "properties": {
+        "primaryActivity": {
+          "anyOf": [
+            {
+              "enum": [
+                "food_beverage_processing",
+                "dairy_cold_storage",
+                "bakery_confectionery",
+                "meat_seafood_processing",
+                "spinning",
+                "weaving",
+                "knitting",
+                "dyeing_processing",
+                "garment_manufacturing",
+                "steel_metal_fabrication",
+                "foundry_casting",
+                "rolling_mill",
+                "structural_fabrication"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Primaryactivity"
+        },
+        "projectStage": {
+          "anyOf": [
+            {
+              "enum": [
+                "new_unit",
+                "expansion",
+                "modernisation"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Projectstage"
+        },
+        "investmentBand": {
+          "anyOf": [
+            {
+              "enum": [
+                "up_to_100_lakh",
+                "from_100_to_1000_lakh",
+                "from_1000_to_5000_lakh",
+                "above_5000_lakh"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Investmentband"
+        },
+        "installedCapacity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InstalledCapacity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "operatingShifts": {
+          "anyOf": [
+            {
+              "enum": [
+                1,
+                2,
+                3
+              ],
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Operatingshifts"
+        },
+        "hasBoilerOrPressureVessel": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hasboilerorpressurevessel"
+        },
+        "boilerCapacityBand": {
+          "anyOf": [
+            {
+              "enum": [
+                "up_to_1",
+                "from_1_to_5",
+                "from_5_to_10",
+                "above_10"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Boilercapacityband"
+        },
+        "boilerWorkingPressureKgCm2": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Boilerworkingpressurekgcm2"
+        },
+        "handlesHazardousChemicals": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Handleshazardouschemicals"
+        },
+        "processesUsed": {
+          "anyOf": [
+            {
+              "items": {
+                "enum": [
+                  "manufacturing_processing",
+                  "packaging_storage",
+                  "boiler_operation",
+                  "onsite_effluent_treatment"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Processesused"
+        }
+      },
+      "title": "Operations",
+      "type": "object"
+    },
+    "SteelDetails": {
+      "additionalProperties": false,
+      "properties": {
+        "sector": {
+          "const": "steel",
+          "title": "Sector",
+          "type": "string"
+        },
+        "furnaceType": {
+          "anyOf": [
+            {
+              "enum": [
+                "induction",
+                "electric_arc",
+                "cupola",
+                "none"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Furnacetype"
+        },
+        "furnaceCapacityBand": {
+          "anyOf": [
+            {
+              "enum": [
+                "up_to_5",
+                "from_5_to_20",
+                "from_20_to_50",
+                "above_50"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Furnacecapacityband"
+        }
+      },
+      "required": [
+        "sector"
+      ],
+      "title": "SteelDetails",
+      "type": "object"
+    },
+    "TextileDetails": {
+      "additionalProperties": false,
+      "properties": {
+        "sector": {
+          "const": "textile",
+          "title": "Sector",
+          "type": "string"
+        },
+        "involvesDyeingOrBleaching": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Involvesdyeingorbleaching"
+        },
+        "loomsOrSpindlesBand": {
+          "anyOf": [
+            {
+              "enum": [
+                "up_to_50",
+                "from_50_to_200",
+                "from_200_to_500",
+                "above_500"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Loomsorspindlesband"
+        }
+      },
+      "required": [
+        "sector"
+      ],
+      "title": "TextileDetails",
+      "type": "object"
+    },
+    "Utilities": {
+      "additionalProperties": false,
+      "properties": {
+        "electricityDemandBand": {
+          "anyOf": [
+            {
+              "enum": [
+                "up_to_50",
+                "from_50_to_100",
+                "from_100_to_500",
+                "from_500_to_1000",
+                "above_1000"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Electricitydemandband"
+        },
+        "dgSetCapacityBand": {
+          "anyOf": [
+            {
+              "enum": [
+                "none",
+                "up_to_125",
+                "from_125_to_500",
+                "from_500_to_1000",
+                "above_1000"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dgsetcapacityband"
+        },
+        "dailyWaterUseBand": {
+          "anyOf": [
+            {
+              "enum": [
+                "up_to_10",
+                "from_10_to_50",
+                "from_50_to_100",
+                "from_100_to_500",
+                "above_500"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dailywateruseband"
+        },
+        "waterSource": {
+          "anyOf": [
+            {
+              "enum": [
+                "midc_supply",
+                "municipal_supply",
+                "borewell",
+                "surface_water",
+                "tanker"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Watersource"
+        },
+        "wastewaterDischarge": {
+          "anyOf": [
+            {
+              "enum": [
+                "common_treatment_facility",
+                "onsite_treatment_plant",
+                "zero_liquid_discharge",
+                "municipal_sewer"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wastewaterdischarge"
+        },
+        "generatesHazardousWaste": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Generateshazardouswaste"
+        }
+      },
+      "title": "Utilities",
+      "type": "object"
+    },
+    "Workforce": {
+      "additionalProperties": false,
+      "properties": {
+        "permanentEmployeeBand": {
+          "anyOf": [
+            {
+              "enum": [
+                "less_than_10",
+                "from_10_to_19",
+                "from_20_to_49",
+                "from_50_to_99",
+                "from_100_to_499",
+                "500_or_more"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Permanentemployeeband"
+        },
+        "contractWorkerBand": {
+          "anyOf": [
+            {
+              "enum": [
+                "none",
+                "from_1_to_19",
+                "from_20_to_49",
+                "50_or_more"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Contractworkerband"
+        },
+        "womenEmployedInNightShift": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Womenemployedinnightshift"
+        },
+        "workerAccommodation": {
+          "anyOf": [
+            {
+              "enum": [
+                "not_provided",
+                "onsite_quarters",
+                "nearby_housing"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Workeraccommodation"
+        }
+      },
+      "title": "Workforce",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "requestId": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Requestid",
+      "type": "string"
+    },
+    "applicationId": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Applicationid",
+      "type": "string"
+    },
+    "applicationVersion": {
+      "exclusiveMinimum": 0,
+      "title": "Applicationversion",
+      "type": "integer"
+    },
+    "evaluationDate": {
+      "format": "date",
+      "title": "Evaluationdate",
+      "type": "string"
+    },
+    "businessProfile": {
+      "$ref": "#/$defs/BusinessProfile"
+    },
+    "location": {
+      "$ref": "#/$defs/Location"
+    },
+    "operations": {
+      "$ref": "#/$defs/Operations"
+    },
+    "utilities": {
+      "$ref": "#/$defs/Utilities"
+    },
+    "workforce": {
+      "$ref": "#/$defs/Workforce"
+    },
+    "sectorDetails": {
+      "anyOf": [
+        {
+          "discriminator": {
+            "mapping": {
+              "food": "#/$defs/FoodDetails",
+              "steel": "#/$defs/SteelDetails",
+              "textile": "#/$defs/TextileDetails"
+            },
+            "propertyName": "sector"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/FoodDetails"
+            },
+            {
+              "$ref": "#/$defs/TextileDetails"
+            },
+            {
+              "$ref": "#/$defs/SteelDetails"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Sectordetails"
+    },
+    "documents": {
+      "items": {
+        "$ref": "#/$defs/DocumentMetadata"
+      },
+      "maxItems": 100,
+      "title": "Documents",
+      "type": "array"
+    },
+    "completedApprovalCodes": {
+      "items": {
+        "maxLength": 100,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Completedapprovalcodes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "requestId",
+    "applicationId",
+    "applicationVersion",
+    "evaluationDate",
+    "businessProfile",
+    "location",
+    "operations",
+    "utilities",
+    "workforce",
+    "sectorDetails",
+    "documents",
+    "completedApprovalCodes"
+  ],
+  "title": "EvaluationRequest",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:udyogsetu:evaluation-request:2.0"
+}
