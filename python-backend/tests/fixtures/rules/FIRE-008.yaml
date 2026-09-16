@@ -1,0 +1,30 @@
+id: FIRE-008
+version: 1
+
+when:
+  any:
+    - field: businessProfile.floorAreaSqM
+      greaterThan: 500
+
+    - field: operations.usesHeatingEquipment
+      equals: true
+
+    - field: operations.boilerOrSteamEquipment
+      equals: true
+
+    - field: operations.totalElectricalLoadKw
+      greaterThan: 25
+
+    - field: operations.storesFlammableMaterials
+      equals: true
+
+    - field: operations.exitAdequacy
+      equals: false
+
+then:
+  recommend: FIRE_SAFETY
+
+explanation: "Premises size, heating or steam equipment, electrical load, flammable-material storage, or inadequate exits requires fire safety review."
+
+requiredDocuments:
+  - fire_safety_plan

@@ -1,0 +1,22 @@
+id: FACT-001
+version: 1
+
+when:
+  any:
+    - field: businessProfile.employeeCount
+      greaterThan: 20
+
+    - field: operations.poweredMachinery
+      equals: true
+
+    - field: operations.totalElectricalLoadKw
+      greaterThan: 10
+
+then:
+  recommend: FACTORY_LABOUR
+
+explanation: "Employee count, powered machinery, or electrical power usage indicates that factory and labour review is required."
+
+requiredDocuments:
+  - site_floor_layout
+  - machinery_process_description

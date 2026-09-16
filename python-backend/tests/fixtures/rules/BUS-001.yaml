@@ -1,0 +1,18 @@
+id: BUS-001
+version: 1
+
+when:
+  all:
+    - field: businessProfile.establishmentStage
+      equals: planning
+
+then:
+  recommend: BUSINESS_REGISTRATION
+
+explanation: "The business is in the planning stage and requires basic business registration."
+
+requiredDocuments:
+  - owner_authorised_person_identity
+  - business_registration
+  - pan
+  - address_or_lease_proof

@@ -1,0 +1,30 @@
+id: ENV-004
+version: 1
+
+when:
+  any:
+    - field: operations.dyeing
+      equals: true
+
+    - field: operations.washing
+      equals: true
+
+    - field: operations.chemicalTreatment
+      equals: true
+
+    - field: operations.printing
+      equals: true
+
+    - field: operations.usesChemicals
+      equals: true
+
+    - field: operations.producesWastewater
+      equals: true
+
+then:
+  recommend: POLLUTION_CONTROL_CONSENT
+
+explanation: "Dyeing, washing, chemical treatment, printing, chemical use, or wastewater generation was selected."
+
+requiredDocuments:
+  - pollution_control_plan
