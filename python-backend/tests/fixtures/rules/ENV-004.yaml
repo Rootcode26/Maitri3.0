@@ -3,28 +3,29 @@ version: 1
 
 when:
   any:
-    - field: operations.dyeing
+    - field: operations.handlesHazardousChemicals
       equals: true
 
-    - field: operations.washing
+    - field: sectorDetails.involvesDyeingOrBleaching
       equals: true
 
-    - field: operations.chemicalTreatment
+    - field: utilities.generatesHazardousWaste
       equals: true
 
-    - field: operations.printing
-      equals: true
+    - field: utilities.wastewaterDischarge
+      in:
+        - common_treatment_facility
+        - onsite_treatment_plant
+        - zero_liquid_discharge
 
-    - field: operations.usesChemicals
-      equals: true
-
-    - field: operations.producesWastewater
-      equals: true
+    - field: operations.processesUsed
+      in:
+        - onsite_effluent_treatment
 
 then:
   recommend: POLLUTION_CONTROL_CONSENT
 
-explanation: "Dyeing, washing, chemical treatment, printing, chemical use, or wastewater generation was selected."
+explanation: "Hazardous chemical use, dyeing or bleaching, hazardous waste, wastewater handling, or effluent treatment indicates that pollution control review is required."
 
 requiredDocuments:
   - pollution_control_plan

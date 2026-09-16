@@ -7,6 +7,7 @@ class RuleCondition(BaseModel):
     field: str
     equals: Any | None = None
     greaterThan: Any | None = None
+    in_: list[Any] | None = Field(default=None, alias="in")
 
 
 class RuleConditions(BaseModel):

@@ -3,13 +3,16 @@ version: 1
 
 when:
   all:
-    - field: businessProfile.establishmentStage
-      equals: planning
+    - field: operations.projectStage
+      in:
+        - new_unit
+        - expansion
+        - modernisation
 
 then:
   recommend: BUSINESS_REGISTRATION
 
-explanation: "The business is in the planning stage and requires basic business registration."
+explanation: "The business project requires basic business registration."
 
 requiredDocuments:
   - owner_authorised_person_identity

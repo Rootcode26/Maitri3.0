@@ -53,6 +53,28 @@ def evaluate_condition(
         except TypeError:
             return False
 
+    if condition.in_ is not None:
+        if actual_value is None:
+            return False
+
+        # Support both scalar values and list values.
+        #
+        # Scalar example:
+        #   electricityDemandBand = "above_1000"
+        #
+        # List example:
+        #   processesUsed = [
+        #       "manufacturing_processing",
+        #       "onsite_effluent_treatment"
+        #   ]
+        if isinstance(actual_value, list):
+            return any(
+                value in condition.in_
+                for value in actual_value
+            )
+
+        return actual_value in condition.in_
+
     return False
 
 

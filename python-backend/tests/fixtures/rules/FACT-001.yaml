@@ -3,19 +3,26 @@ version: 1
 
 when:
   any:
-    - field: businessProfile.employeeCount
-      greaterThan: 20
+    - field: workforce.permanentEmployeeBand
+      in:
+        - from_20_to_49
+        - from_50_to_99
+        - from_100_to_499
+        - 500_or_more
 
-    - field: operations.poweredMachinery
+    - field: utilities.electricityDemandBand
+      in:
+        - from_100_to_500
+        - from_500_to_1000
+        - above_1000
+
+    - field: operations.hasBoilerOrPressureVessel
       equals: true
-
-    - field: operations.totalElectricalLoadKw
-      greaterThan: 10
 
 then:
   recommend: FACTORY_LABOUR
 
-explanation: "Employee count, powered machinery, or electrical power usage indicates that factory and labour review is required."
+explanation: "Workforce size, electricity demand, or boiler or pressure-vessel use indicates that factory and labour review is required."
 
 requiredDocuments:
   - site_floor_layout
