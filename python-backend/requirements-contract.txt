@@ -1,0 +1,2 @@
+# Explicit dependency for the request models; install alongside requirements.txt.
+pydantic>=2.10,<3.0

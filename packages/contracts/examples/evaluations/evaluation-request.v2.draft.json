@@ -1,0 +1,22 @@
+{
+  "requestId": "req-001",
+  "applicationId": "app-001",
+  "applicationVersion": 1,
+  "evaluationDate": "2026-09-16",
+  "businessProfile": {
+    "legalName": "Example Textiles Private Limited",
+    "organisationType": "private_limited",
+    "industrySector": "textile",
+    "registrationNumber": null,
+    "pan": "ABCDE1234F",
+    "gstin": null,
+    "udyamRegistrationNumber": null
+  },
+  "location": {},
+  "operations": {},
+  "utilities": {},
+  "workforce": {},
+  "sectorDetails": {},
+  "documents": [],
+  "completedApprovalCodes": []
+}

@@ -1,0 +1,61 @@
+{
+  "requestId": "req-001",
+  "applicationId": "app-001",
+  "applicationVersion": 1,
+  "evaluationDate": "2026-09-16",
+  "ruleSetVersion": "prototype-2026.09",
+  "scoringPolicyVersion": "prototype-1",
+  "recommendations": [
+    {
+      "approvalCode": "POLLUTION_CONTROL_CONSENT",
+      "approvalName": "Pollution-control consent",
+      "departmentCode": "POLLUTION_CONTROL",
+      "matchedRuleIds": ["ENV-004"],
+      "explanation": "Dyeing, chemical use and wastewater generation were selected.",
+      "requiredDocuments": [
+        { "documentType": "business_registration", "mandatory": true },
+        { "documentType": "wastewater_plan", "mandatory": true }
+      ]
+    }
+  ],
+  "validationFindings": [
+    {
+      "code": "REQUIRED_DOCUMENT_MISSING",
+      "severity": "error",
+      "field": "documents",
+      "documentId": null,
+      "approvalCode": "POLLUTION_CONTROL_CONSENT",
+      "message": "A wastewater-management plan is required.",
+      "suggestedAction": "Upload a wastewater-management plan."
+    }
+  ],
+  "readiness": {
+    "score": 83,
+    "readyToSubmit": false,
+    "blockingErrorCount": 1,
+    "warningCount": 0,
+    "sections": [
+      { "code": "BUSINESS_PROFILE", "earnedPoints": 30, "maximumPoints": 30 },
+      { "code": "OPERATIONS", "earnedPoints": 20, "maximumPoints": 20 },
+      { "code": "REQUIRED_DOCUMENTS", "earnedPoints": 18, "maximumPoints": 35 },
+      { "code": "DOCUMENT_CONSISTENCY", "earnedPoints": 15, "maximumPoints": 15 }
+    ]
+  },
+  "risk": {
+    "score": 40,
+    "level": "medium",
+    "factors": [
+      { "code": "CHEMICAL_USE", "points": 20, "explanation": "Chemical use was declared." },
+      { "code": "WASTEWATER", "points": 20, "explanation": "Wastewater generation was declared." }
+    ]
+  },
+  "dependencyMap": [
+    {
+      "approvalCode": "POLLUTION_CONTROL_CONSENT",
+      "dependsOn": [],
+      "blockedBy": [],
+      "canStartImmediately": true
+    }
+  ],
+  "disclaimer": "Prototype evaluation. Current departmental rules remain authoritative."
+}
