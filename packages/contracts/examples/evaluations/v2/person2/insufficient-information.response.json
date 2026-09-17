@@ -1,0 +1,22 @@
+{
+  "validationFindings": [],
+  "readiness": {
+    "assessmentStatus": "insufficient_information",
+    "scoringPolicyVersion": "DEMO-ONLY-readiness-1",
+    "score": null,
+    "readyToSubmit": null,
+    "blockingErrorCount": 0,
+    "warningCount": 0,
+    "sections": []
+  },
+  "risk": {
+    "assessmentStatus": "insufficient_information",
+    "scoringPolicyVersion": "DEMO-ONLY-risk-1",
+    "score": null,
+    "level": null,
+    "missingFields": [
+      "operations.handlesHazardousChemicals"
+    ],
+    "factors": []
+  }
+}

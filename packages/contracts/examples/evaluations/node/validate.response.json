@@ -1,0 +1,42 @@
+{
+  "rulesVersion": "2026.09",
+  "projectId": "a1b2c3d4-0000-4444-8888-1234567890ab",
+  "projectVersion": 1,
+  "evaluatedAt": "2026-09-17T10:15:00Z",
+  "validationStatus": "review_required",
+  "blockingIssues": [
+    {
+      "code": "REQUIRED_DOCUMENT_MISSING",
+      "severity": "error",
+      "field": "documents",
+      "approvalKey": "food-licence",
+      "documentKey": "factory-plan",
+      "documentId": null,
+      "message": "The required factory-plan document has not been uploaded.",
+      "suggestedAction": "Upload a factory plan for the selected food-licence application."
+    }
+  ],
+  "warnings": [],
+  "reviewItems": [
+    {
+      "code": "DOCUMENT_REQUIREMENT_REVIEW_NEEDED",
+      "severity": "review",
+      "field": null,
+      "approvalKey": "food-licence",
+      "documentKey": "identity-proof",
+      "documentId": "doc-test-001",
+      "message": "The identity proof belongs to a signatory; its expected identity fields need an explicit comparison specification.",
+      "suggestedAction": "Confirm the authorised signatory details and which fields must be compared."
+    }
+  ],
+  "documentChecks": [
+    {
+      "documentId": "doc-test-001",
+      "approvalKey": "food-licence",
+      "documentKey": "identity-proof",
+      "field": "pan",
+      "status": "review_required",
+      "reason": "Different PAN values detected; the expected document identity and extraction accuracy must be reviewed."
+    }
+  ]
+}

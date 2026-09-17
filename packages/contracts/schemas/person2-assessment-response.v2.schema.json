@@ -1,0 +1,341 @@
+{
+  "$defs": {
+    "ReadinessResult": {
+      "additionalProperties": false,
+      "properties": {
+        "assessmentStatus": {
+          "enum": [
+            "complete",
+            "insufficient_information",
+            "requirements_not_configured",
+            "policy_not_configured"
+          ],
+          "title": "Assessmentstatus",
+          "type": "string"
+        },
+        "scoringPolicyVersion": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Scoringpolicyversion"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Score"
+        },
+        "readyToSubmit": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Readytosubmit"
+        },
+        "blockingErrorCount": {
+          "minimum": 0,
+          "title": "Blockingerrorcount",
+          "type": "integer"
+        },
+        "warningCount": {
+          "minimum": 0,
+          "title": "Warningcount",
+          "type": "integer"
+        },
+        "sections": {
+          "items": {
+            "$ref": "#/$defs/ReadinessSection"
+          },
+          "title": "Sections",
+          "type": "array"
+        }
+      },
+      "required": [
+        "assessmentStatus",
+        "scoringPolicyVersion",
+        "score",
+        "readyToSubmit",
+        "blockingErrorCount",
+        "warningCount",
+        "sections"
+      ],
+      "title": "ReadinessResult",
+      "type": "object"
+    },
+    "ReadinessSection": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "title": "Code",
+          "type": "string"
+        },
+        "earnedPoints": {
+          "minimum": 0,
+          "title": "Earnedpoints",
+          "type": "integer"
+        },
+        "maximumPoints": {
+          "exclusiveMinimum": 0,
+          "title": "Maximumpoints",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "code",
+        "earnedPoints",
+        "maximumPoints"
+      ],
+      "title": "ReadinessSection",
+      "type": "object"
+    },
+    "RiskFactor": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "title": "Code",
+          "type": "string"
+        },
+        "points": {
+          "minimum": 0,
+          "title": "Points",
+          "type": "integer"
+        },
+        "explanation": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "points",
+        "explanation"
+      ],
+      "title": "RiskFactor",
+      "type": "object"
+    },
+    "RiskResult": {
+      "additionalProperties": false,
+      "properties": {
+        "assessmentStatus": {
+          "enum": [
+            "complete",
+            "insufficient_information",
+            "policy_not_configured"
+          ],
+          "title": "Assessmentstatus",
+          "type": "string"
+        },
+        "scoringPolicyVersion": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Scoringpolicyversion"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Score"
+        },
+        "level": {
+          "anyOf": [
+            {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Level"
+        },
+        "missingFields": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Missingfields",
+          "type": "array"
+        },
+        "factors": {
+          "items": {
+            "$ref": "#/$defs/RiskFactor"
+          },
+          "title": "Factors",
+          "type": "array"
+        }
+      },
+      "required": [
+        "assessmentStatus",
+        "scoringPolicyVersion",
+        "score",
+        "level",
+        "missingFields",
+        "factors"
+      ],
+      "title": "RiskResult",
+      "type": "object"
+    },
+    "ValidationFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "title": "Code",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning",
+            "info"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Field"
+        },
+        "documentId": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Documentid"
+        },
+        "approvalCode": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Approvalcode"
+        },
+        "message": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "suggestedAction": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Suggestedaction"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "field",
+        "documentId",
+        "approvalCode",
+        "message",
+        "suggestedAction"
+      ],
+      "title": "ValidationFinding",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Only P2 sections; the combined evaluation envelope belongs to integration.",
+  "properties": {
+    "validationFindings": {
+      "items": {
+        "$ref": "#/$defs/ValidationFinding"
+      },
+      "title": "Validationfindings",
+      "type": "array"
+    },
+    "readiness": {
+      "$ref": "#/$defs/ReadinessResult"
+    },
+    "risk": {
+      "$ref": "#/$defs/RiskResult"
+    }
+  },
+  "required": [
+    "validationFindings",
+    "readiness",
+    "risk"
+  ],
+  "title": "Person2AssessmentResponse",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:udyogsetu:person2-assessment-response:2.0"
+}

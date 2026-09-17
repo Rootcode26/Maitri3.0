@@ -1,0 +1,36 @@
+{
+  "validationFindings": [
+    {
+      "code": "REQUIRED_FIELD_MISSING",
+      "severity": "error",
+      "field": "location.district",
+      "documentId": null,
+      "approvalCode": null,
+      "message": "District is required.",
+      "suggestedAction": "Select the district where the unit will operate."
+    }
+  ],
+  "readiness": {
+    "assessmentStatus": "complete",
+    "scoringPolicyVersion": "DEMO-ONLY-readiness-1",
+    "score": 80,
+    "readyToSubmit": false,
+    "blockingErrorCount": 1,
+    "warningCount": 0,
+    "sections": [
+      {
+        "code": "EXAMPLE_REQUIREMENTS",
+        "earnedPoints": 80,
+        "maximumPoints": 100
+      }
+    ]
+  },
+  "risk": {
+    "assessmentStatus": "complete",
+    "scoringPolicyVersion": "DEMO-ONLY-risk-1",
+    "score": 0,
+    "level": "low",
+    "missingFields": [],
+    "factors": []
+  }
+}

@@ -1,0 +1,239 @@
+{
+  "$defs": {
+    "ContractIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 100,
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "title": "Code",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning",
+            "review"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Field"
+        },
+        "approvalKey": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Approvalkey"
+        },
+        "documentKey": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Documentkey"
+        },
+        "documentId": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Documentid"
+        },
+        "message": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "suggestedAction": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Suggestedaction",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "field",
+        "approvalKey",
+        "documentKey",
+        "documentId",
+        "message",
+        "suggestedAction"
+      ],
+      "title": "ContractIssue",
+      "type": "object"
+    },
+    "DocumentCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "documentId": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Documentid",
+          "type": "string"
+        },
+        "approvalKey": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Approvalkey",
+          "type": "string"
+        },
+        "documentKey": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Documentkey",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Field"
+        },
+        "status": {
+          "enum": [
+            "matched",
+            "mismatched",
+            "unavailable",
+            "review_required"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "documentId",
+        "approvalKey",
+        "documentKey",
+        "field",
+        "status",
+        "reason"
+      ],
+      "title": "DocumentCheck",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "rulesVersion": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Rulesversion",
+      "type": "string"
+    },
+    "projectId": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Projectid",
+      "type": "string"
+    },
+    "evaluatedAt": {
+      "format": "date-time",
+      "title": "Evaluatedat",
+      "type": "string"
+    },
+    "projectVersion": {
+      "exclusiveMinimum": 0,
+      "title": "Projectversion",
+      "type": "integer"
+    },
+    "validationStatus": {
+      "enum": [
+        "complete",
+        "review_required",
+        "not_evaluated"
+      ],
+      "title": "Validationstatus",
+      "type": "string"
+    },
+    "blockingIssues": {
+      "items": {
+        "$ref": "#/$defs/ContractIssue"
+      },
+      "title": "Blockingissues",
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "$ref": "#/$defs/ContractIssue"
+      },
+      "title": "Warnings",
+      "type": "array"
+    },
+    "reviewItems": {
+      "items": {
+        "$ref": "#/$defs/ContractIssue"
+      },
+      "title": "Reviewitems",
+      "type": "array"
+    },
+    "documentChecks": {
+      "items": {
+        "$ref": "#/$defs/DocumentCheck"
+      },
+      "title": "Documentchecks",
+      "type": "array"
+    }
+  },
+  "required": [
+    "rulesVersion",
+    "projectId",
+    "evaluatedAt",
+    "projectVersion",
+    "validationStatus",
+    "blockingIssues",
+    "warnings",
+    "reviewItems",
+    "documentChecks"
+  ],
+  "title": "ValidateResponse",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:maitri:node:validate.response:1"
+}

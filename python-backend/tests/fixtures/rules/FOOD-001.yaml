@@ -1,37 +1,33 @@
 {
-  "id": "FACT-001",
+  "id": "FOOD-001",
   "version": 2,
   "when": {
     "all": [
       {
         "field": "businessProfile.industrySector",
-        "in": [
-          "food",
-          "textile",
-          "steel"
-        ]
+        "equals": "food"
       }
     ]
   },
   "then": {
-    "recommend": "factory-registration",
+    "recommend": "food-licence",
     "scope": "approval",
     "status": "recommended"
   },
-  "explanation": "Review factory registration/licensing using the current Maharashtra framework. Worker bands, electricity or a boiler alone are not verified statutory triggers.",
+  "explanation": "Food activity needs FSSAI registration/licence eligibility review. Investment and the applicant-selected category do not establish the correct route.",
   "verification": "NEEDS_REVIEW",
-  "jurisdiction": "MH",
+  "jurisdiction": "IN",
   "decisionInputs": [
-    "regulatory.manufacturingWithPower",
-    "regulatory.maximumWorkers",
-    "regulatory.factoryApplicabilityConfirmed"
+    "regulatory.annualTurnover",
+    "regulatory.foodKindOfBusiness",
+    "regulatory.foodEligibilityConfirmed"
   ],
   "sources": [
     {
-      "organization": "DISH Maharashtra",
-      "title": "Online services",
-      "url": "https://mahadish.in/online_services",
-      "notes": "Legacy forms alone do not establish current labour-code applicability."
+      "organization": "FSSAI",
+      "title": "2026 licensing and registration amendments FAQ",
+      "url": "https://fssai.gov.in/upload/advisories/2026/03/69c6a23234827order_27032026.pdf",
+      "date": "2026-03-27"
     }
   ],
   "limitations": [
@@ -39,9 +35,9 @@
   ],
   "requiredDocuments": [
     {
-      "key": "floor-plan",
-      "name": "Factory floor plan",
-      "description": "Factory floor plan for departmental review.",
+      "key": "factory-plan",
+      "name": "Food premises plan",
+      "description": "Food premises plan for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
       "required": false,
       "when": null,
@@ -57,20 +53,20 @@
       "verification": "NEEDS_REVIEW",
       "sources": [
         {
-          "organization": "DISH Maharashtra",
-          "title": "Online services",
-          "url": "https://mahadish.in/online_services",
-          "notes": "Legacy forms alone do not establish current labour-code applicability."
+          "organization": "FSSAI",
+          "title": "2026 licensing and registration amendments FAQ",
+          "url": "https://fssai.gov.in/upload/advisories/2026/03/69c6a23234827order_27032026.pdf",
+          "date": "2026-03-27"
         }
       ],
-      "jurisdiction": "MH",
+      "jurisdiction": "IN",
       "requirementBasis": "PROTOTYPE_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
     },
     {
-      "key": "machinery-list",
-      "name": "Machinery list",
-      "description": "Machinery list for departmental review.",
+      "key": "identity-proof",
+      "name": "Authorised signatory identity proof",
+      "description": "Authorised signatory identity proof for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
       "required": false,
       "when": null,
@@ -86,23 +82,30 @@
       "verification": "NEEDS_REVIEW",
       "sources": [
         {
-          "organization": "DISH Maharashtra",
-          "title": "Online services",
-          "url": "https://mahadish.in/online_services",
-          "notes": "Legacy forms alone do not establish current labour-code applicability."
+          "organization": "FSSAI",
+          "title": "2026 licensing and registration amendments FAQ",
+          "url": "https://fssai.gov.in/upload/advisories/2026/03/69c6a23234827order_27032026.pdf",
+          "date": "2026-03-27"
         }
       ],
-      "jurisdiction": "MH",
+      "jurisdiction": "IN",
       "requirementBasis": "PROTOTYPE_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
     },
     {
-      "key": "worker-details",
-      "name": "Workforce summary",
-      "description": "Workforce summary for departmental review.",
+      "key": "water-report",
+      "name": "Water ingredient test report",
+      "description": "Water ingredient test report for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
       "required": false,
-      "when": null,
+      "when": {
+        "all": [
+          {
+            "field": "regulatory.waterUsedAsIngredient",
+            "equals": true
+          }
+        ]
+      },
       "formats": [
         "PDF"
       ],
@@ -115,13 +118,13 @@
       "verification": "NEEDS_REVIEW",
       "sources": [
         {
-          "organization": "DISH Maharashtra",
-          "title": "Online services",
-          "url": "https://mahadish.in/online_services",
-          "notes": "Legacy forms alone do not establish current labour-code applicability."
+          "organization": "FSSAI",
+          "title": "2026 licensing and registration amendments FAQ",
+          "url": "https://fssai.gov.in/upload/advisories/2026/03/69c6a23234827order_27032026.pdf",
+          "date": "2026-03-27"
         }
       ],
-      "jurisdiction": "MH",
+      "jurisdiction": "IN",
       "requirementBasis": "PROTOTYPE_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
     }

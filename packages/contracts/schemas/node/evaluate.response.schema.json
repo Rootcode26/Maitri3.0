@@ -1,0 +1,326 @@
+{
+  "$defs": {
+    "ApprovalDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "required",
+            "recommended"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "ruleId": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Ruleid",
+          "type": "string"
+        },
+        "departmentKey": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Departmentkey",
+          "type": "string"
+        },
+        "processingDays": {
+          "minimum": 0,
+          "title": "Processingdays",
+          "type": "integer"
+        },
+        "documents": {
+          "items": {
+            "$ref": "#/$defs/DocumentRequirement"
+          },
+          "title": "Documents",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "title",
+        "status",
+        "reason",
+        "ruleId",
+        "departmentKey",
+        "processingDays",
+        "documents"
+      ],
+      "title": "ApprovalDefinition",
+      "type": "object"
+    },
+    "ContractIssue": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 100,
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "title": "Code",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning",
+            "review"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Field"
+        },
+        "approvalKey": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Approvalkey"
+        },
+        "documentKey": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Documentkey"
+        },
+        "documentId": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Documentid"
+        },
+        "message": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "suggestedAction": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Suggestedaction",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "field",
+        "approvalKey",
+        "documentKey",
+        "documentId",
+        "message",
+        "suggestedAction"
+      ],
+      "title": "ContractIssue",
+      "type": "object"
+    },
+    "DocumentRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Key",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "formats": {
+          "items": {
+            "enum": [
+              "PDF",
+              "JPG",
+              "PNG",
+              "XLSX"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Formats",
+          "type": "array"
+        },
+        "maxSizeMb": {
+          "exclusiveMinimum": 0,
+          "title": "Maxsizemb",
+          "type": "number"
+        },
+        "filesRequired": {
+          "exclusiveMinimum": 0,
+          "title": "Filesrequired",
+          "type": "integer"
+        },
+        "required": {
+          "title": "Required",
+          "type": "boolean"
+        },
+        "mustInclude": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Mustinclude",
+          "type": "array"
+        },
+        "quality": {
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Quality",
+          "type": "array"
+        },
+        "fieldsToCompare": {
+          "items": {
+            "enum": [
+              "enterpriseName",
+              "pan",
+              "gstin",
+              "cin",
+              "udyam",
+              "district",
+              "taluka",
+              "pincode",
+              "plotNumber"
+            ],
+            "type": "string"
+          },
+          "title": "Fieldstocompare",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "name",
+        "description",
+        "formats",
+        "maxSizeMb",
+        "filesRequired",
+        "required",
+        "mustInclude",
+        "quality"
+      ],
+      "title": "DocumentRequirement",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "rulesVersion": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Rulesversion",
+      "type": "string"
+    },
+    "projectId": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Projectid",
+      "type": "string"
+    },
+    "evaluatedAt": {
+      "format": "date-time",
+      "title": "Evaluatedat",
+      "type": "string"
+    },
+    "readinessScore": {
+      "anyOf": [
+        {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Readinessscore"
+    },
+    "blockingIssues": {
+      "items": {
+        "$ref": "#/$defs/ContractIssue"
+      },
+      "title": "Blockingissues",
+      "type": "array"
+    },
+    "approvals": {
+      "items": {
+        "$ref": "#/$defs/ApprovalDefinition"
+      },
+      "title": "Approvals",
+      "type": "array"
+    }
+  },
+  "required": [
+    "rulesVersion",
+    "projectId",
+    "evaluatedAt",
+    "readinessScore",
+    "blockingIssues",
+    "approvals"
+  ],
+  "title": "EvaluateResponse",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:maitri:node:evaluate.response:1"
+}
