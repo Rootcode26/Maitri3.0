@@ -36,7 +36,11 @@ const validBody = {
   fssaiCategory: 'State licence',
 };
 
-const projectRecord = { id: 'project-1', enterpriseName: 'Sahyadri Foods Pvt. Ltd.', approvals: [] };
+const projectRecord = {
+  id: 'project-1',
+  enterpriseName: 'Sahyadri Foods Pvt. Ltd.',
+  approvals: [],
+};
 
 const createTestApp = () => {
   const service = {
@@ -156,7 +160,12 @@ describe('project routes', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({ data: { approval: { department: { key: 'mpcb' } } } });
-    expect(service.setApprovalDepartment).toHaveBeenCalledWith('applicant-1', 'project-1', 'a1', 'mpcb');
+    expect(service.setApprovalDepartment).toHaveBeenCalledWith(
+      'applicant-1',
+      'project-1',
+      'a1',
+      'mpcb',
+    );
   });
 
   it('rejects an unknown department key', async () => {

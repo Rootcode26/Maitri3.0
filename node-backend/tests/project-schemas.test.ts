@@ -46,7 +46,9 @@ describe('createProjectSchema', () => {
   });
 
   it('rejects a blank required field', () => {
-    expect(() => createProjectSchema.parse({ ...validFoodProject, enterpriseName: '   ' })).toThrow();
+    expect(() =>
+      createProjectSchema.parse({ ...validFoodProject, enterpriseName: '   ' }),
+    ).toThrow();
   });
 
   it('rejects an invalid PIN code', () => {
@@ -92,8 +94,6 @@ describe('createProjectSchema', () => {
   });
 
   it('rejects unknown keys', () => {
-    expect(() =>
-      createProjectSchema.parse({ ...validFoodProject, hackerField: 'oops' }),
-    ).toThrow();
+    expect(() => createProjectSchema.parse({ ...validFoodProject, hackerField: 'oops' })).toThrow();
   });
 });

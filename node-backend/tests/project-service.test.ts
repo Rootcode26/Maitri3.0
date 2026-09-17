@@ -44,7 +44,14 @@ describe('ProjectService', () => {
   it('uses the rules engine result when the engine is configured', async () => {
     const createProject = vi.fn().mockResolvedValue({ id: 'project-1' });
     const engineApprovals = [
-      { key: 'from-engine', title: 'Engine approval', departmentKey: 'fssai', status: 'required', documents: [], processingDays: 10 },
+      {
+        key: 'from-engine',
+        title: 'Engine approval',
+        departmentKey: 'fssai',
+        status: 'required',
+        documents: [],
+        processingDays: 10,
+      },
     ];
     const evaluate = vi.fn().mockResolvedValue(engineApprovals);
     const service = new ProjectService(
@@ -82,7 +89,9 @@ describe('ProjectService', () => {
   it('rejects reading a project owned by someone else', async () => {
     const findProjectById = vi.fn().mockResolvedValue({ id: 'p1', applicantId: 'other' });
     const service = new ProjectService({ findProjectById } as unknown as ProjectRepository);
-    await expect(service.getProject('applicant-1', 'p1')).rejects.toMatchObject({ statusCode: 404 });
+    await expect(service.getProject('applicant-1', 'p1')).rejects.toMatchObject({
+      statusCode: 404,
+    });
   });
 
   it('rejects reading a missing project', async () => {

@@ -17,7 +17,10 @@ export interface RecommendedApproval {
 }
 
 const doc = (name: string): ApprovalDocument => ({
-  key: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+  key: name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, ''),
   name,
   required: true,
 });

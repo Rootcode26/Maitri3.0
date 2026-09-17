@@ -108,7 +108,10 @@ describe('RulesEngineClient', () => {
   it('throws when the response shape is invalid', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ approvals: [{ key: 'x' }] }) } as Response),
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ approvals: [{ key: 'x' }] }),
+      } as Response),
     );
     await expect(new RulesEngineClient(options).evaluate(input)).rejects.toBeTruthy();
   });

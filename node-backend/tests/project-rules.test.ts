@@ -19,7 +19,11 @@ describe('deriveApprovals', () => {
   });
 
   it('marks factory registration as required for steel and omits the duplicate', () => {
-    const approvals = deriveApprovals({ industry: 'steel', boiler: 'no', wetProcessing: undefined });
+    const approvals = deriveApprovals({
+      industry: 'steel',
+      boiler: 'no',
+      wetProcessing: undefined,
+    });
     const factory = approvals.filter((a) => a.key === 'factory-registration');
     expect(factory).toHaveLength(1);
     expect(factory[0]?.status).toBe('required');
@@ -27,7 +31,11 @@ describe('deriveApprovals', () => {
   });
 
   it('adds a boiler registration when a boiler is present', () => {
-    const approvals = deriveApprovals({ industry: 'food', boiler: 'yes', wetProcessing: undefined });
+    const approvals = deriveApprovals({
+      industry: 'food',
+      boiler: 'yes',
+      wetProcessing: undefined,
+    });
     const boiler = approvals.find((a) => a.key === 'boiler-registration');
     expect(boiler?.departmentKey).toBe('steam-boilers');
     expect(approvals).toHaveLength(5);

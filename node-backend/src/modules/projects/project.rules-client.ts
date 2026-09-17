@@ -73,18 +73,16 @@ export class RulesEngineClient {
     }
 
     const parsed = evaluateResponseSchema.parse(await response.json());
-    return parsed.approvals.map(
-      (approval): RecommendedApproval => ({
-        key: approval.key,
-        title: approval.title,
-        status: approval.status,
-        ...(approval.reason !== undefined ? { reason: approval.reason } : {}),
-        ...(approval.ruleId !== undefined ? { ruleId: approval.ruleId } : {}),
-        departmentKey: approval.departmentKey as DepartmentKey,
-        processingDays: approval.processingDays,
-        documents: approval.documents as ApprovalDocument[],
-      }),
-    );
+    return parsed.approvals.map((approval): RecommendedApproval => ({
+      key: approval.key,
+      title: approval.title,
+      status: approval.status,
+      ...(approval.reason !== undefined ? { reason: approval.reason } : {}),
+      ...(approval.ruleId !== undefined ? { ruleId: approval.ruleId } : {}),
+      departmentKey: approval.departmentKey as DepartmentKey,
+      processingDays: approval.processingDays,
+      documents: approval.documents as ApprovalDocument[],
+    }));
   }
 }
 
