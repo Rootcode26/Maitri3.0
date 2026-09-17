@@ -12,16 +12,12 @@
   "then": {
     "recommend": "boiler-registration",
     "scope": "approval",
-    "status": "recommended"
+    "status": "required"
   },
   "explanation": "Declared boiler use requires current-authority applicability and registration-stage review. TPH and pressure alone do not establish statutory coverage.",
   "verification": "NEEDS_REVIEW",
   "jurisdiction": "MH",
-  "decisionInputs": [
-    "regulatory.boilerApplicabilityConfirmed",
-    "regulatory.boilerRegistrationStage",
-    "regulatory.boilerExistingRegistration"
-  ],
+  "decisionInputs": [],
   "sources": [
     {
       "organization": "Maharashtra Steam Boilers",
@@ -35,46 +31,46 @@
     "Preliminary screening only; absent decision inputs must be supplied through an owner-approved internal snapshot. No legal exemption is inferred from a non-match."
   ],
   "dependencies": [
-  {
-    "prerequisite": "boiler-inspection",
-    "stage": "hydraulic-test",
-    "external": true,
-    "verification": "NEEDS_REVIEW",
-    "reason": "2017 guidance places inspection before hydraulic testing; reconfirm current workflow.",
-    "sources": [
-      {
-        "organization": "Maharashtra Steam Boilers",
-        "title": "Registration guidelines 2017",
-        "url": "https://mahaboiler.in/boiler/writereaddata/Portal/Images/pdf/Registration_of_Boilers_Economisers_Guidelines_27102017.pdf",
-        "date": "2017-10-27",
-        "notes": "Historical workflow evidence only; not proof of current applicability under the 2025 framework."
-      }
-    ]
-  },
-  {
-    "prerequisite": "boiler-hydraulic-test",
-    "stage": "registration",
-    "external": true,
-    "verification": "NEEDS_REVIEW",
-    "reason": "2017 guidance places hydraulic testing before registration; reconfirm current workflow.",
-    "sources": [
-      {
-        "organization": "Maharashtra Steam Boilers",
-        "title": "Registration guidelines 2017",
-        "url": "https://mahaboiler.in/boiler/writereaddata/Portal/Images/pdf/Registration_of_Boilers_Economisers_Guidelines_27102017.pdf",
-        "date": "2017-10-27",
-        "notes": "Historical workflow evidence only; not proof of current applicability under the 2025 framework."
-      }
-    ]
-  }
-],
+    {
+      "prerequisite": "boiler-inspection",
+      "stage": "hydraulic-test",
+      "external": true,
+      "verification": "NEEDS_REVIEW",
+      "reason": "2017 guidance places inspection before hydraulic testing; reconfirm current workflow.",
+      "sources": [
+        {
+          "organization": "Maharashtra Steam Boilers",
+          "title": "Registration guidelines 2017",
+          "url": "https://mahaboiler.in/boiler/writereaddata/Portal/Images/pdf/Registration_of_Boilers_Economisers_Guidelines_27102017.pdf",
+          "date": "2017-10-27",
+          "notes": "Historical workflow evidence only; not proof of current applicability under the 2025 framework."
+        }
+      ]
+    },
+    {
+      "prerequisite": "boiler-hydraulic-test",
+      "stage": "registration",
+      "external": true,
+      "verification": "NEEDS_REVIEW",
+      "reason": "2017 guidance places hydraulic testing before registration; reconfirm current workflow.",
+      "sources": [
+        {
+          "organization": "Maharashtra Steam Boilers",
+          "title": "Registration guidelines 2017",
+          "url": "https://mahaboiler.in/boiler/writereaddata/Portal/Images/pdf/Registration_of_Boilers_Economisers_Guidelines_27102017.pdf",
+          "date": "2017-10-27",
+          "notes": "Historical workflow evidence only; not proof of current applicability under the 2025 framework."
+        }
+      ]
+    }
+  ],
   "requiredDocuments": [
     {
       "key": "boiler-drawing",
       "name": "Boiler drawing",
       "description": "Boiler drawing for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
-      "required": false,
+      "required": true,
       "when": null,
       "formats": [
         "PDF"
@@ -96,7 +92,7 @@
         }
       ],
       "jurisdiction": "MH",
-      "requirementBasis": "PROTOTYPE_POLICY",
+      "requirementBasis": "APPLICATION_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
     },
     {
@@ -104,7 +100,7 @@
       "name": "Manufacturer / inspection test records",
       "description": "Manufacturer / inspection test records for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
-      "required": false,
+      "required": true,
       "when": null,
       "formats": [
         "PDF"
@@ -126,7 +122,7 @@
         }
       ],
       "jurisdiction": "MH",
-      "requirementBasis": "PROTOTYPE_POLICY",
+      "requirementBasis": "APPLICATION_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
     }
   ]

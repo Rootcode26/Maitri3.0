@@ -108,8 +108,10 @@ def enrich_recommendations(assessments: list[RuleAssessment], application: dict[
                 if document.verification != 'VERIFIED':
                     issues.append({'approvalKey': code, 'ruleId': rule.id, 'fields': [], 'message': f'Document {document.key} is a preparation suggestion, not a verified requirement.', 'action': 'Confirm the current departmental checklist before final submission.', 'state': 'needs_review'})
                 payload = document.model_dump(include={'key', 'name', 'description', 'formats', 'maxSizeMb', 'filesRequired', 'required', 'mustInclude', 'quality', 'fieldsToCompare'}, mode='json')
-                # A verified checklist item does not prove approval applicability.
-                payload['required'] = document.required and document.verification == 'VERIFIED' and candidate.state == 'matched'
+                # Application-policy semantics: "required" means the applicant must
+                # submit this to complete the application, taken from the document's
+                # declared flag once its rule applies. Legal verification is separate.
+                payload['required'] = bool(document.required) and candidate.state in ('matched', 'needs_review')
                 if document.key in documents:
                     previous = documents[document.key]
                     if {key: value for key, value in previous.items() if key != 'required'} != {key: value for key, value in payload.items() if key != 'required'}:
@@ -117,5 +119,5 @@ def enrich_recommendations(assessments: list[RuleAssessment], application: dict[
                     payload['required'] = previous['required'] or payload['required']
                 documents[document.key] = payload
             evidence.append({'approvalKey': code, 'ruleId': rule.id, 'state': candidate.state, 'verification': rule.verification, 'sources': [source.model_dump(mode='json') for source in rule.sources], 'documents': document_evidence, 'processingDaysBasis': 'PROTOTYPE_ASSUMPTION: estimates copied from api-contract.md, not statutory SLAs.'})
-        approvals.append({'key': code, 'title': title, 'status': 'required' if any(item.state == 'matched' and item.rule.then.status == 'required' for item in candidates) else 'recommended', 'reason': ' '.join(dict.fromkeys(item.rule.explanation for item in candidates)), 'ruleId': candidates[0].rule.id, 'departmentKey': department, 'processingDays': days, 'documents': [documents[key] for key in sorted(documents)]})
+        approvals.append({'key': code, 'title': title, 'status': 'required' if any(item.state in ('matched', 'needs_review') and item.rule.then.status == 'required' for item in candidates) else 'recommended', 'reason': ' '.join(dict.fromkeys(item.rule.explanation for item in candidates)), 'ruleId': candidates[0].rule.id, 'departmentKey': department, 'processingDays': days, 'documents': [documents[key] for key in sorted(documents)]})
     return approvals, issues, evidence

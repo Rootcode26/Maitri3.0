@@ -34,8 +34,11 @@ class EngineTests(unittest.TestCase):
         result = evaluate_project(project, '2026.09', jurisdiction='MH', evaluation_date=date(2026, 9, 17))
         self.assertEqual(len(result['approvals']), 5)
         self.assertTrue(result['integrationIssues'])
-        self.assertTrue(all(item['status'] == 'recommended' for item in result['approvals']))
-        self.assertTrue(all(not document['required'] for approval in result['approvals'] for document in approval['documents']))
+        # Application-policy checklist: applicable approvals commit to "required",
+        # and their must-submit documents are marked required.
+        food = next(item for item in result['approvals'] if item['key'] == 'food-licence')
+        self.assertEqual(food['status'], 'required')
+        self.assertTrue(any(document['required'] for document in food['documents']))
         self.assertNotIn('BUSINESS_REGISTRATION', [item['key'] for item in result['approvals']])
 
     def test_all_request_examples_do_not_assert_exemptions(self):
@@ -57,12 +60,13 @@ class EngineTests(unittest.TestCase):
             evaluate_project({}, '2026.09', jurisdiction='KA')
 
     def test_conditional_documents_and_verified_metadata(self):
-        result = evaluate_project({'industry': 'food', 'hazardousChemicals': 'yes'}, '2026.09', jurisdiction='MH', regulatory_inputs={'waterUsedAsIngredient': True})
+        # water-report is now an always-listed "recommended" (may-be-needed) item
+        # rather than gated on a hidden regulatory input.
+        result = evaluate_project({'industry': 'food', 'hazardousChemicals': 'yes'}, '2026.09', jurisdiction='MH')
         food = next(item for item in result['approvals'] if item['key'] == 'food-licence')
-        self.assertIn('water-report', [item['key'] for item in food['documents']])
-        result = evaluate_project({'industry': 'food'}, '2026.09', regulatory_inputs={'waterUsedAsIngredient': False})
-        food = next(item for item in result['approvals'] if item['key'] == 'food-licence')
-        self.assertNotIn('water-report', [item['key'] for item in food['documents']])
+        water = next(item for item in food['documents'] if item['key'] == 'water-report')
+        self.assertFalse(water['required'])
+        self.assertTrue(any(document['required'] for document in food['documents']))
         consent = next(rule for rule in load_version('2026.09') if rule.id == 'ENV-004')
         self.assertTrue(all(document.verification == 'VERIFIED' for document in consent.requiredDocuments))
         self.assertTrue(all('prototype application' in document.policyNote for document in consent.requiredDocuments))
@@ -140,10 +144,10 @@ class EngineTests(unittest.TestCase):
                 self.assertFalse(result['submissionBlocked'])
                 self.assertTrue(result['reviewReasons'])
 
-    def test_unknown_document_condition_reports_actual_field(self):
+    def test_unverified_documents_still_carry_preparation_notes(self):
+        # The application-policy checklist commits to "required", but unverified
+        # documents still generate an officer preparation note in the audit trail.
         result = evaluate_project({'industry': 'food'}, '2026.09', jurisdiction='MH')
-        issue = next(item for item in result['integrationIssues'] if 'Applicability of document water-report' in item['message'])
-        self.assertEqual(issue['fields'], ['regulatory.waterUsedAsIngredient'])
         self.assertTrue(any('preparation suggestion' in item['message'] for item in result['integrationIssues']))
 
     def test_declared_dependencies_reach_submission_issues(self):

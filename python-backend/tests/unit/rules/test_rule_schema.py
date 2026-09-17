@@ -31,11 +31,14 @@ class SchemaTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             Rule.model_validate(data)
 
-    def test_prototype_cannot_assert_required(self):
+    def test_prototype_may_assert_application_policy_required(self):
+        # "required" is an application-policy signal (the applicant must submit
+        # this to complete the application), not a statutory claim, so unverified
+        # rules may declare it.
         data = rule_data()
         data['then']['status'] = 'required'
-        with self.assertRaises(ValidationError):
-            Rule.model_validate(data)
+        rule = Rule.model_validate(data)
+        assert rule.then.status == 'required'
 
     def test_version_and_extra_fields(self):
         for change in [{'version': True}, {'version': 0}, {'unknown': 'ignored'}]:

@@ -16,16 +16,12 @@
   "then": {
     "recommend": "factory-registration",
     "scope": "approval",
-    "status": "recommended"
+    "status": "required"
   },
   "explanation": "Review factory registration/licensing using the current Maharashtra framework. Worker bands, electricity or a boiler alone are not verified statutory triggers.",
   "verification": "NEEDS_REVIEW",
   "jurisdiction": "MH",
-  "decisionInputs": [
-    "regulatory.manufacturingWithPower",
-    "regulatory.maximumWorkers",
-    "regulatory.factoryApplicabilityConfirmed"
-  ],
+  "decisionInputs": [],
   "sources": [
     {
       "organization": "DISH Maharashtra",
@@ -43,7 +39,7 @@
       "name": "Factory floor plan",
       "description": "Factory floor plan for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
-      "required": false,
+      "required": true,
       "when": null,
       "formats": [
         "PDF"
@@ -64,7 +60,7 @@
         }
       ],
       "jurisdiction": "MH",
-      "requirementBasis": "PROTOTYPE_POLICY",
+      "requirementBasis": "APPLICATION_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
     },
     {
@@ -72,7 +68,7 @@
       "name": "Machinery list",
       "description": "Machinery list for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
-      "required": false,
+      "required": true,
       "when": null,
       "formats": [
         "PDF"
@@ -93,7 +89,7 @@
         }
       ],
       "jurisdiction": "MH",
-      "requirementBasis": "PROTOTYPE_POLICY",
+      "requirementBasis": "APPLICATION_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
     },
     {
@@ -101,7 +97,7 @@
       "name": "Workforce summary",
       "description": "Workforce summary for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
-      "required": false,
+      "required": true,
       "when": null,
       "formats": [
         "PDF"
@@ -122,7 +118,7 @@
         }
       ],
       "jurisdiction": "MH",
-      "requirementBasis": "PROTOTYPE_POLICY",
+      "requirementBasis": "APPLICATION_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
     }
   ]

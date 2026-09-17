@@ -5,7 +5,9 @@
     "any": [
       {
         "field": "sectorDetails.involvesDyeingOrBleaching",
-        "applicableIndustries": ["textile"],
+        "applicableIndustries": [
+          "textile"
+        ],
         "equals": true
       },
       {
@@ -18,7 +20,9 @@
       },
       {
         "field": "sectorDetails.furnaceType",
-        "applicableIndustries": ["steel"],
+        "applicableIndustries": [
+          "steel"
+        ],
         "in": [
           "induction",
           "electric_arc",
@@ -37,16 +41,12 @@
   "then": {
     "recommend": "consent-to-operate",
     "scope": "approval",
-    "status": "recommended"
+    "status": "required"
   },
   "explanation": "Pollution indicators warrant MPCB consent review, not an automatic CTO determination. CTE and CTO are distinct; zero discharge does not by itself establish an exemption.",
   "verification": "PROTOTYPE_ASSUMPTION",
   "jurisdiction": "MH",
-  "decisionInputs": [
-    "regulatory.consentCategory",
-    "regulatory.consentExemptionConfirmed",
-    "regulatory.operationStage"
-  ],
+  "decisionInputs": [],
   "sources": [
     {
       "organization": "MPCB",
@@ -58,21 +58,21 @@
     "Preliminary screening only; absent decision inputs must be supplied through an owner-approved internal snapshot. No legal exemption is inferred from a non-match."
   ],
   "dependencies": [
-  {
-    "prerequisite": "consent-to-establish",
-    "stage": "operation",
-    "external": true,
-    "verification": "NEEDS_REVIEW",
-    "reason": "CTE precedes establishment for consent-applicable units; applicability/exemptions must be confirmed before activating this dependency.",
-    "sources": [
-      {
-        "organization": "MPCB",
-        "title": "Consent application information",
-        "url": "https://www.mpcb.gov.in/en/consentmgt/water-and-air-act/document"
-      }
-    ]
-  }
-],
+    {
+      "prerequisite": "consent-to-establish",
+      "stage": "operation",
+      "external": true,
+      "verification": "NEEDS_REVIEW",
+      "reason": "CTE precedes establishment for consent-applicable units; applicability/exemptions must be confirmed before activating this dependency.",
+      "sources": [
+        {
+          "organization": "MPCB",
+          "title": "Consent application information",
+          "url": "https://www.mpcb.gov.in/en/consentmgt/water-and-air-act/document"
+        }
+      ]
+    }
+  ],
   "requiredDocuments": [
     {
       "key": "process-note",
