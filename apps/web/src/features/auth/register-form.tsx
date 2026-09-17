@@ -22,13 +22,9 @@ import {
 } from "@/features/auth/auth-options";
 import { FieldError, FormStatus } from "@/features/auth/form-message";
 import { authRequest, getAuthErrorMessage } from "@/lib/auth-api";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+const nativeSelectClass =
+  "h-11 w-full rounded-md border border-input bg-white px-3 text-base text-[#18263d] outline-none focus-visible:border-[#315f9f] focus-visible:ring-3 focus-visible:ring-[#315f9f]/25 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
 
 export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
   const router = useRouter();
@@ -91,30 +87,26 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
             name="department"
             control={control}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger
-                  id="department"
-                  className="h-11 w-full bg-white"
-                  aria-invalid={Boolean(errors.department)}
-                  aria-describedby={
-                    errors.department ? "department-error" : "department-hint"
-                  }
-                >
-                  <SelectValue placeholder="Select your department" />
-                </SelectTrigger>
-                <SelectContent
-                  side="bottom"
-                  align="start"
-                  alignItemWithTrigger={false}
-                  className="max-h-64 max-w-[min(34rem,calc(100vw-2rem))] text-sm"
-                >
-                  {allInspectorDepartments.map((department) => (
-                    <SelectItem key={department.value} value={department.value}>
-                      {department.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                id="department"
+                className={nativeSelectClass}
+                value={field.value}
+                onChange={(event) => field.onChange(event.target.value)}
+                onBlur={field.onBlur}
+                aria-invalid={Boolean(errors.department)}
+                aria-describedby={
+                  errors.department ? "department-error" : "department-hint"
+                }
+              >
+                <option value="" disabled>
+                  Select your department
+                </option>
+                {allInspectorDepartments.map((department) => (
+                  <option key={department.value} value={department.value}>
+                    {department.label}
+                  </option>
+                ))}
+              </select>
             )}
           />
           <p id="department-hint" className="text-xs text-muted-foreground">
@@ -134,30 +126,23 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
             name="industry"
             control={control}
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger
-                  id="register-industry"
-                  className="h-11 w-full bg-white"
-                  aria-invalid={Boolean(errors.industry)}
-                  aria-describedby={
-                    errors.industry ? "industry-error" : "industry-hint"
-                  }
-                >
-                  <SelectValue placeholder="Select your industry" />
-                </SelectTrigger>
-                <SelectContent
-                  side="bottom"
-                  align="start"
-                  alignItemWithTrigger={false}
-                  className="text-sm"
-                >
-                  {Object.entries(industryLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                id="register-industry"
+                className={nativeSelectClass}
+                value={field.value}
+                onChange={(event) => field.onChange(event.target.value)}
+                onBlur={field.onBlur}
+                aria-invalid={Boolean(errors.industry)}
+                aria-describedby={
+                  errors.industry ? "industry-error" : "industry-hint"
+                }
+              >
+                {Object.entries(industryLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
             )}
           />
           <p className="text-xs text-muted-foreground">

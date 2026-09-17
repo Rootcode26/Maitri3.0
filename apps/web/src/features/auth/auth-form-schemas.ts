@@ -8,7 +8,7 @@ export const phoneSchema = z
   .string()
   .trim()
   .min(1, "Enter your mobile number.")
-  .regex(indianMobile, "Enter a valid 10-digit Indian mobile number.");
+  .regex(indianMobile, "Enter a 10-digit Indian mobile number starting with 6, 7, 8 or 9.");
 
 export const passwordSchema = z
   .string()

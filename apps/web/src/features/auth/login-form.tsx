@@ -35,6 +35,10 @@ const expectedRoles: Record<LoginMode, UserRole> = {
   applicant: "applicant",
   inspector: "inspector",
 };
+const postLoginRoutes: Record<LoginMode, string> = {
+  applicant: "/applicant/dashboard",
+  inspector: "/",
+};
 
 export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
   const router = useRouter();
@@ -65,7 +69,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
         },
       );
       queryClient.setQueryData(sessionQueryKey, response.data.user);
-      router.push("/");
+      router.push(postLoginRoutes[mode]);
       router.refresh();
     } catch (cause) {
       setServerError(getAuthErrorMessage(cause, "login"));
@@ -99,7 +103,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
           />
         </div>
         <p id="phone-hint" className="text-xs text-muted-foreground">
-          Enter a 10-digit Indian mobile number.
+          10-digit Indian mobile number, starting with 6, 7, 8 or 9.
         </p>
         <FieldError id="phone-error" message={errors.phone?.message} />
       </div>

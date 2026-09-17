@@ -20,8 +20,22 @@ export class AuthApiError extends Error {
   }
 }
 
+const REQUEST_TIMEOUT_MS = 15_000;
+
 async function apiRequest<T>(path: string, init: RequestInit): Promise<T> {
-  const response = await fetch(`/api/v1/auth${path}`, { ...init, credentials: "include" });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(`/api/v1/auth${path}`, { ...init, credentials: "include", signal: controller.signal });
+  } catch (cause) {
+    if (cause instanceof DOMException && cause.name === "AbortError") {
+      throw new AuthApiError("The request timed out. Check your connection and try again.", 0, "REQUEST_TIMEOUT");
+    }
+    throw cause;
+  } finally {
+    clearTimeout(timeout);
+  }
   if (!response.ok) {
     const error = (await response.json().catch(() => ({}))) as ApiErrorBody;
     throw new AuthApiError(error.message ?? "Something went wrong. Please try again.", response.status, error.code);
@@ -54,6 +68,7 @@ type AuthAction = "login" | "register" | "verifyOtp" | "resendOtp" | "forgotPass
 
 export function getAuthErrorMessage(cause: unknown, action: AuthAction): string {
   if (!(cause instanceof AuthApiError)) return "We could not reach the service. Check your connection and try again.";
+  if (cause.code === "REQUEST_TIMEOUT") return "The request timed out. Check your connection and try again.";
   if (cause.status >= 500) return "The authentication service is temporarily unavailable. Please try again shortly.";
   if (cause.status === 429) return action === "resendOtp" ? "Too many code requests. Wait a few minutes before trying again." : "Too many attempts. Wait a few minutes and try again.";
   if (cause.code === "WORKSPACE_ACCESS_DENIED") return "This account does not have access to the selected workspace.";
