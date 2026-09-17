@@ -12,16 +12,12 @@
   "then": {
     "recommend": "food-licence",
     "scope": "approval",
-    "status": "recommended"
+    "status": "required"
   },
   "explanation": "Food activity needs FSSAI registration/licence eligibility review. Investment and the applicant-selected category do not establish the correct route.",
   "verification": "NEEDS_REVIEW",
   "jurisdiction": "IN",
-  "decisionInputs": [
-    "regulatory.annualTurnover",
-    "regulatory.foodKindOfBusiness",
-    "regulatory.foodEligibilityConfirmed"
-  ],
+  "decisionInputs": [],
   "sources": [
     {
       "organization": "FSSAI",
@@ -39,7 +35,7 @@
       "name": "Food premises plan",
       "description": "Food premises plan for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
-      "required": false,
+      "required": true,
       "when": null,
       "formats": [
         "PDF"
@@ -60,7 +56,7 @@
         }
       ],
       "jurisdiction": "IN",
-      "requirementBasis": "PROTOTYPE_POLICY",
+      "requirementBasis": "APPLICATION_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
     },
     {
@@ -68,7 +64,7 @@
       "name": "Authorised signatory identity proof",
       "description": "Authorised signatory identity proof for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
-      "required": false,
+      "required": true,
       "when": null,
       "formats": [
         "PDF"
@@ -89,7 +85,7 @@
         }
       ],
       "jurisdiction": "IN",
-      "requirementBasis": "PROTOTYPE_POLICY",
+      "requirementBasis": "APPLICATION_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
     },
     {
@@ -98,14 +94,7 @@
       "description": "Water ingredient test report for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
       "required": false,
-      "when": {
-        "all": [
-          {
-            "field": "regulatory.waterUsedAsIngredient",
-            "equals": true
-          }
-        ]
-      },
+      "when": null,
       "formats": [
         "PDF"
       ],

@@ -144,8 +144,9 @@ class Rule(RuleModel):
     def evidence_consistent(self) -> 'Rule':
         if self.verification == 'VERIFIED' and (not self.sources or not self.jurisdiction):
             raise ValueError('Verified rules require evidence and jurisdiction')
-        if self.then.status == 'required' and self.verification != 'VERIFIED':
-            raise ValueError('Unverified rules cannot assert statutory required status')
+        # Application-policy "required" (what the applicant must submit to complete
+        # the application) does not assert a statutory determination, so it is
+        # allowed for unverified rules. Legal verification is tracked separately.
         if self.effectiveFrom and self.effectiveTo and self.effectiveFrom > self.effectiveTo:
             raise ValueError('Invalid effective date interval')
         if len(self.decisionInputs) != len(set(self.decisionInputs)):

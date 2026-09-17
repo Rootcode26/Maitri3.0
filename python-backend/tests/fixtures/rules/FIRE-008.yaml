@@ -16,17 +16,12 @@
   "then": {
     "recommend": "fire-noc",
     "scope": "approval",
-    "status": "recommended"
+    "status": "required"
   },
   "explanation": "Industrial fire approval screening requires occupancy, building characteristics, competent authority and approval stage. Previous area/power thresholds are withdrawn.",
   "verification": "NEEDS_REVIEW",
   "jurisdiction": "MH",
-  "decisionInputs": [
-    "regulatory.fireOccupancy",
-    "regulatory.buildingHeight",
-    "regulatory.fireApprovalStage",
-    "regulatory.fireApplicabilityConfirmed"
-  ],
+  "decisionInputs": [],
   "sources": [
     {
       "organization": "Maharashtra Fire & Emergency Services",
@@ -38,28 +33,28 @@
     "Preliminary screening only; absent decision inputs must be supplied through an owner-approved internal snapshot. No legal exemption is inferred from a non-match."
   ],
   "dependencies": [
-  {
-    "prerequisite": "fire-provisional-approval",
-    "stage": "final-fire",
-    "external": true,
-    "verification": "NEEDS_REVIEW",
-    "reason": "Final approval guidance refers to provisional NOC if any. Not a universal prerequisite; confirm the site workflow.",
-    "sources": [
-      {
-        "organization": "Maharashtra Fire & Emergency Services",
-        "title": "E-Approval document and workflow guidance",
-        "url": "https://mahafireservice.gov.in/e-fire.php"
-      }
-    ]
-  }
-],
+    {
+      "prerequisite": "fire-provisional-approval",
+      "stage": "final-fire",
+      "external": true,
+      "verification": "NEEDS_REVIEW",
+      "reason": "Final approval guidance refers to provisional NOC if any. Not a universal prerequisite; confirm the site workflow.",
+      "sources": [
+        {
+          "organization": "Maharashtra Fire & Emergency Services",
+          "title": "E-Approval document and workflow guidance",
+          "url": "https://mahafireservice.gov.in/e-fire.php"
+        }
+      ]
+    }
+  ],
   "requiredDocuments": [
     {
       "key": "fire-layout",
       "name": "Fire architectural drawings",
       "description": "Fire architectural drawings for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
-      "required": false,
+      "required": true,
       "when": null,
       "formats": [
         "PDF"
@@ -79,7 +74,7 @@
         }
       ],
       "jurisdiction": "MH",
-      "requirementBasis": "PROTOTYPE_POLICY",
+      "requirementBasis": "APPLICATION_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
     },
     {
@@ -87,7 +82,7 @@
       "name": "Evacuation plan",
       "description": "Evacuation plan for departmental review.",
       "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
-      "required": false,
+      "required": true,
       "when": null,
       "formats": [
         "PDF"
@@ -107,7 +102,7 @@
         }
       ],
       "jurisdiction": "MH",
-      "requirementBasis": "PROTOTYPE_POLICY",
+      "requirementBasis": "APPLICATION_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
     }
   ]

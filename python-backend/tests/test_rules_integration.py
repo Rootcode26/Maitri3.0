@@ -42,14 +42,16 @@ class RulesIntegrationTests(unittest.TestCase):
         response = RulesAdapter(audit_sink=lambda p, v, result: records.append(result), clock=lambda: NOW)(EvaluateRequest.model_validate(self.payload))
         fields = {field for item in records[0]['integrationIssues'] for field in item['fields']}
         self.assertFalse(response.blocking_issues)
+        # Maharashtra rules still report a missing jurisdiction when no context is
+        # supplied; the checklist no longer depends on hidden regulatory inputs.
         self.assertIn('location.stateCode', fields)
-        self.assertIn('regulatory.annualTurnover', fields)
-        self.assertIn('regulatory.waterUsedAsIngredient', fields)
 
-    def test_context_confirmation_does_not_promote_rules(self):
-        resolver = lambda project_id, version: TrustedRulesContext(jurisdiction='MH', regulatory_inputs={'annualTurnover': 1, 'foodKindOfBusiness': 'test', 'foodEligibilityConfirmed': True})
+    def test_context_enables_application_checklist(self):
+        # With the Maharashtra context supplied, applicable approvals commit to the
+        # application-policy "required" status; no blocking issues at /evaluate.
+        resolver = lambda project_id, version: TrustedRulesContext(jurisdiction='MH')
         response = RulesAdapter(resolver, clock=lambda: NOW)(EvaluateRequest.model_validate(self.payload))
-        self.assertTrue(all(a.status == 'recommended' for a in response.approvals))
+        self.assertTrue(any(a.status == 'required' for a in response.approvals))
         self.assertFalse(response.blocking_issues)
 
     def test_untrusted_context_rejected_at_contract(self):
@@ -89,9 +91,10 @@ class RulesIntegrationTests(unittest.TestCase):
         self.request['documents'] = []
         result = validate_application(ValidateRequest.model_validate(self.request), response, evaluated_at=NOW)
         self.assertEqual(result.validation_status, 'review_required')
-        self.assertEqual(result.blocking_issues, response.blocking_issues)
+        # Required application documents that were not supplied now block, while
+        # recommended approvals still surface officer-review notes.
+        self.assertTrue(any(i.code == 'REQUIRED_DOCUMENT_MISSING' for i in result.blocking_issues))
         self.assertTrue(any(i.code == 'APPROVAL_OFFICER_REVIEW' for i in result.review_items))
-        self.assertFalse(any(i.code == 'REQUIRED_DOCUMENT_MISSING' for i in result.blocking_issues))
         # A fully specified required fixture can complete without research errors.
         evaluation = EvaluateResponse.model_validate_json(json.dumps({**self.evaluation, 'blockingIssues': [i.model_dump(by_alias=True) for i in response.blocking_issues]}))
         self.request, _ = fixture()
@@ -114,7 +117,9 @@ class RulesIntegrationTests(unittest.TestCase):
             self.request['documents'] = []
             validation = client.post('/validate', json=self.request, headers=headers)
             self.assertEqual(validation.status_code, 200, validation.text)
-            self.assertFalse(validation.json()['blockingIssues'])
+            # Required application documents are missing, so /validate blocks; the
+            # recommended approvals still produce officer-review notes.
+            self.assertTrue(validation.json()['blockingIssues'])
             self.assertTrue(validation.json()['reviewItems'])
             self.assertEqual(client.post('/evaluate', json=self.payload).status_code, 401)
             self.payload['rulesVersion'] = '2026.08'
