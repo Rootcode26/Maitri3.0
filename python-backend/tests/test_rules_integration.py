@@ -33,13 +33,15 @@ class RulesIntegrationTests(unittest.TestCase):
         self.assertEqual(response.rules_version, '2026.09')
         self.assertEqual(response.evaluated_at, NOW)
         self.assertIsNone(response.readiness_score)
-        self.assertTrue(response.blocking_issues)
+        self.assertFalse(response.blocking_issues)
         self.assertTrue({a.key for a in response.approvals} <= {'food-licence', 'factory-registration', 'fire-noc', 'consent-to-operate', 'boiler-registration'})
         EvaluateResponse.model_validate_json(response.model_dump_json(by_alias=True))
 
     def test_missing_context_explicit(self):
-        response = self.evaluate()
-        fields = {i.field for i in response.blocking_issues}
+        records = []
+        response = RulesAdapter(audit_sink=lambda p, v, result: records.append(result), clock=lambda: NOW)(EvaluateRequest.model_validate(self.payload))
+        fields = {field for item in records[0]['integrationIssues'] for field in item['fields']}
+        self.assertFalse(response.blocking_issues)
         self.assertIn('location.stateCode', fields)
         self.assertIn('regulatory.annualTurnover', fields)
         self.assertIn('regulatory.waterUsedAsIngredient', fields)
@@ -48,7 +50,7 @@ class RulesIntegrationTests(unittest.TestCase):
         resolver = lambda project_id, version: TrustedRulesContext(jurisdiction='MH', regulatory_inputs={'annualTurnover': 1, 'foodKindOfBusiness': 'test', 'foodEligibilityConfirmed': True})
         response = RulesAdapter(resolver, clock=lambda: NOW)(EvaluateRequest.model_validate(self.payload))
         self.assertTrue(all(a.status == 'recommended' for a in response.approvals))
-        self.assertTrue(response.blocking_issues)
+        self.assertFalse(response.blocking_issues)
 
     def test_untrusted_context_rejected_at_contract(self):
         for key in ('jurisdiction', 'regulatoryInputs'):
@@ -78,24 +80,26 @@ class RulesIntegrationTests(unittest.TestCase):
         adapter = RulesAdapter(audit_sink=lambda p, v, result: records.append(result), clock=lambda: NOW)
         adapter(EvaluateRequest.model_validate(self.payload))
         self.assertTrue(records[0]['evidence'])
-        self.assertTrue(records[0]['submissionBlocked'])
+        self.assertFalse(records[0]['submissionBlocked'])
         self.assertTrue(records[0]['dependencies']['immediate'])
         self.assertNotIn('project', records[0])
 
-    def test_full_flow_and_regulatory_blockers_survive(self):
+    def test_full_flow_keeps_officer_notes_separate(self):
         response = self.evaluate()
         self.request['documents'] = []
         result = validate_application(ValidateRequest.model_validate(self.request), response, evaluated_at=NOW)
         self.assertEqual(result.validation_status, 'review_required')
         self.assertEqual(result.blocking_issues, response.blocking_issues)
+        self.assertTrue(any(i.code == 'APPROVAL_OFFICER_REVIEW' for i in result.review_items))
         self.assertFalse(any(i.code == 'REQUIRED_DOCUMENT_MISSING' for i in result.blocking_issues))
-        # Even successful synthetic document checks cannot erase engine blockers.
+        # A fully specified required fixture can complete without research errors.
         evaluation = EvaluateResponse.model_validate_json(json.dumps({**self.evaluation, 'blockingIssues': [i.model_dump(by_alias=True) for i in response.blocking_issues]}))
         self.request, _ = fixture()
         checked = validate_application(ValidateRequest.model_validate(self.request), evaluation, evaluated_at=NOW)
         self.assertEqual(checked.document_checks[0].status, 'matched')
-        self.assertEqual(checked.validation_status, 'review_required')
-        self.assertTrue(checked.blocking_issues)
+        self.assertEqual(checked.validation_status, 'complete')
+        self.assertFalse(checked.blocking_issues)
+        self.assertFalse(checked.review_items)
 
     def test_routes_use_same_registered_engine(self):
         app = FastAPI()
@@ -110,7 +114,8 @@ class RulesIntegrationTests(unittest.TestCase):
             self.request['documents'] = []
             validation = client.post('/validate', json=self.request, headers=headers)
             self.assertEqual(validation.status_code, 200, validation.text)
-            self.assertTrue(validation.json()['blockingIssues'])
+            self.assertFalse(validation.json()['blockingIssues'])
+            self.assertTrue(validation.json()['reviewItems'])
             self.assertEqual(client.post('/evaluate', json=self.payload).status_code, 401)
             self.payload['rulesVersion'] = '2026.08'
             self.assertEqual(client.post('/evaluate', json=self.payload, headers=headers).status_code, 503)
@@ -128,7 +133,8 @@ class RulesIntegrationTests(unittest.TestCase):
         self.assertEqual(request.documents[0].size_bytes, len(PDF_CANDIDATE))
         self.assertEqual(request.documents[0].extraction_status, 'succeeded')
         self.assertEqual(result.validation_status, 'review_required')
-        self.assertTrue(any(i.code.startswith('REGULATORY_') for i in result.blocking_issues))
+        self.assertFalse(any(i.code.startswith('REGULATORY_') for i in result.blocking_issues))
+        self.assertTrue(any(i.code == 'APPROVAL_OFFICER_REVIEW' for i in result.review_items))
         self.assertTrue(any(i.code == 'DOCUMENT_CONTENT_REVIEW_NEEDED' for i in result.review_items))
 
     def test_main_registers_engine_once(self):
@@ -138,3 +144,20 @@ class RulesIntegrationTests(unittest.TestCase):
         importlib.reload(main)
         self.assertIsInstance(main.app.state.rules_evaluator, RulesAdapter)
         self.assertEqual(set(main.app.openapi()['paths']), {'/evaluate', '/validate', '/health'})
+
+    def test_mismatch_remains_an_error_with_officer_notes(self):
+        response = self.evaluate()
+        approval = next(item for item in response.approvals if item.key == 'food-licence')
+        document = next(item for item in approval.documents if item.key == 'identity-proof')
+        document.fields_to_compare = ['pan']
+        self.request['documents'][0]['extractedData']['pan'] = 'ABCDE5678F'
+        result = validate_application(ValidateRequest.model_validate(self.request), response, evaluated_at=NOW)
+        self.assertTrue(any(item.code == 'DOCUMENT_DATA_MISMATCH' for item in result.blocking_issues))
+        self.assertTrue(any(item.code == 'APPROVAL_OFFICER_REVIEW' for item in result.review_items))
+
+    def test_confirmed_prerequisite_remains_blocking(self):
+        original = EvaluateResponse.model_validate_json(json.dumps(self.evaluation))
+        from app.domain.api_contract_models import ContractIssue
+        original.blocking_issues.append(ContractIssue.model_validate({'code': 'VERIFIED_PREREQUISITE_MISSING', 'severity': 'error', 'field': None, 'approvalKey': 'food-licence', 'documentKey': None, 'documentId': None, 'message': 'Confirmed prerequisite is incomplete.', 'suggestedAction': 'Complete it.'}))
+        result = validate_application(ValidateRequest.model_validate(self.request), original, evaluated_at=NOW)
+        self.assertTrue(any(item.code == 'VERIFIED_PREREQUISITE_MISSING' for item in result.blocking_issues))

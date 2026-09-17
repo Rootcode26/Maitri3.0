@@ -133,11 +133,11 @@ class EngineTests(unittest.TestCase):
         project = {'industry': 'steel', 'boiler': 'yes'}
         self.assertEqual(evaluate_project(project, '2026.09'), evaluate_project(project, '2026.09'))
 
-    def test_screening_documents_do_not_mean_submission_ready(self):
+    def test_research_review_is_kept_without_blocking_applicant(self):
         for sector in ['food', 'textile', 'steel', None]:
             with self.subTest(sector=sector):
                 result = evaluate_project({'industry': sector}, '2026.09', jurisdiction='MH')
-                self.assertTrue(result['submissionBlocked'])
+                self.assertFalse(result['submissionBlocked'])
                 self.assertTrue(result['reviewReasons'])
 
     def test_unknown_document_condition_reports_actual_field(self):
@@ -150,7 +150,7 @@ class EngineTests(unittest.TestCase):
         result = evaluate_project({'industry': 'steel', 'boiler': 'yes'}, '2026.09', jurisdiction='MH', stage='registration')
         self.assertIn('boiler-registration', result['dependencies']['needsReview'])
         self.assertTrue(any('Unresolved prerequisite' in issue['message'] for issue in result['integrationIssues']))
-        self.assertTrue(result['submissionBlocked'])
+        self.assertFalse(result['submissionBlocked'])
 
     def test_manifest_pins_revisions_and_rejects_missing_pin(self):
         import shutil

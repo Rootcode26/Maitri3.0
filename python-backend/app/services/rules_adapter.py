@@ -40,19 +40,14 @@ class RulesAdapter:
                                   regulatory_inputs=context.regulatory_inputs, stage=context.stage,
                                   completed_prerequisites=context.completed_prerequisites)
         issues = []
-        for item in result['integrationIssues']:
-            for path in item['fields'] or [None]:
-                issues.append(ContractIssue.model_validate({
-                    'code': 'REGULATORY_REVIEW_REQUIRED', 'severity': 'error', 'field': path,
-                    'approvalKey': item['approvalKey'], 'documentKey': None, 'documentId': None,
-                    'message': f"{item['ruleId'] or 'Workflow'}: {item['message']}",
-                    'suggestedAction': item['action'],
-                }))
-        for reason in result['reviewReasons']:
+        # Approval reasons explain preliminary recommendations. Detailed research
+        # gaps stay in the audit result; /validate provides concise officer notes.
+        for code in result['dependencies']['dependent']:
             issues.append(ContractIssue.model_validate({
-                'code': 'REGULATORY_DECISION_UNRESOLVED', 'severity': 'error', 'field': None,
-                'approvalKey': None, 'documentKey': None, 'documentId': None,
-                'message': reason, 'suggestedAction': 'Obtain authoritative applicability review; document checks do not establish eligibility.',
+                'code': 'VERIFIED_PREREQUISITE_MISSING', 'severity': 'error', 'field': None,
+                'approvalKey': code, 'documentKey': None, 'documentId': None,
+                'message': f'A confirmed prerequisite for {code} is incomplete.',
+                'suggestedAction': 'Complete the prerequisite for this stage before proceeding.',
             }))
         if result['submissionBlocked'] and not issues:
             issues.append(ContractIssue.model_validate({

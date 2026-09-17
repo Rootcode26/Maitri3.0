@@ -111,10 +111,21 @@ def validate_application(request, evaluation, *, evaluated_at=None, policy=None)
     approvals = {item.key: item for item in evaluation.approvals}
     selected = set(request.selected_approval_keys) if request.selected_approval_keys is not None else set(approvals)
     for approval in evaluation.approvals:
+        if approval.key in selected and approval.status == 'recommended':
+            issue('APPROVAL_OFFICER_REVIEW', 'review',
+                  f'{approval.title} is suggested from the supplied business details and needs officer confirmation.',
+                  'Officer: confirm whether this approval and its document checklist apply. The applicant does not need to correct an answer solely because of this note.',
+                  approval=approval.key)
         # Ensure dependency/configuration failures aren't converted to empty success.
         if approval.key in selected and not approval.documents:
             issue("DOCUMENT_REQUIREMENTS_REVIEW_NEEDED", "review", "This approval has no configured document requirements.", "Ask the responsible department to confirm its document requirements.", approval=approval.key)
-    issues.extend(evaluation.blocking_issues)
+    for finding in evaluation.blocking_issues:
+        # Support older internal evaluators without presenting research gaps as
+        # applicant mistakes. Real prerequisites and all other errors are retained.
+        if finding.code in {'REGULATORY_REVIEW_REQUIRED', 'REGULATORY_DECISION_UNRESOLVED'}:
+            issues.append(finding.model_copy(update={'severity': 'review'}))
+        else:
+            issues.append(finding)
 
     for key in sorted(selected - set(approvals)):
         issue("UNKNOWN_APPROVAL", "error", "A selected approval is not in the trusted checklist.", "Regenerate the checklist and select an applicable approval.", approval=key)
@@ -252,7 +263,7 @@ def validate_application(request, evaluation, *, evaluated_at=None, policy=None)
     return ValidateResponse.model_validate({
         "rulesVersion": request.rules_version, "projectId": request.project_id,
         "projectVersion": request.project_version, "evaluatedAt": now,
-        "validationStatus": "review_required" if reviews or any(item.code.startswith('REGULATORY_') or item.code == 'SUBMISSION_BLOCKED' for item in errors) else "complete",
+        "validationStatus": "review_required" if reviews or any(item.code in {'VERIFIED_PREREQUISITE_MISSING', 'SUBMISSION_BLOCKED'} for item in errors) else "complete",
         "blockingIssues": [item.model_dump(by_alias=True) for item in errors],
         "warnings": [item.model_dump(by_alias=True) for item in warnings],
         "reviewItems": [item.model_dump(by_alias=True) for item in reviews],
