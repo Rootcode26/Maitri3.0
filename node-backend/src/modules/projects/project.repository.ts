@@ -87,18 +87,18 @@ const mapProject = (row: ProjectRow, approvals: ProjectApprovalRecord[]): Projec
 export class ProjectRepository {
   async createProject(
     applicantId: string,
+    projectId: string,
     input: CreateProjectInput,
     approvals: readonly RecommendedApproval[],
   ): Promise<ProjectRecord> {
     const client = await databasePool.connect();
-    let projectId: string;
     try {
       await client.query('BEGIN');
-      const projectResult = await client.query<{ id: string }>(
-        `INSERT INTO projects (applicant_id, enterprise_name, industry, district, primary_activity, details)
-         VALUES ($1, $2, $3, $4, $5, $6::jsonb)
-         RETURNING id`,
+      await client.query(
+        `INSERT INTO projects (id, applicant_id, enterprise_name, industry, district, primary_activity, details)
+         VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)`,
         [
+          projectId,
           applicantId,
           input.enterpriseName,
           input.industry,
@@ -107,7 +107,6 @@ export class ProjectRepository {
           JSON.stringify(input),
         ],
       );
-      projectId = projectResult.rows[0]!.id;
 
       for (const approval of approvals) {
         await client.query(

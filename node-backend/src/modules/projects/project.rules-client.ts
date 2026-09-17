@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto';
-
 import { z } from 'zod';
 
 import { logger } from '../../config/logger.js';
@@ -31,9 +29,25 @@ const approvalSchema = z.object({
   documents: z.array(documentSchema),
 });
 
+const blockingIssueSchema = z.object({ code: z.string(), message: z.string() }).loose();
+
 const evaluateResponseSchema = z.object({
   approvals: z.array(approvalSchema),
+  blockingIssues: z.array(blockingIssueSchema).optional(),
 });
+
+export type RulesEngineFailure = 'unreachable' | 'unauthorized' | 'bad-status' | 'invalid-response';
+
+export class RulesEngineError extends Error {
+  constructor(
+    readonly kind: RulesEngineFailure,
+    message: string,
+    readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = 'RulesEngineError';
+  }
+}
 
 export interface RulesEngineClientOptions {
   baseUrl: string;
@@ -45,7 +59,7 @@ export interface RulesEngineClientOptions {
 export class RulesEngineClient {
   constructor(private readonly options: RulesEngineClientOptions) {}
 
-  async evaluate(input: CreateProjectInput): Promise<RecommendedApproval[]> {
+  async evaluate(input: CreateProjectInput, projectId: string): Promise<RecommendedApproval[]> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.options.timeoutMs);
 
@@ -59,21 +73,54 @@ export class RulesEngineClient {
         },
         body: JSON.stringify({
           rulesVersion: this.options.rulesVersion,
-          projectId: randomUUID(),
+          projectId,
           project: input,
         }),
         signal: controller.signal,
       });
+    } catch (error) {
+      throw new RulesEngineError('unreachable', 'Could not reach the rules engine', error);
     } finally {
       clearTimeout(timer);
     }
 
+    if (response.status === 401 || response.status === 403) {
+      throw new RulesEngineError(
+        'unauthorized',
+        `Rules engine rejected the internal token (status ${response.status})`,
+      );
+    }
     if (!response.ok) {
-      throw new Error(`Rules engine responded with status ${response.status}`);
+      throw new RulesEngineError(
+        'bad-status',
+        `Rules engine responded with status ${response.status}`,
+      );
     }
 
-    const parsed = evaluateResponseSchema.parse(await response.json());
-    return parsed.approvals.map((approval): RecommendedApproval => ({
+    let payload: unknown;
+    try {
+      payload = await response.json();
+    } catch (error) {
+      throw new RulesEngineError('invalid-response', 'Rules engine returned invalid JSON', error);
+    }
+
+    const parsed = evaluateResponseSchema.safeParse(payload);
+    if (!parsed.success) {
+      throw new RulesEngineError(
+        'invalid-response',
+        'Rules engine response failed validation',
+        parsed.error,
+      );
+    }
+
+    if (parsed.data.blockingIssues && parsed.data.blockingIssues.length > 0) {
+      logger.warn(
+        { projectId, blockingIssues: parsed.data.blockingIssues },
+        'Rules engine returned blocking issues at evaluation time',
+      );
+    }
+
+    return parsed.data.approvals.map((approval): RecommendedApproval => ({
       key: approval.key,
       title: approval.title,
       status: approval.status,
