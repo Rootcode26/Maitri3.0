@@ -13,6 +13,11 @@ import { AuthRepository } from './modules/auth/auth.repository.js';
 import { AuthService } from './modules/auth/auth.service.js';
 import { OtpService } from './modules/auth/otp.service.js';
 import { otpProvider } from './modules/auth/otp-provider.js';
+import { ProjectController } from './modules/projects/project.controller.js';
+import { ProjectRepository } from './modules/projects/project.repository.js';
+import { createRulesEngineClient } from './modules/projects/project.rules-client.js';
+import { ProjectService } from './modules/projects/project.service.js';
+import { env } from './config/env.js';
 import { notFoundHandler } from './middleware/not-found.js';
 import { HealthRepository } from './repositories/health.repository.js';
 import { createV1Router } from './routes/v1/index.js';
@@ -36,6 +41,9 @@ export const createApp = ({
   const authController = new AuthController(
     new AuthService(new AuthRepository(), new OtpService(otpProvider)),
   );
+  const projectController = new ProjectController(
+    new ProjectService(new ProjectRepository(), createRulesEngineClient(env)),
+  );
 
   app.disable('x-powered-by');
   app.use(pinoHttp({ logger }));
@@ -44,7 +52,7 @@ export const createApp = ({
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-  app.use('/api/v1', createV1Router(healthController, authController));
+  app.use('/api/v1', createV1Router(healthController, authController, projectController));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

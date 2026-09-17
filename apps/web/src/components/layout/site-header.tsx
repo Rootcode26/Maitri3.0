@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function PortalBrand({ tone = "dark" }: { tone?: "dark" | "light" }) {
@@ -8,18 +9,15 @@ export function PortalBrand({ tone = "dark" }: { tone?: "dark" | "light" }) {
       className={`inline-flex items-center gap-3 ${light ? "text-white" : "text-[#17345a]"}`}
       translate="no"
     >
-      <span className="flex h-8 items-end gap-1" aria-hidden="true">
-        <span
-          className={`h-4 w-1.5 -skew-x-12 rounded-sm ${light ? "bg-white" : "bg-[#bd963a]"}`}
-        />
-        <span
-          className={`h-6 w-1.5 -skew-x-12 rounded-sm ${light ? "bg-white" : "bg-[#bd963a]"}`}
-        />
-        <span
-          className={`h-8 w-1.5 -skew-x-12 rounded-sm ${light ? "bg-white" : "bg-[#bd963a]"}`}
-        />
-      </span>
-      <span className="text-xl font-bold tracking-tight sm:text-2xl">
+      <Image
+        src="/images/udyogsetu-emblem.svg"
+        alt=""
+        width={64}
+        height={64}
+        aria-hidden="true"
+        className={`shrink-0 ${light ? "brightness-110" : ""}`}
+      />
+      <span className="text-2xl font-bold tracking-tight sm:text-3xl">
         UdyogSetu
       </span>
     </span>
@@ -35,7 +33,7 @@ export function SiteHeader({ actionLabel = "Return home", actionHref = "/" }) {
           className="rounded-sm focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-white"
         >
           <PortalBrand tone="light" />
-          <span className="block text-xs text-slate-300 sm:text-sm">
+          <span className="block text-sm font-medium text-slate-200 sm:text-base">
             Industrial Approval Portal
           </span>
         </Link>

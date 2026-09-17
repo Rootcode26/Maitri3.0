@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 10 140 140" fill="none">
+  <!-- Emblem circle -->
+  <circle cx="80" cy="80" r="70" fill="#0f2744"/>
+  <circle cx="80" cy="80" r="64" fill="none" stroke="#c9a84c" stroke-width="1.5"/>
+  <circle cx="80" cy="80" r="56" fill="none" stroke="#c9a84c" stroke-width="0.5" stroke-dasharray="3 3"/>
+
+  <!-- Bridge arch -->
+  <rect x="32" y="95" width="96" height="4" rx="2" fill="#c9a84c"/>
+  <rect x="42" y="68" width="8" height="28" rx="1" fill="#c9a84c"/>
+  <rect x="110" y="68" width="8" height="28" rx="1" fill="#c9a84c"/>
+  <path d="M46 68 Q80 44 114 68" stroke="#efd383" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <line x1="62" y1="59" x2="62" y2="95" stroke="#efd383" stroke-width="1" opacity="0.7"/>
+  <line x1="80" y1="52" x2="80" y2="95" stroke="#efd383" stroke-width="1" opacity="0.7"/>
+  <line x1="98" y1="59" x2="98" y2="95" stroke="#efd383" stroke-width="1" opacity="0.7"/>
+
+  <!-- Factory silhouette -->
+  <rect x="55" y="83" width="10" height="12" rx="0.5" fill="#1e4a7a"/>
+  <rect x="71" y="79" width="18" height="16" rx="0.5" fill="#1e4a7a"/>
+  <rect x="95" y="83" width="10" height="12" rx="0.5" fill="#1e4a7a"/>
+  <rect x="58" y="77" width="3" height="8" rx="1" fill="#2a6099"/>
+  <rect x="75" y="73" width="3" height="8" rx="1" fill="#2a6099"/>
+  <rect x="82" y="73" width="3" height="8" rx="1" fill="#2a6099"/>
+  <rect x="98" y="77" width="3" height="8" rx="1" fill="#2a6099"/>
+
+  <!-- Arc text top -->
+  <path id="topArc" d="M 24 80 A 56 56 0 0 1 136 80" fill="none"/>
+  <text font-family="Georgia, serif" font-size="7.5" fill="#efd383" letter-spacing="1.5">
+    <textPath href="#topArc" startOffset="50%" text-anchor="middle">GOVERNMENT OF MAHARASHTRA</textPath>
+  </text>
+
+  <!-- Arc text bottom -->
+  <path id="bottomArc" d="M 24 80 A 56 56 0 0 0 136 80" fill="none"/>
+  <text font-family="Georgia, serif" font-size="7.5" fill="#efd383" letter-spacing="1.5">
+    <textPath href="#bottomArc" startOffset="50%" text-anchor="middle">INDUSTRIAL APPROVALS</textPath>
+  </text>
+
+  <!-- Divider dots -->
+  <circle cx="80" cy="24" r="2" fill="#c9a84c"/>
+  <circle cx="80" cy="136" r="2" fill="#c9a84c"/>
+</svg>

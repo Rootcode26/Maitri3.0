@@ -45,6 +45,10 @@ const envSchema = z.object({
     .string()
     .regex(/^\d{6}$/)
     .optional(),
+  RULES_SERVICE_URL: z.url({ protocol: /^https?$/ }).optional(),
+  RULES_SERVICE_TOKEN: z.string().min(1).optional(),
+  RULES_VERSION: z.string().trim().min(1).default('2026.09'),
+  RULES_SERVICE_TIMEOUT_MS: z.coerce.number().int().positive().default(5_000),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
