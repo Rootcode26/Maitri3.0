@@ -1,5 +1,29 @@
 # Person 1 / Person 2 review handoff
 
+## Updated prototype response behaviour
+
+Unconfirmed government rules and incomplete departmental checklists are officer
+review notes, not applicant errors. /evaluate returns recommendations with their
+existing reasons and no research-only blockingIssues. /validate provides one
+APPROVAL_OFFICER_REVIEW note per selected recommended approval in reviewItems.
+Detailed internal research gaps and evidence remain available to the audit sink.
+Older evaluator REGULATORY_REVIEW_REQUIRED / REGULATORY_DECISION_UNRESOLVED
+findings are moved to reviewItems. They do not ask applicants to fix internal
+regulatory context fields absent from the form.
+
+Missing required answers/files, unreadable or oversized files, identifier
+conflicts and document mismatches remain blockingIssues. Uncertain document
+reading remains a document review item. Confirmed unmet workflow prerequisites
+remain errors (VERIFIED_PREREQUISITE_MISSING). submissionBlocked at the rules
+layer now represents confirmed unmet prerequisites rather than research gaps.
+
+validationStatus=review_required means an officer or document reader still needs
+to check something; it does not mean the applicant necessarily made a mistake.
+For the original demo form with an unread document reference, expect no research
+errors and a short officer note plus the two file/readability review items.
+No API keys, request fields, rules or document requirements were changed by this
+response adjustment. Earlier counts and descriptions below are historical.
+
 Technical prototype integration is complete. It is not legally verified or
 production-ready. Branch: feat/rules-engine-v2. No commit/push or dependency install.
 

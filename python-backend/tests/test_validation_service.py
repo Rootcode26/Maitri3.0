@@ -53,6 +53,14 @@ class ValidationTests(unittest.TestCase):
         self.assertFalse(result.blocking_issues)
         self.assertEqual(result.document_checks[0].status, 'matched')
 
+    def test_old_research_errors_move_to_review_and_missing_file_stays_error(self):
+        self.evaluation['blockingIssues'] = [{'code': 'REGULATORY_REVIEW_REQUIRED', 'severity': 'error', 'field': 'regulatory.annualTurnover', 'approvalKey': 'food-licence', 'documentKey': None, 'documentId': None, 'message': 'Departmental eligibility needs review.', 'suggestedAction': 'Officer to confirm.'}]
+        self.request['documents'] = []
+        result = self.run_validation()
+        self.assertTrue(any(item.code == 'REQUIRED_DOCUMENT_MISSING' for item in result.blocking_issues))
+        self.assertFalse(any(item.code.startswith('REGULATORY_') for item in result.blocking_issues))
+        self.assertTrue(any(item.code == 'REGULATORY_REVIEW_REQUIRED' and item.severity == 'review' for item in result.review_items))
+
     def test_pan_mismatch(self):
         self.request['documents'][0]['extractedData']['pan'] = 'ABCDE5678F'
         self.assertIn('DOCUMENT_DATA_MISMATCH', self.codes())

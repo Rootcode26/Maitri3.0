@@ -27,5 +27,7 @@ def evaluate_project(project: dict[str, Any], rules_version: str, *, jurisdictio
     review_reasons = [f'{item.rule.id}: screening-only applicability; non-match is not a verified exemption.' for item in assessments if item.rule.then.scope == 'approval' and item.rule.verification != 'VERIFIED']
     for code in dependencies['dependent'] + dependencies['needsReview']:
         issues.append({'approvalKey': code, 'ruleId': None, 'fields': [], 'message': f'Unresolved prerequisite for stage {stage}.', 'action': 'Resolve prerequisite completion or departmental workflow review.', 'state': 'needs_review'})
-    submission_blocked = bool(issues or review_reasons)
+    # Unfinished rule/checklist research is an officer note, not an applicant error.
+    # Only confirmed unmet workflow prerequisites block at this layer.
+    submission_blocked = bool(dependencies['dependent'])
     return {'approvals': approvals, 'integrationIssues': issues, 'evidence': evidence, 'dependencies': dependencies, 'submissionBlocked': submission_blocked, 'reviewReasons': review_reasons, 'assessments': [{'ruleId': item.rule.id, 'approval': item.rule.then.recommend, 'scope': item.rule.then.scope, 'state': item.state, 'missingFields': list(item.missing_fields)} for item in assessments]}
