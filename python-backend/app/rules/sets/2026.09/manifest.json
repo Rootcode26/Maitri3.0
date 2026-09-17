@@ -1,0 +1,13 @@
+{
+  "rulesVersion": "2026.09",
+  "ruleVersions": {"BUS-001": 2, "FOOD-001": 2, "FACT-001": 2, "FIRE-008": 2, "ENV-004": 2, "BOILER-001": 2},
+  "ruleIds": [
+    "BUS-001",
+    "FOOD-001",
+    "FACT-001",
+    "FIRE-008",
+    "ENV-004",
+    "BOILER-001"
+  ],
+  "notes": "JSON-compatible YAML 1.2. Screening rules only; current applicability needs review."
+}

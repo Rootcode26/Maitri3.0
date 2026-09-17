@@ -1,0 +1,2 @@
+# Test-only HTTP client; unittest itself is part of Python.
+httpx>=0.28,<1.0

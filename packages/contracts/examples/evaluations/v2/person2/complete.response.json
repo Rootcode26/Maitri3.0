@@ -1,0 +1,26 @@
+{
+  "validationFindings": [],
+  "readiness": {
+    "assessmentStatus": "complete",
+    "scoringPolicyVersion": "DEMO-ONLY-readiness-1",
+    "score": 100,
+    "readyToSubmit": true,
+    "blockingErrorCount": 0,
+    "warningCount": 0,
+    "sections": [
+      {
+        "code": "EXAMPLE_REQUIREMENTS",
+        "earnedPoints": 100,
+        "maximumPoints": 100
+      }
+    ]
+  },
+  "risk": {
+    "assessmentStatus": "complete",
+    "scoringPolicyVersion": "DEMO-ONLY-risk-1",
+    "score": 0,
+    "level": "low",
+    "missingFields": [],
+    "factors": []
+  }
+}

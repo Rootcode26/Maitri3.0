@@ -1,0 +1,30 @@
+{
+  "validationFindings": [
+    {
+      "code": "REQUIRED_FIELD_MISSING",
+      "severity": "error",
+      "field": "location.district",
+      "documentId": null,
+      "approvalCode": null,
+      "message": "District is required.",
+      "suggestedAction": "Select the district where the unit will operate."
+    }
+  ],
+  "readiness": {
+    "assessmentStatus": "requirements_not_configured",
+    "scoringPolicyVersion": null,
+    "score": null,
+    "readyToSubmit": false,
+    "blockingErrorCount": 1,
+    "warningCount": 0,
+    "sections": []
+  },
+  "risk": {
+    "assessmentStatus": "policy_not_configured",
+    "scoringPolicyVersion": null,
+    "score": null,
+    "level": null,
+    "missingFields": [],
+    "factors": []
+  }
+}

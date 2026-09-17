@@ -1,3 +1,4 @@
+from math import isfinite
 from typing import Any
 
 
@@ -7,6 +8,10 @@ def normalize_project(project: dict[str, Any]) -> dict[str, Any]:
     structured field names/values expected by the rules engine.
 
     This is an adapter only. It does not evaluate rules.
+
+    Unknown process labels raise ValueError instead of disappearing. Explicit
+    null processes remain unknown; invalid/non-finite pressure becomes None.
+    State is not part of this flat contract and must be supplied outside it.
     """
 
     industry = project.get("industry")
@@ -20,14 +25,19 @@ def normalize_project(project: dict[str, Any]) -> dict[str, Any]:
     primary_activity_map = {
         "Food & beverage processing": "food_beverage_processing",
         "Dairy / cold storage": "dairy_cold_storage",
+        "Dairy & cold storage": "dairy_cold_storage",
         "Bakery / confectionery": "bakery_confectionery",
+        "Bakery & confectionery": "bakery_confectionery",
         "Meat / seafood processing": "meat_seafood_processing",
+        "Meat & seafood processing": "meat_seafood_processing",
         "Spinning": "spinning",
         "Weaving": "weaving",
         "Knitting": "knitting",
         "Dyeing / processing": "dyeing_processing",
+        "Dyeing & processing": "dyeing_processing",
         "Garment manufacturing": "garment_manufacturing",
         "Steel / metal fabrication": "steel_metal_fabrication",
+        "Steel & metal fabrication": "steel_metal_fabrication",
         "Foundry / casting": "foundry_casting",
         "Rolling mill": "rolling_mill",
         "Structural fabrication": "structural_fabrication",
@@ -71,9 +81,12 @@ def normalize_project(project: dict[str, Any]) -> dict[str, Any]:
 
     investment_map = {
         "Up to ₹100 lakh": "up_to_100_lakh",
+        "Up to ₹100 lakh (Micro)": "up_to_100_lakh",
         "₹100–1,000 lakh (Small)": "from_100_to_1000_lakh",
         "₹1,000–5,000 lakh": "from_1000_to_5000_lakh",
+        "₹1,000–5,000 lakh (Medium)": "from_1000_to_5000_lakh",
         "Above ₹5,000 lakh": "above_5000_lakh",
+        "Above ₹5,000 lakh (Large)": "above_5000_lakh",
     }
 
     electricity_map = {
@@ -119,7 +132,9 @@ def normalize_project(project: dict[str, Any]) -> dict[str, Any]:
     wastewater_map = {
         "Common treatment facility": "common_treatment_facility",
         "Onsite treatment plant": "onsite_treatment_plant",
+        "On-site treatment plant": "onsite_treatment_plant",
         "Zero liquid discharge": "zero_liquid_discharge",
+        "No discharge (zero liquid)": "zero_liquid_discharge",
         "Municipal sewer": "municipal_sewer",
     }
 
@@ -143,6 +158,7 @@ def normalize_project(project: dict[str, Any]) -> dict[str, Any]:
         "Packaging and storage": "packaging_storage",
         "Boiler operation": "boiler_operation",
         "Onsite effluent treatment": "onsite_effluent_treatment",
+        "On-site effluent treatment": "onsite_effluent_treatment",
     }
 
     normalized: dict[str, Any] = {
@@ -158,7 +174,7 @@ def normalize_project(project: dict[str, Any]) -> dict[str, Any]:
             "udyamRegistrationNumber": project.get("udyam"),
         },
         "location": {
-            "stateCode": project.get("stateCode"),
+            "stateCode": None,
             "district": project.get("district"),
             "taluka": project.get("taluka"),
             "postalCode": project.get("pincode"),
@@ -202,11 +218,7 @@ def normalize_project(project: dict[str, Any]) -> dict[str, Any]:
             "handlesHazardousChemicals": _parse_bool(
                 project.get("hazardousChemicals")
             ),
-            "processesUsed": [
-                processes_map[value]
-                for value in project.get("processes", [])
-                if value in processes_map
-            ],
+            "processesUsed": _normalize_processes(project.get("processes", []), processes_map),
         },
         "utilities": {
             "electricityDemandBand": electricity_map.get(
@@ -272,17 +284,31 @@ def _parse_bool(value: Any) -> bool | None:
 
 
 def _parse_number(value: Any) -> float | None:
-    if value is None:
+    if value is None or isinstance(value, bool):
         return None
 
     try:
-        return float(value)
-    except (TypeError, ValueError):
+        number = float(value)
+        return number if isfinite(number) and number >= 0 else None
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
-def _parse_shifts(value: Any) -> int | None:
+def _normalize_processes(value: Any, mapping: dict[str, str]) -> list[str] | None:
     if value is None:
+        return None
+    if not isinstance(value, list):
+        raise ValueError("project.processes must be a list or null")
+    result = []
+    for index, label in enumerate(value):
+        if not isinstance(label, str) or label not in mapping:
+            raise ValueError(f"project.processes[{index}] contains an unsupported process value")
+        result.append(mapping[label])
+    return result
+
+
+def _parse_shifts(value: Any) -> int | None:
+    if value is None or isinstance(value, bool):
         return None
 
     shift_map = {
@@ -291,12 +317,13 @@ def _parse_shifts(value: Any) -> int | None:
         "Three shifts": 3,
     }
 
-    if value in shift_map:
+    if isinstance(value, str) and value in shift_map:
         return shift_map[value]
 
     try:
-        return int(value)
-    except (TypeError, ValueError):
+        number = float(value)
+        return int(number) if isfinite(number) and number in (1, 2, 3) else None
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
@@ -304,6 +331,7 @@ def _parse_accommodation(value: Any) -> str | None:
     accommodation_map = {
         "Not provided": "not_provided",
         "Onsite quarters": "onsite_quarters",
+        "On-site quarters": "onsite_quarters",
         "Nearby housing": "nearby_housing",
     }
 
@@ -332,18 +360,29 @@ def _build_sector_details(
             "involvesDyeingOrBleaching": _parse_bool(
                 project.get("wetProcessing")
             ),
-            "loomsOrSpindlesBand": project.get(
-                "loomsSpindles"
-            ),
+            "loomsOrSpindlesBand": {
+                "Up to 50": "up_to_50",
+                "50–200": "from_50_to_200",
+                "200–500": "from_200_to_500",
+                "Above 500": "above_500",
+            }.get(project.get("loomsSpindles")),
         }
 
     if industry == "steel":
         return {
             "sector": "steel",
-            "furnaceType": project.get("furnaceType"),
-            "furnaceCapacityBand": project.get(
-                "furnaceCapacity"
-            ),
+            "furnaceType": {
+                "Induction furnace": "induction",
+                "Electric arc furnace": "electric_arc",
+                "Cupola": "cupola",
+                "None": "none",
+            }.get(project.get("furnaceType")),
+            "furnaceCapacityBand": {
+                "Up to 5": "up_to_5",
+                "5–20": "from_5_to_20",
+                "20–50": "from_20_to_50",
+                "Above 50": "above_50",
+            }.get(project.get("furnaceCapacity")),
         }
 
     return None
@@ -369,4 +408,3 @@ def _normalize_cold_storage(value: Any) -> str | None:
     }
 
     return mapping.get(value)
-    
