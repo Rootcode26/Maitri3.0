@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { closeDatabase, connectDatabase, query } from '../../src/database/database.js';
@@ -22,7 +24,7 @@ const foodProject: CreateProjectInput = {
   projectStage: 'new',
   boiler: 'yes',
   boilerCapacity: '1–5',
-  hazardousChemicals: 'no',
+  hazardousChemicals: 'yes',
   processes: ['Manufacturing / processing'],
   fssaiCategory: 'State licence',
   electricity: '100–500',
@@ -55,9 +57,10 @@ describe.runIf(runDbTests)('ProjectRepository (integration)', () => {
 
   it('stores a project with its derived approvals and reads it back', async () => {
     const approvals = deriveApprovals(foodProject);
-    const created = await repository.createProject(applicantId, foodProject, approvals);
+    const projectId = randomUUID();
+    const created = await repository.createProject(applicantId, projectId, foodProject, approvals);
 
-    expect(created.id).toBeTruthy();
+    expect(created.id).toBe(projectId);
     expect(created.enterpriseName).toBe('Integration Foods Pvt. Ltd.');
     expect(created.industry).toBe('food');
     expect(created.status).toBe('submitted');

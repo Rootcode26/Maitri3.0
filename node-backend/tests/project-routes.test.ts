@@ -94,6 +94,53 @@ describe('project routes', () => {
     expect(service.createProject).not.toHaveBeenCalled();
   });
 
+  it('rejects an unknown field in the body (strict schema) and does not persist', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .post('/api/v1/projects')
+      .set('Cookie', applicantCookie())
+      .send({ ...validBody, injected: 'payload' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.code).toBe('VALIDATION_ERROR');
+    expect(service.createProject).not.toHaveBeenCalled();
+  });
+
+  it('rejects a conditional-required gap (boiler without capacity) with field details', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .post('/api/v1/projects')
+      .set('Cookie', applicantCookie())
+      .send({ ...validBody, boiler: 'yes' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.code).toBe('VALIDATION_ERROR');
+    expect(response.body.details.fieldErrors).toHaveProperty('boilerCapacity');
+    expect(service.createProject).not.toHaveBeenCalled();
+  });
+
+  it('rejects an empty body', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .post('/api/v1/projects')
+      .set('Cookie', applicantCookie())
+      .send({});
+
+    expect(response.status).toBe(400);
+    expect(service.createProject).not.toHaveBeenCalled();
+  });
+
+  it('rejects a PATCH without a departmentKey', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .patch('/api/v1/projects/project-1/approvals/a1')
+      .set('Cookie', applicantCookie())
+      .send({});
+
+    expect(response.status).toBe(400);
+    expect(service.setApprovalDepartment).not.toHaveBeenCalled();
+  });
+
   it('requires authentication', async () => {
     const { app, service } = createTestApp();
     const response = await request(app).post('/api/v1/projects').send(validBody);

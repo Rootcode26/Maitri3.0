@@ -30,34 +30,25 @@ const foodLicence: RecommendedApproval = {
   title: 'Food-related licence',
   departmentKey: 'fssai',
   status: 'required',
-  documents: ['Factory plan', 'Identity proof', 'Water report'].map(doc),
+  documents: ['Food premises plan', 'Authorised signatory identity proof'].map(doc),
   processingDays: 30,
 };
 
-const textileRegistration: RecommendedApproval = {
-  key: 'textile-registration',
-  title: 'Textile unit registration',
-  departmentKey: 'textiles-directorate',
-  status: 'required',
-  documents: ['Unit plan', 'Machinery list', 'Ownership proof'].map(doc),
-  processingDays: 30,
-};
-
-const factoryRegistration = (status: ApprovalStatus): RecommendedApproval => ({
+const factoryRegistration: RecommendedApproval = {
   key: 'factory-registration',
   title: 'Factory registration',
   departmentKey: 'dish',
-  status,
-  documents: ['Floor plan', 'Machinery list', 'Worker details'].map(doc),
+  status: 'required',
+  documents: ['Factory floor plan', 'Machinery list', 'Workforce summary'].map(doc),
   processingDays: 45,
-});
+};
 
 const fireNoc: RecommendedApproval = {
   key: 'fire-noc',
   title: 'Fire safety NOC',
   departmentKey: 'fire-emergency-services',
-  status: 'recommended',
-  documents: ['Fire layout', 'Evacuation plan', 'Site photograph'].map(doc),
+  status: 'required',
+  documents: ['Evacuation plan', 'Fire architectural drawings'].map(doc),
   processingDays: 21,
 };
 
@@ -65,8 +56,8 @@ const consentToOperate: RecommendedApproval = {
   key: 'consent-to-operate',
   title: 'Consent to operate',
   departmentKey: 'mpcb',
-  status: 'recommended',
-  documents: ['Water balance', 'Waste declaration', 'Process note'].map(doc),
+  status: 'required',
+  documents: ['Process note', 'Water balance', 'Waste declaration'].map(doc),
   processingDays: 60,
 };
 
@@ -74,45 +65,45 @@ const boilerRegistration: RecommendedApproval = {
   key: 'boiler-registration',
   title: 'Boiler registration',
   departmentKey: 'steam-boilers',
-  status: 'recommended',
-  documents: ['Boiler drawing', 'Test certificate', 'Feed-water report'].map(doc),
+  status: 'required',
+  documents: ['Boiler drawing', 'Manufacturer / inspection test records'].map(doc),
   processingDays: 30,
 };
 
-const effluentConsent: RecommendedApproval = {
-  key: 'effluent-consent',
-  title: 'Effluent treatment consent',
-  departmentKey: 'mpcb',
-  status: 'required',
-  documents: ['ETP design', 'Water balance', 'Discharge plan'].map(doc),
-  processingDays: 45,
-};
-
-type DerivationInput = Pick<CreateProjectInput, 'industry' | 'boiler' | 'wetProcessing'>;
+type DerivationInput = Pick<
+  CreateProjectInput,
+  | 'industry'
+  | 'boiler'
+  | 'wetProcessing'
+  | 'hazardousChemicals'
+  | 'hazardousWaste'
+  | 'furnaceType'
+  | 'primaryActivity'
+>;
 
 export const deriveApprovals = (input: DerivationInput): RecommendedApproval[] => {
   const approvals: RecommendedApproval[] = [];
 
-  if (input.industry === 'textile') {
-    approvals.push(textileRegistration);
-  } else if (input.industry === 'steel') {
-    approvals.push(factoryRegistration('required'));
-  } else {
+  if (input.industry === 'food') {
     approvals.push(foodLicence);
   }
 
-  if (input.industry !== 'steel') {
-    approvals.push(factoryRegistration('recommended'));
+  approvals.push(factoryRegistration, fireNoc);
+
+  if (needsConsentToOperate(input)) {
+    approvals.push(consentToOperate);
   }
-
-  approvals.push(fireNoc, consentToOperate);
-
   if (input.boiler === 'yes') {
     approvals.push(boilerRegistration);
-  }
-  if (input.wetProcessing === 'yes') {
-    approvals.push(effluentConsent);
   }
 
   return approvals;
 };
+
+const needsConsentToOperate = (input: DerivationInput): boolean =>
+  input.hazardousChemicals === 'yes' ||
+  input.hazardousWaste === 'yes' ||
+  input.wetProcessing === 'yes' ||
+  (input.furnaceType !== undefined && input.furnaceType !== 'None') ||
+  input.primaryActivity === 'Dyeing & processing' ||
+  input.primaryActivity === 'Foundry / casting';

@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { logger } from '../src/config/logger.js';
 import { createProjectSchema } from '../src/modules/projects/project.schemas.js';
 import {
   RulesEngineClient,
+  RulesEngineError,
   createRulesEngineClient,
 } from '../src/modules/projects/project.rules-client.js';
 
@@ -73,7 +75,7 @@ describe('RulesEngineClient', () => {
     } as Response);
     vi.stubGlobal('fetch', fetchMock);
 
-    const approvals = await new RulesEngineClient(options).evaluate(input);
+    const approvals = await new RulesEngineClient(options).evaluate(input, 'project-123');
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0]!;
@@ -83,7 +85,7 @@ describe('RulesEngineClient', () => {
     expect(headers['X-Internal-Token']).toBe('secret-token');
     const body = JSON.parse((init as RequestInit).body as string);
     expect(body).toMatchObject({ rulesVersion: '2026.09', project: { industry: 'food' } });
-    expect(typeof body.projectId).toBe('string');
+    expect(body.projectId).toBe('project-123');
 
     expect(approvals).toHaveLength(1);
     expect(approvals[0]).toMatchObject({
@@ -102,7 +104,9 @@ describe('RulesEngineClient', () => {
 
   it('throws on a non-ok response so the caller can fall back', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 } as Response));
-    await expect(new RulesEngineClient(options).evaluate(input)).rejects.toThrow(/503/);
+    await expect(new RulesEngineClient(options).evaluate(input, 'project-123')).rejects.toThrow(
+      /503/,
+    );
   });
 
   it('throws when the response shape is invalid', async () => {
@@ -113,7 +117,9 @@ describe('RulesEngineClient', () => {
         json: async () => ({ approvals: [{ key: 'x' }] }),
       } as Response),
     );
-    await expect(new RulesEngineClient(options).evaluate(input)).rejects.toBeTruthy();
+    await expect(
+      new RulesEngineClient(options).evaluate(input, 'project-123'),
+    ).rejects.toBeTruthy();
   });
 
   it('rejects an unknown department key from the engine', async () => {
@@ -126,7 +132,63 @@ describe('RulesEngineClient', () => {
         }),
       } as Response),
     );
-    await expect(new RulesEngineClient(options).evaluate(input)).rejects.toBeTruthy();
+    await expect(
+      new RulesEngineClient(options).evaluate(input, 'project-123'),
+    ).rejects.toBeTruthy();
+  });
+
+  it('classifies a 401 as an unauthorized configuration failure', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 401 } as Response));
+    await expect(
+      new RulesEngineClient(options).evaluate(input, 'project-123'),
+    ).rejects.toMatchObject({ name: 'RulesEngineError', kind: 'unauthorized' });
+  });
+
+  it('classifies a network failure as unreachable', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('ECONNREFUSED')));
+    const error = await new RulesEngineClient(options)
+      .evaluate(input, 'project-123')
+      .catch((e) => e);
+    expect(error).toBeInstanceOf(RulesEngineError);
+    expect(error.kind).toBe('unreachable');
+  });
+
+  it('classifies an invalid response shape as invalid-response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ approvals: [{ key: 'x' }] }),
+      } as Response),
+    );
+    const error = await new RulesEngineClient(options)
+      .evaluate(input, 'project-123')
+      .catch((e) => e);
+    expect(error).toBeInstanceOf(RulesEngineError);
+    expect(error.kind).toBe('invalid-response');
+  });
+
+  it('logs engine-reported blocking issues instead of discarding them', async () => {
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          approvals: engineResponse.approvals,
+          blockingIssues: [{ code: 'SUBMISSION_BLOCKED', message: 'Blocked.' }],
+        }),
+      } as Response),
+    );
+
+    const approvals = await new RulesEngineClient(options).evaluate(input, 'project-123');
+
+    expect(approvals).toHaveLength(1);
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({ blockingIssues: expect.any(Array) }),
+      expect.stringMatching(/blocking issues/i),
+    );
+    warn.mockRestore();
   });
 });
 
