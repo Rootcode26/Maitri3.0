@@ -8,6 +8,7 @@ from app.domain.api_contract_models import ValidateRequest, ValidateResponse
 from app.services.rule_provider import RulesUnavailable, evaluate_for_validation
 from app.services.validation import validate_application
 from app.services.document_processing import prepare_validation_documents
+from app.services.document_advisories import build_document_advisories
 
 router = APIRouter()
 
@@ -27,7 +28,11 @@ def validate(payload: ValidateRequest, request: Request) -> ValidateResponse:
     try:
         evaluation = evaluate_for_validation(request.app, payload)
         processed = prepare_validation_documents(request.app, payload)
-        return validate_application(processed, evaluation, policy=getattr(request.app.state, 'document_validation_policy', None))
+        result = validate_application(processed, evaluation, policy=getattr(request.app.state, 'document_validation_policy', None))
+        advisories = build_document_advisories(request.app, payload)
+        if advisories:
+            result = result.model_copy(update={'warnings': [*result.warnings, *advisories]})
+        return result
     except RulesUnavailable:
         raise HTTPException(503, detail={
             "code": "RULES_UNAVAILABLE",

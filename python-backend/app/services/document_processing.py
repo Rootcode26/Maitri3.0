@@ -36,7 +36,10 @@ def process_document(upload: UploadedDocument, content: bytes, *, inspector=None
     if type(max_bytes) is not int or max_bytes <= 0:
         raise ValueError('Processor limit must be a positive integer')
     data = {
-        **upload.model_dump(by_alias=True, exclude={'extraction_status', 'extracted_data', 'expires_on'}),
+        **upload.model_dump(
+            by_alias=True,
+            exclude={'extraction_status', 'extracted_data', 'expires_on', 'content'},
+        ),
         'sizeBytes': len(content), 'detectedMimeType': None, 'fileReadStatus': 'not_checked',
         'declaredDocumentType': upload.document_key, 'detectedDocumentType': None,
         'typeConfirmed': False, 'subject': 'unknown', 'subjectConfirmed': False,
