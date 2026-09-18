@@ -63,7 +63,7 @@ describe.runIf(runDbTests)('ProjectRepository (integration)', () => {
     expect(created.id).toBe(projectId);
     expect(created.enterpriseName).toBe('Integration Foods Pvt. Ltd.');
     expect(created.industry).toBe('food');
-    expect(created.status).toBe('submitted');
+    expect(created.status).toBe('draft');
     expect(created.details.pan).toBe('AABCS1234F');
 
     expect(created.approvals).toHaveLength(5);

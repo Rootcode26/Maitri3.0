@@ -37,7 +37,7 @@ const expectedRoles: Record<LoginMode, UserRole> = {
 };
 const postLoginRoutes: Record<LoginMode, string> = {
   applicant: "/applicant/dashboard",
-  inspector: "/",
+  inspector: "/inspector/dashboard",
 };
 
 export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {

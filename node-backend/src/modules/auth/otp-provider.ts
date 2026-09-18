@@ -32,8 +32,9 @@ class TwilioOtpProvider implements OtpProvider {
   }
 
   async send(phoneNumber: string, otp: string): Promise<void> {
+    const validForMinutes = Math.round(env.OTP_TTL_SECONDS / 60);
     await this.client.messages.create({
-      body: `Your UdyogSetu OTP is ${otp}. Valid for 10 minutes. Do not share this code.`,
+      body: `Your UdyogSetu OTP is ${otp}. Valid for ${validForMinutes} minutes. Do not share this code.`,
       from: env.TWILIO_PHONE_NUMBER!,
       to: phoneNumber,
     });

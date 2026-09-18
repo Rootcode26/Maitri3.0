@@ -25,9 +25,13 @@ class EngineTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 load_version(value)
 
-    def test_corrected_fixtures_match_selected_version(self):
-        fixtures = load_rules(ROOT / 'python-backend/tests/fixtures/rules')
-        self.assertEqual([item.model_dump() for item in fixtures], [item.model_dump() for item in load_version('2026.09')])
+    def test_direct_loader_matches_versioned_loader(self):
+        # The rule set has a single source of truth under app/rules/sets. This
+        # guards that the raw directory loader and the manifest-validated version
+        # loader agree on the same canonical files.
+        canonical = ROOT / 'python-backend/app/rules/sets/2026.09'
+        loaded = load_rules(canonical)
+        self.assertEqual([item.model_dump() for item in loaded], [item.model_dump() for item in load_version('2026.09')])
 
     def test_food_flat_request_and_multiple_approvals(self):
         project = {'industry': 'food', 'primaryActivity': 'Food & beverage processing', 'boiler': 'yes', 'hazardousChemicals': 'yes', 'processes': []}

@@ -89,9 +89,8 @@ describe('ProjectService', () => {
     expect(approvals.map((a) => a.title)).toContain('Food-related licence');
   });
 
-  it('logs a configuration fault at error level and still falls back', async () => {
+  it('fails loudly on a configuration fault instead of fabricating a checklist', async () => {
     const error = vi.spyOn(logger, 'error').mockImplementation(() => logger);
-    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
     const createProject = vi.fn().mockResolvedValue({ id: 'project-1' });
     const evaluate = vi.fn().mockRejectedValue(new RulesEngineError('unauthorized', 'bad token'));
     const service = new ProjectService(
@@ -99,14 +98,32 @@ describe('ProjectService', () => {
       { evaluate } as unknown as RulesEngineClient,
     );
 
-    await service.createProject('applicant-1', input);
-
+    await expect(service.createProject('applicant-1', input)).rejects.toMatchObject({
+      statusCode: 502,
+      code: 'RULES_ENGINE_MISCONFIGURED',
+    });
     expect(error).toHaveBeenCalledTimes(1);
-    expect(warn).not.toHaveBeenCalled();
-    const approvals = createProject.mock.calls[0]![3] as Array<{ title: string }>;
-    expect(approvals.map((a) => a.title)).toContain('Food-related licence');
+    expect(createProject).not.toHaveBeenCalled();
     error.mockRestore();
-    warn.mockRestore();
+  });
+
+  it('rejects the submission with the blocking issues when the engine blocks it', async () => {
+    const createProject = vi.fn().mockResolvedValue({ id: 'project-1' });
+    const blockingIssues = [{ code: 'SUBMISSION_BLOCKED', message: 'Missing mandatory approval.' }];
+    const evaluate = vi
+      .fn()
+      .mockRejectedValue(new RulesEngineError('blocked', 'blocked', undefined, blockingIssues));
+    const service = new ProjectService(
+      { createProject } as unknown as ProjectRepository,
+      { evaluate } as unknown as RulesEngineClient,
+    );
+
+    await expect(service.createProject('applicant-1', input)).rejects.toMatchObject({
+      statusCode: 422,
+      code: 'SUBMISSION_BLOCKED',
+      details: { blockingIssues },
+    });
+    expect(createProject).not.toHaveBeenCalled();
   });
 
   it('returns an owned project', async () => {

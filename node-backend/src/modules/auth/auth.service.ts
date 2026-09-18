@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { DatabaseError } from 'pg';
 
 import { AppError } from '../../errors/app-error.js';
@@ -29,6 +31,10 @@ const refreshTtl = (remembered: boolean): number =>
   remembered ? env.JWT_REMEMBERED_REFRESH_TTL_SECONDS : env.JWT_REFRESH_TTL_SECONDS;
 
 const expiresAt = (ttlSeconds: number): Date => new Date(Date.now() + ttlSeconds * 1000);
+
+let dummyPasswordHash: Promise<string> | undefined;
+const getDummyPasswordHash = (): Promise<string> =>
+  (dummyPasswordHash ??= hashPassword(randomUUID()));
 
 export class AuthService {
   constructor(
@@ -124,7 +130,9 @@ export class AuthService {
 
   async login(input: LoginInput): Promise<AuthResult> {
     const user = await this.repository.findUserByPhone(input.phoneNumber);
-    if (!user?.passwordHash || !(await verifyPassword(user.passwordHash, input.password))) {
+    const passwordHash = user?.passwordHash ?? (await getDummyPasswordHash());
+    const passwordValid = await verifyPassword(passwordHash, input.password);
+    if (!user?.passwordHash || !passwordValid) {
       throw invalidCredentials();
     }
     if (user.status !== 'active') {

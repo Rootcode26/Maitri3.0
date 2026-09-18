@@ -153,12 +153,23 @@ export async function createProject(answers: Record<string, string>): Promise<Pr
     message?: string;
     code?: string;
     data?: { project: Project };
-    details?: { formErrors?: string[]; fieldErrors?: Record<string, string[]> };
+    details?: {
+      formErrors?: string[];
+      fieldErrors?: Record<string, string[]>;
+      blockingIssues?: { code: string; message: string }[];
+    };
   };
 
   if (!response.ok) {
     if (response.status === 401) {
       throw new ProjectApiError("Please sign in to save this project.", 401, body.code);
+    }
+    if (response.status === 422) {
+      const messages = (body.details?.blockingIssues ?? []).map((issue) => issue.message).filter(Boolean);
+      const detail = messages.length
+        ? `This submission cannot be accepted yet: ${messages.join(" ")}`
+        : (body.message ?? "This submission cannot be accepted yet.");
+      throw new ProjectApiError(detail, 422, body.code);
     }
     if (response.status === 400) {
       // The backend returns human-readable messages per field; surface them so

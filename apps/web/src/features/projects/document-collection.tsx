@@ -18,7 +18,7 @@ type DocSpec = {
 };
 
 const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
-  "Factory plan": {
+  "food-premises-plan": {
     formats: ["PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -33,7 +33,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Do not use password-protected files. Keep scans upright, readable and free of missing pages.",
     ],
   },
-  "Identity proof": {
+  "authorised-signatory-identity-proof": {
     formats: ["PDF", "JPG", "PNG"],
     maxSizeMb: 2,
     filesRequired: "1 complete file",
@@ -48,7 +48,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Avoid glare and shadows. Do not crop out any part of the document.",
     ],
   },
-  "Water report": {
+  "water-report": {
     formats: ["PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -63,7 +63,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Ensure result tables are legible and pages are in order.",
     ],
   },
-  "Unit plan": {
+  "unit-plan": {
     formats: ["PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -78,7 +78,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Include a scale and north arrow. Do not use password-protected files.",
     ],
   },
-  "Machinery list": {
+  "machinery-list": {
     formats: ["PDF", "XLSX"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -93,7 +93,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Group machines by process stage so reviewers can follow the flow.",
     ],
   },
-  "Ownership proof": {
+  "ownership-proof": {
     formats: ["PDF", "JPG", "PNG"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -108,7 +108,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Ensure stamps and registration marks are legible.",
     ],
   },
-  "Floor plan": {
+  "factory-floor-plan": {
     formats: ["PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -123,7 +123,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Include a north arrow and a drawing scale.",
     ],
   },
-  "Worker details": {
+  "workforce-summary": {
     formats: ["PDF", "XLSX"],
     maxSizeMb: 2,
     filesRequired: "1 complete file",
@@ -138,7 +138,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Do not include personal identity numbers.",
     ],
   },
-  "Fire layout": {
+  "fire-architectural-drawings": {
     formats: ["PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -153,7 +153,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Mark all safety equipment with standard symbols.",
     ],
   },
-  "Evacuation plan": {
+  "evacuation-plan": {
     formats: ["PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -168,7 +168,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Keep floor references consistent with the fire layout.",
     ],
   },
-  "Site photograph": {
+  "site-photograph": {
     formats: ["JPG", "PNG", "PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -183,7 +183,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Avoid heavy compression, blur or filters.",
     ],
   },
-  "Water balance": {
+  "water-balance": {
     formats: ["PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -198,7 +198,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Ensure figures reconcile with the declared water use.",
     ],
   },
-  "Waste declaration": {
+  "waste-declaration": {
     formats: ["PDF"],
     maxSizeMb: 2,
     filesRequired: "1 complete file",
@@ -213,7 +213,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "List authorised handlers where applicable.",
     ],
   },
-  "Process note": {
+  "process-note": {
     formats: ["PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -228,7 +228,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Keep terminology consistent with the machinery list.",
     ],
   },
-  "Boiler drawing": {
+  "boiler-drawing": {
     formats: ["PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -243,7 +243,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Include the manufacturer and drawing number.",
     ],
   },
-  "Test certificate": {
+  "manufacturer-inspection-test-records": {
     formats: ["PDF"],
     maxSizeMb: 2,
     filesRequired: "1 complete file",
@@ -258,7 +258,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Ensure stamps and seals are legible.",
     ],
   },
-  "Feed-water report": {
+  "feed-water-report": {
     formats: ["PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -273,7 +273,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Ensure result tables are legible.",
     ],
   },
-  "ETP design": {
+  "etp-design": {
     formats: ["PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -288,7 +288,7 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
       "Include design calculations where available.",
     ],
   },
-  "Discharge plan": {
+  "discharge-plan": {
     formats: ["PDF"],
     maxSizeMb: 5,
     filesRequired: "1 complete file",
@@ -308,11 +308,12 @@ const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
 /**
  * Builds the display spec for a document. The rules-engine fields take
  * precedence; anything the engine omits falls back to the built-in catalog
- * (keyed by name) and then to generic defaults, so both the enriched engine
+ * (keyed by document key, which both the engine and the built-in derivation
+ * agree on) and then to generic defaults, so both the enriched engine
  * response and the minimal built-in derivation render fully.
  */
 function specFor(document: ApprovalDocument): DocSpec {
-  const known = knownSpecs[document.name];
+  const known = knownSpecs[document.key];
   const generic = {
     formats: ["PDF"],
     maxSizeMb: 5,
@@ -369,10 +370,32 @@ export function DocumentCollection({
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const spec = specs[current];
   const selectedCount = Object.keys(selected).length;
   const remaining = total - selectedCount;
   const progress = total ? Math.round((selectedCount / total) * 100) : 0;
+
+  if (total === 0) {
+    return (
+      <div>
+        <button
+          type="button"
+          onClick={onBack}
+          className="mb-5 inline-flex items-center gap-1.5 rounded-sm text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to approvals
+        </button>
+        <div className="rounded-2xl bg-white p-8 ring-1 ring-[#e4e0d6]">
+          <h2 className="font-heading text-2xl font-semibold text-[#142b45]">{approvalTitle}</h2>
+          <p className="mt-3 text-base text-slate-600">
+            No documents are required for this approval right now.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const spec = specs[current]!;
   const isLast = current === total - 1;
 
   function acceptFile(file: File | undefined) {

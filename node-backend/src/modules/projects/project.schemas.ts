@@ -1,11 +1,37 @@
 import { z } from 'zod';
 
 import { departmentKeys, industries } from '../auth/auth.constants.js';
-import { landStatuses, organisationTypes, projectStages, yesNo } from './project.constants.js';
+import {
+  accommodationOptions,
+  boilerCapacityBands,
+  builtUpAreaBands,
+  coldStorageBands,
+  contractBands,
+  dgSetBands,
+  electricityBands,
+  fssaiCategories,
+  furnaceCapacityBands,
+  furnaceTypes,
+  investmentBands,
+  landStatuses,
+  loomsSpindlesBands,
+  organisationTypes,
+  permanentBands,
+  plotAreaBands,
+  primaryActivities,
+  processOptions,
+  projectStages,
+  shiftBands,
+  wastewaterOptions,
+  waterSources,
+  waterUseBands,
+  yesNo,
+} from './project.constants.js';
 
 const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
 const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 const PINCODE_REGEX = /^[1-9][0-9]{5}$/;
+const NUMBER_TEXT_REGEX = /^[0-9]+(?:\.[0-9]+)?$/;
 
 const requiredText = (max: number, label: string) =>
   z.string().trim().min(1, `${label} is required.`).max(max, `${label} is too long.`);
@@ -14,6 +40,12 @@ const optionalText = (max: number) =>
   z.preprocess(
     (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
     z.string().trim().max(max).optional(),
+  );
+
+const optionalEnum = <T extends readonly [string, ...string[]]>(values: T) =>
+  z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+    z.enum(values).optional(),
   );
 
 const panSchema = z.preprocess(
@@ -46,39 +78,46 @@ export const createProjectSchema = z
     pincode: z.string().trim().regex(PINCODE_REGEX, 'Enter a valid 6-digit PIN code.'),
     industrialArea: optionalText(120),
     plotNumber: optionalText(80),
-    plotArea: requiredText(40, 'Plot area'),
-    builtUpArea: optionalText(40),
+    plotArea: z.enum(plotAreaBands),
+    builtUpArea: optionalEnum(builtUpAreaBands),
     landStatus: z.enum(landStatuses),
 
-    primaryActivity: requiredText(80, 'Primary activity'),
+    primaryActivity: z.enum(primaryActivities),
     projectStage: z.enum(projectStages),
-    investment: optionalText(40),
+    investment: optionalEnum(investmentBands),
     capacity: optionalText(60),
-    shifts: optionalText(20),
+    shifts: optionalEnum(shiftBands),
     boiler: z.enum(yesNo),
-    boilerCapacity: optionalText(40),
-    boilerPressure: optionalText(40),
+    boilerCapacity: optionalEnum(boilerCapacityBands),
+    boilerPressure: z.preprocess(
+      (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+      z
+        .string()
+        .trim()
+        .regex(NUMBER_TEXT_REGEX, 'Enter working pressure as a number (e.g. 10.5).')
+        .optional(),
+    ),
     hazardousChemicals: z.enum(yesNo),
-    processes: z.array(requiredText(80, 'Process')).max(20).default([]),
+    processes: z.array(z.enum(processOptions)).max(20).default([]),
 
-    fssaiCategory: optionalText(60),
-    coldStorage: optionalText(40),
+    fssaiCategory: optionalEnum(fssaiCategories),
+    coldStorage: optionalEnum(coldStorageBands),
     wetProcessing: z.enum(yesNo).optional(),
-    loomsSpindles: optionalText(40),
-    furnaceType: optionalText(40),
-    furnaceCapacity: optionalText(40),
+    loomsSpindles: optionalEnum(loomsSpindlesBands),
+    furnaceType: optionalEnum(furnaceTypes),
+    furnaceCapacity: optionalEnum(furnaceCapacityBands),
 
-    electricity: requiredText(40, 'Electricity demand'),
-    dgSet: optionalText(40),
-    waterUse: requiredText(40, 'Daily water use'),
-    waterSource: optionalText(40),
-    wastewater: requiredText(60, 'Wastewater discharge'),
+    electricity: z.enum(electricityBands),
+    dgSet: optionalEnum(dgSetBands),
+    waterUse: z.enum(waterUseBands),
+    waterSource: optionalEnum(waterSources),
+    wastewater: z.enum(wastewaterOptions),
     hazardousWaste: z.enum(yesNo),
 
-    permanent: requiredText(40, 'Permanent employees'),
-    contract: optionalText(40),
+    permanent: z.enum(permanentBands),
+    contract: optionalEnum(contractBands),
     womenNight: z.enum(yesNo).optional(),
-    accommodation: optionalText(60),
+    accommodation: optionalEnum(accommodationOptions),
   })
   .strict()
   .superRefine((value, ctx) => {

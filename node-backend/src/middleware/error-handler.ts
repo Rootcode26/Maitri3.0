@@ -49,6 +49,8 @@ export const errorHandler: ErrorRequestHandler = (error, request, response, next
     message: 'Internal server error',
   };
 
+  const exposedStatus = getExposedHttpStatus(error);
+
   if (error instanceof AppError) {
     statusCode = error.statusCode;
     body = {
@@ -100,8 +102,8 @@ export const errorHandler: ErrorRequestHandler = (error, request, response, next
       code: 'PAYLOAD_TOO_LARGE',
       message: 'Request body exceeds the allowed size',
     };
-  } else if (getExposedHttpStatus(error) !== undefined) {
-    statusCode = getExposedHttpStatus(error) ?? 500;
+  } else if (exposedStatus !== undefined) {
+    statusCode = exposedStatus;
     body = {
       status: 'error',
       code: 'HTTP_ERROR',

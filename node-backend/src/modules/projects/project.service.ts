@@ -35,17 +35,33 @@ export class ProjectService {
     try {
       return await this.rulesEngine.evaluate(input, projectId);
     } catch (error) {
+      if (error instanceof RulesEngineError && error.kind === 'blocked') {
+        logger.warn(
+          { projectId, blockingIssues: error.blockingIssues },
+          'Rules engine blocked the submission; rejecting the request',
+        );
+        throw new AppError('This submission cannot be accepted yet', {
+          statusCode: 422,
+          code: 'SUBMISSION_BLOCKED',
+          details: { blockingIssues: error.blockingIssues ?? [] },
+        });
+      }
+
       const isConfigFault =
         error instanceof RulesEngineError &&
         (error.kind === 'unauthorized' || error.kind === 'invalid-response');
       if (isConfigFault) {
         logger.error(
           { err: error },
-          'Rules engine misconfiguration or contract mismatch; using built-in derivation',
+          'Rules engine misconfiguration or contract mismatch; refusing to fabricate a checklist',
         );
-      } else {
-        logger.warn({ err: error }, 'Rules engine unavailable; using built-in derivation');
+        throw new AppError('The approval service is temporarily unavailable', {
+          statusCode: 502,
+          code: 'RULES_ENGINE_MISCONFIGURED',
+        });
       }
+
+      logger.warn({ err: error }, 'Rules engine unavailable; using built-in derivation');
       return deriveApprovals(input);
     }
   }

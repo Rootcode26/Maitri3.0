@@ -102,7 +102,7 @@ class ApprovalDefinition(ContractModel):
     reason: NonEmpty
     rule_id: Identifier
     department_key: Identifier
-    processing_days: Count
+    processing_days: PositiveCount
     documents: list[DocumentRequirement]
 
     @model_validator(mode="after")

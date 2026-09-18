@@ -292,7 +292,8 @@ function ApprovalCard({
         onClick={onOpen}
         className="mt-4 inline-flex items-center gap-1 self-start rounded-sm text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
-        View {approval.documents.length} document requirements
+        View {approval.documents.length}{" "}
+        {approval.documents.length === 1 ? "document requirement" : "document requirements"}
         <ChevronRight className="size-4" aria-hidden="true" />
       </button>
     </article>
@@ -378,14 +379,6 @@ function ChecklistResult({ project }: { project: Project }) {
             {project.enterpriseName} · {project.primaryActivity} · {project.district} district
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="outline" size="lg" className="h-11 rounded-full px-5">
-            Compare operations
-          </Button>
-          <Button size="lg" className="h-11 rounded-full px-5">
-            Review application bundle
-          </Button>
-        </div>
       </header>
 
       <hr className="my-6 border-[#e4e0d6]" />
@@ -453,8 +446,6 @@ export function NewProjectWizard() {
     [],
   );
 
-  // Real answers only — the approval count is unknown until the engine runs, so
-  // we show the industry here instead of a misleading fixed number.
   const summary = [
     { label: "Industry", value: answers.industry || "—" },
     { label: "Activity", value: answers.primaryActivity || "—" },
@@ -532,10 +523,21 @@ export function NewProjectWizard() {
       return;
     }
 
+    const allIndustrySpecific = Object.values(industryFields)
+      .flat()
+      .map((field) => field.name);
+    const keepForIndustry = new Set(
+      (industryFields[answers.industry ?? ""] ?? []).map((field) => field.name),
+    );
+    const cleaned = { ...answers };
+    for (const name of allIndustrySpecific) {
+      if (!keepForIndustry.has(name)) delete cleaned[name];
+    }
+
     setSubmitting(true);
     setSubmitError(null);
     try {
-      setResult(await createProject(answers));
+      setResult(await createProject(cleaned));
     } catch (cause) {
       setSubmitError(
         cause instanceof ProjectApiError

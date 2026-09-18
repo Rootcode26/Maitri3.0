@@ -490,7 +490,7 @@ describe("authentication workflow", () => {
       screen.getByRole("button", { name: /verify and continue/i }),
     );
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/auth/login"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/applicant/dashboard"));
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/v1/auth/otp/verify",
       expect.objectContaining({
@@ -704,7 +704,7 @@ describe("authentication workflow", () => {
     const otp = render(<OtpForm />);
     await user.type(screen.getByLabelText("Verification code"), "123456");
     await user.click(screen.getByRole("button", { name: /verify and continue/i }));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/auth/login"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/applicant/dashboard"));
     otp.unmount();
     searchValues.clear();
 
@@ -739,7 +739,7 @@ describe("authentication workflow", () => {
     const otp = render(<OtpForm />);
     await user.type(screen.getByLabelText("Verification code"), "123456");
     await user.click(screen.getByRole("button", { name: /verify and continue/i }));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/inspector/login"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/inspector/dashboard"));
     otp.unmount();
     searchValues.clear();
 
@@ -747,7 +747,7 @@ describe("authentication workflow", () => {
     await user.type(screen.getByLabelText("Registered mobile number"), "9876543211");
     await user.type(screen.getByLabelText("Password"), "strong-password");
     await user.click(screen.getByRole("button", { name: /sign in to inspector/i }));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/inspector/dashboard"));
     expect(
       JSON.parse(fetchMock.mock.calls.at(-1)?.[1]?.body as string),
     ).toMatchObject({ expectedRole: "inspector" });

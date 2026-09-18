@@ -15,6 +15,18 @@ vi.mock('../src/modules/auth/access-token-store.js', () => ({
   revokeAccessToken: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('../src/cache/redis.js', () => ({
+  redisClient: {
+    multi: () => ({
+      incr: () => ({
+        expire: () => ({
+          exec: async () => [[null, 1]],
+        }),
+      }),
+    }),
+  },
+}));
+
 const authResult: AuthResult = {
   user: {
     id: '94a84df4-779f-4e3b-98c3-d5ea23ccc75c',
