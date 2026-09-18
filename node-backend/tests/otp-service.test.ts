@@ -70,6 +70,13 @@ vi.mock('../src/cache/redis.js', () => ({
 }));
 
 const { OtpService } = await import('../src/modules/auth/otp.service.js');
+const { env } = await import('../src/config/env.js');
+
+const clearCooldowns = () => {
+  for (const key of [...redis.values.keys()]) {
+    if (key.includes('auth:otp:resend:')) redis.values.delete(key);
+  }
+};
 
 describe('OtpService', () => {
   const provider = { send: vi.fn() };
@@ -112,6 +119,26 @@ describe('OtpService', () => {
     await expect(
       service.sendRegistrationOtp('user-1', phoneNumber, ipAddress),
     ).rejects.toMatchObject({ statusCode: 429, code: 'OTP_RESEND_COOLDOWN' });
+  });
+
+  it('rate-limits once the per-window send limit is exceeded', async () => {
+    for (let i = 0; i < env.OTP_SEND_LIMIT; i += 1) {
+      await service.sendRegistrationOtp('user-1', phoneNumber, ipAddress);
+      clearCooldowns();
+    }
+    await expect(
+      service.sendRegistrationOtp('user-1', phoneNumber, ipAddress),
+    ).rejects.toMatchObject({ statusCode: 429, code: 'OTP_RATE_LIMITED' });
+  });
+
+  it('locks out after too many incorrect verification attempts', async () => {
+    await service.sendRegistrationOtp('user-1', phoneNumber, ipAddress);
+    for (let i = 0; i < env.OTP_MAX_ATTEMPTS; i += 1) {
+      await service.verifyRegistrationOtp(phoneNumber, '654321', ipAddress).catch(() => undefined);
+    }
+    await expect(
+      service.verifyRegistrationOtp(phoneNumber, '654321', ipAddress),
+    ).rejects.toMatchObject({ statusCode: 429, code: 'OTP_ATTEMPTS_EXCEEDED' });
   });
 
   it('removes the OTP and cooldown if delivery fails', async () => {

@@ -46,6 +46,7 @@ export const createApp = ({
   );
 
   app.disable('x-powered-by');
+  app.set('trust proxy', env.TRUST_PROXY_HOPS);
   app.use(pinoHttp({ logger }));
   app.use(helmet());
   app.use(cookieParser());
