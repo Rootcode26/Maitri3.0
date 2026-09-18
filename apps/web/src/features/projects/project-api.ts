@@ -211,3 +211,127 @@ export async function updateApprovalDepartment(
   if (!response.ok || !body.data) throw new ProjectApiError("Could not update the department.", response.status);
   return body.data.approval;
 }
+
+export interface ProjectDocument {
+  id: string;
+  approvalKey: string;
+  documentKey: string;
+  version: number;
+  fileName: string;
+  mimeType: string;
+  detectedMimeType: string | null;
+  sizeBytes: number;
+  fileReadStatus: string;
+  extractionStatus: string;
+  expiresOn: string | null;
+  createdAt: string;
+}
+
+export async function listProjectDocuments(projectId: string): Promise<ProjectDocument[]> {
+  const response = await fetch(`/api/v1/projects/${projectId}/documents`, { credentials: "include" });
+  const body = (await response.json().catch(() => ({}))) as { data?: { documents: ProjectDocument[] } };
+  if (!response.ok || !body.data) throw new ProjectApiError("Could not load uploaded documents.", response.status);
+  return body.data.documents;
+}
+
+export async function uploadProjectDocument(
+  projectId: string,
+  approvalKey: string,
+  documentKey: string,
+  file: File,
+): Promise<ProjectDocument> {
+  const form = new FormData();
+  form.append("approvalKey", approvalKey);
+  form.append("documentKey", documentKey);
+  form.append("file", file);
+
+  let response: Response;
+  try {
+    response = await fetch(`/api/v1/projects/${projectId}/documents`, {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    });
+  } catch {
+    throw new ProjectApiError("We could not reach the service. Check your connection and try again.", 0);
+  }
+
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string;
+    code?: string;
+    data?: { document: ProjectDocument };
+  };
+
+  if (!response.ok || !body.data) {
+    if (response.status === 401) throw new ProjectApiError("Please sign in to upload documents.", 401, body.code);
+    if (body.code === "UNSUPPORTED_FILE_TYPE") throw new ProjectApiError("That file type is not accepted for this document.", 400, body.code);
+    if (body.code === "FILE_TOO_LARGE") throw new ProjectApiError(body.message ?? "That file is too large.", response.status, body.code);
+    if (body.code === "UPLOADS_NOT_CONFIGURED") throw new ProjectApiError("Uploads are not available right now. Please try again later.", 503, body.code);
+    throw new ProjectApiError(body.message ?? "Could not upload the file. Please try again.", response.status, body.code);
+  }
+  return body.data.document;
+}
+
+export async function deleteProjectDocument(projectId: string, documentId: string): Promise<void> {
+  const response = await fetch(`/api/v1/projects/${projectId}/documents/${documentId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!response.ok && response.status !== 204) {
+    throw new ProjectApiError("Could not remove the file. Please try again.", response.status);
+  }
+}
+
+export interface ValidationIssue {
+  code: string;
+  message: string;
+  suggestedAction: string;
+  approvalKey?: string | null;
+  documentKey?: string | null;
+  field?: string | null;
+}
+
+export interface DocumentCheck {
+  documentId: string;
+  approvalKey: string;
+  documentKey: string;
+  field?: string | null;
+  status: "matched" | "mismatched" | "unavailable" | "review_required";
+  reason: string;
+}
+
+export interface ValidationResult {
+  validationStatus: "complete" | "review_required" | "not_evaluated";
+  blockingIssues: ValidationIssue[];
+  warnings: ValidationIssue[];
+  reviewItems: ValidationIssue[];
+  documentChecks: DocumentCheck[];
+}
+
+export async function validateProjectDocuments(projectId: string): Promise<ValidationResult> {
+  let response: Response;
+  try {
+    response = await fetch(`/api/v1/projects/${projectId}/validate`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    throw new ProjectApiError("We could not reach the service. Check your connection and try again.", 0);
+  }
+
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string;
+    code?: string;
+    data?: { validation: ValidationResult };
+  };
+
+  if (!response.ok || !body.data) {
+    if (response.status === 401) throw new ProjectApiError("Please sign in to validate documents.", 401, body.code);
+    if (body.code === "VALIDATION_NOT_CONFIGURED")
+      throw new ProjectApiError("Document validation is not available yet.", 503, body.code);
+    if (body.code === "VALIDATION_UNAVAILABLE")
+      throw new ProjectApiError("The validation service is temporarily unavailable. Please try again shortly.", response.status, body.code);
+    throw new ProjectApiError(body.message ?? "Could not validate the documents. Please try again.", response.status, body.code);
+  }
+  return body.data.validation;
+}

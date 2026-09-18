@@ -51,6 +51,56 @@ const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
   if (url === "/api/v1/departments") {
     return { ok: true, status: 200, json: async () => ({ data: { departments: departmentsList } }) } as Response;
   }
+  if (url.endsWith("/documents") && (init?.method ?? "GET") === "GET") {
+    return { ok: true, status: 200, json: async () => ({ data: { documents: [] } }) } as Response;
+  }
+  if (url.endsWith("/documents") && init?.method === "POST") {
+    const form = init.body as FormData;
+    const file = form.get("file") as File | null;
+    const document = {
+      id: `doc-${String(form.get("documentKey"))}`,
+      approvalKey: String(form.get("approvalKey")),
+      documentKey: String(form.get("documentKey")),
+      version: 1,
+      fileName: file?.name ?? "file",
+      mimeType: "application/pdf",
+      detectedMimeType: "application/pdf",
+      sizeBytes: 10,
+      fileReadStatus: "readable",
+      extractionStatus: "not_run",
+      expiresOn: null,
+      createdAt: "2026-09-19T00:00:00.000Z",
+    };
+    return { ok: true, status: 201, json: async () => ({ data: { document } }) } as Response;
+  }
+  if (url.includes("/documents/") && init?.method === "DELETE") {
+    return { ok: true, status: 204, json: async () => ({}) } as Response;
+  }
+  if (url.endsWith("/validate") && init?.method === "POST") {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        data: {
+          validation: {
+            validationStatus: "review_required",
+            blockingIssues: [],
+            warnings: [],
+            reviewItems: [
+              {
+                code: "APPROVAL_OFFICER_REVIEW",
+                severity: "review",
+                approvalKey: "food-licence",
+                message: "Officer review needed for food licence.",
+                suggestedAction: "An officer will confirm.",
+              },
+            ],
+            documentChecks: [],
+          },
+        },
+      }),
+    } as Response;
+  }
   if (init?.method === "PATCH") {
     const { departmentKey } = JSON.parse(init.body as string) as { departmentKey: string };
     const department = departmentsList.find((d) => d.key === departmentKey)!;
@@ -514,6 +564,27 @@ describe("NewProjectWizard — generated checklist result", () => {
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 
+  it("validates the documents and shows the review results", async () => {
+    const u = userEvent.setup();
+    render(<NewProjectWizard />);
+    await completeFoodToChecklist(u);
+    await generate(u);
+
+    await u.click(screen.getByRole("button", { name: /^check documents$/i }));
+
+    expect(await screen.findByText(/some items need attention/i)).toBeInTheDocument();
+    expect(screen.getByText(/officer review needed for food licence/i)).toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(
+        (call) => String(call[0]).endsWith("/validate") && call[1]?.method === "POST",
+      ),
+    ).toBe(true);
+
+    // The "Review documents" shortcut jumps straight to that approval's uploads.
+    await u.click(screen.getByRole("button", { name: /review documents/i }));
+    expect(screen.getByRole("heading", { name: /^required documents$/i })).toBeInTheDocument();
+  });
+
   it("adds a boiler registration approval when a boiler is declared", async () => {
     const u = userEvent.setup();
     render(<NewProjectWizard />);
@@ -556,7 +627,7 @@ describe("NewProjectWizard — document requirements", () => {
     await openFirstApproval(u);
 
     expect(screen.getByRole("heading", { name: /^required documents$/i })).toBeInTheDocument();
-    expect(screen.getByText(/0 of 3 files selected/i)).toBeInTheDocument();
+    expect(screen.getByText(/0 of 3 files uploaded/i)).toBeInTheDocument();
     expect(screen.getByText(/document 1 of 3/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /^factory plan$/i })).toBeInTheDocument();
     expect(screen.getByText(/3 documents remaining/i)).toBeInTheDocument();
@@ -585,12 +656,12 @@ describe("NewProjectWizard — document requirements", () => {
     const tooBig = new File([new ArrayBuffer(6 * 1024 * 1024)], "big-plan.pdf", { type: "application/pdf" });
     await u.upload(input, tooBig);
     expect(screen.getByText(/file must be 5 MB or smaller/i)).toBeInTheDocument();
-    expect(screen.getByText(/0 of 3 files selected/i)).toBeInTheDocument();
+    expect(screen.getByText(/0 of 3 files uploaded/i)).toBeInTheDocument();
 
     const goodFile = new File(["%PDF-1.4"], "factory-plan.pdf", { type: "application/pdf" });
     await u.upload(input, goodFile);
-    expect(screen.getByText("factory-plan.pdf")).toBeInTheDocument();
-    expect(screen.getByText(/1 of 3 files selected/i)).toBeInTheDocument();
+    expect(await screen.findByText("factory-plan.pdf")).toBeInTheDocument();
+    expect(screen.getByText(/1 of 3 files uploaded/i)).toBeInTheDocument();
   });
 
   it("tracks progress across documents and pluralises the remaining count", async () => {
@@ -599,10 +670,12 @@ describe("NewProjectWizard — document requirements", () => {
     await openFirstApproval(u);
 
     await u.upload(document.querySelector("input[type='file']") as HTMLInputElement, new File(["%PDF-1.4"], "plan.pdf", { type: "application/pdf" }));
+    await screen.findByText("plan.pdf");
     await u.click(screen.getByRole("button", { name: /next document/i }));
     await u.upload(document.querySelector("input[type='file']") as HTMLInputElement, new File(["%PDF-1.4"], "id.pdf", { type: "application/pdf" }));
+    await screen.findByText("id.pdf");
 
-    expect(screen.getByText(/2 of 3 files selected/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 of 3 files uploaded/i)).toBeInTheDocument();
     expect(screen.getByText(/^1 document remaining$/i)).toBeInTheDocument();
   });
 
@@ -612,11 +685,11 @@ describe("NewProjectWizard — document requirements", () => {
     await openFirstApproval(u);
 
     await u.upload(document.querySelector("input[type='file']") as HTMLInputElement, new File(["%PDF-1.4"], "plan.pdf", { type: "application/pdf" }));
-    expect(screen.getByText("plan.pdf")).toBeInTheDocument();
+    expect(await screen.findByText("plan.pdf")).toBeInTheDocument();
 
     await u.click(screen.getByRole("button", { name: /remove/i }));
-    expect(screen.getByText(/drag and drop your file here/i)).toBeInTheDocument();
-    expect(screen.getByText(/0 of 3 files selected/i)).toBeInTheDocument();
+    expect(await screen.findByText(/drag and drop your file here/i)).toBeInTheDocument();
+    expect(screen.getByText(/0 of 3 files uploaded/i)).toBeInTheDocument();
   });
 
   it("shows document specs specific to the opened approval", async () => {
