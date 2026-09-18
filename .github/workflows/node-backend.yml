@@ -29,16 +29,7 @@ jobs:
       CI: true
       NODE_ENV: test
       LOG_LEVEL: silent
-      DB_HOST: localhost
-      DB_PORT: 5432
-      DB_USER: test
-      DB_PASSWORD: test
-      DB_NAME: test
       DATABASE_URL: postgresql://test:test@localhost:5432/test
-      REDIS_HOST: localhost
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: test
-      REDIS_DB: 0
       REDIS_URL: redis://:test@localhost:6379/0
       JWT_ACCESS_SECRET: ci-test-access-secret-change-before-production
       JWT_REFRESH_SECRET: ci-test-refresh-secret-change-before-production
