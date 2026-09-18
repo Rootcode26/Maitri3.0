@@ -19,7 +19,7 @@ def fixture():
         'evaluatedAt': '2026-09-17T00:00:00Z', 'readinessScore': None, 'blockingIssues': [],
         'approvals': [{
             'key': 'food-licence', 'title': 'Test approval', 'status': 'required',
-            'reason': 'Test only', 'ruleId': 'test', 'departmentKey': 'test', 'processingDays': 0,
+            'reason': 'Test only', 'ruleId': 'test', 'departmentKey': 'test', 'processingDays': 30,
             'documents': [{
                 'key': 'identity-proof', 'name': 'Test PAN document', 'description': 'Test only',
                 'formats': ['PDF'], 'maxSizeMb': 1.0, 'filesRequired': 1, 'required': True,
