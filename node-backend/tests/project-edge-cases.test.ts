@@ -142,6 +142,37 @@ describe('createProjectSchema — edge cases', () => {
       createProjectSchema.safeParse({ ...validFoodProject, cin: 'X'.repeat(31) }).success,
     ).toBe(false);
   });
+
+  it('rejects a banded field value outside the shared enum set', () => {
+    expect(
+      createProjectSchema.safeParse({ ...validFoodProject, plotArea: 'quite large' }).success,
+    ).toBe(false);
+    expect(
+      createProjectSchema.safeParse({ ...validFoodProject, electricity: 'lots' }).success,
+    ).toBe(false);
+    expect(
+      createProjectSchema.safeParse({ ...validFoodProject, permanent: 'a handful' }).success,
+    ).toBe(false);
+  });
+
+  it('accepts the exact banded enum values the wizard and engine share', () => {
+    const parsed = createProjectSchema.parse({
+      ...validFoodProject,
+      plotArea: '5,000–10,000',
+      investment: '₹1,000–5,000 lakh (Medium)',
+      waterUse: 'Above 500',
+      wastewater: 'No discharge (zero liquid)',
+    });
+    expect(parsed.plotArea).toBe('5,000–10,000');
+    expect(parsed.investment).toBe('₹1,000–5,000 lakh (Medium)');
+  });
+
+  it('rejects a process value outside the shared enum set', () => {
+    expect(
+      createProjectSchema.safeParse({ ...validFoodProject, processes: ['Something made up'] })
+        .success,
+    ).toBe(false);
+  });
 });
 
 describe('deriveApprovals — invariants', () => {
@@ -157,19 +188,19 @@ describe('deriveApprovals — invariants', () => {
   const profiles = [
     { ...base, industry: 'food' as const },
     { ...base, industry: 'food' as const, boiler: 'yes' as const },
-    { ...base, industry: 'textile' as const, primaryActivity: 'Weaving' },
+    { ...base, industry: 'textile' as const, primaryActivity: 'Weaving' as const },
     {
       ...base,
       industry: 'textile' as const,
-      primaryActivity: 'Dyeing & processing',
+      primaryActivity: 'Dyeing & processing' as const,
       wetProcessing: 'yes' as const,
     },
-    { ...base, industry: 'steel' as const, primaryActivity: 'Rolling mill' },
+    { ...base, industry: 'steel' as const, primaryActivity: 'Rolling mill' as const },
     {
       ...base,
       industry: 'steel' as const,
-      primaryActivity: 'Foundry / casting',
-      furnaceType: 'Cupola',
+      primaryActivity: 'Foundry / casting' as const,
+      furnaceType: 'Cupola' as const,
     },
     {
       ...base,
@@ -205,8 +236,8 @@ describe('deriveApprovals — invariants', () => {
     const approvals = deriveApprovals({
       ...base,
       industry: 'steel',
-      primaryActivity: 'Foundry / casting',
-      furnaceType: 'Induction furnace',
+      primaryActivity: 'Foundry / casting' as const,
+      furnaceType: 'Induction furnace' as const,
       hazardousChemicals: 'yes',
       hazardousWaste: 'yes',
     });
@@ -217,9 +248,9 @@ describe('deriveApprovals — invariants', () => {
     ['hazardousChemicals', { hazardousChemicals: 'yes' as const }],
     ['hazardousWaste', { hazardousWaste: 'yes' as const }],
     ['wetProcessing', { wetProcessing: 'yes' as const }],
-    ['furnaceType', { furnaceType: 'Electric arc furnace' }],
-    ['dyeing activity', { primaryActivity: 'Dyeing & processing' }],
-    ['foundry activity', { primaryActivity: 'Foundry / casting' }],
+    ['furnaceType', { furnaceType: 'Electric arc furnace' as const }],
+    ['dyeing activity', { primaryActivity: 'Dyeing & processing' as const }],
+    ['foundry activity', { primaryActivity: 'Foundry / casting' as const }],
   ])('adds consent-to-operate when triggered by %s', (_label, override) => {
     const approvals = deriveApprovals({ ...base, industry: 'food', ...override });
     expect(approvals.map((a) => a.key)).toContain('consent-to-operate');
@@ -302,10 +333,71 @@ describe('RulesEngineClient — edge cases', () => {
     expect(error.kind).toBe('invalid-response');
   });
 
+  it('rejects a zero processingDays (violates the DB positive check)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          approvals: [
+            {
+              key: 'food-licence',
+              title: 'X',
+              status: 'required',
+              departmentKey: 'fssai',
+              processingDays: 0,
+              documents: [],
+            },
+          ],
+        }),
+      } as Response),
+    );
+    const error = await new RulesEngineClient(options).evaluate(input, 'p1').catch((e) => e);
+    expect(error).toBeInstanceOf(RulesEngineError);
+    expect(error.kind).toBe('invalid-response');
+  });
+
+  it('rejects over-length key/title/ruleId that would overflow the DB columns', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          approvals: [
+            {
+              key: 'a'.repeat(61),
+              title: 'b'.repeat(121),
+              ruleId: 'c'.repeat(101),
+              status: 'required',
+              departmentKey: 'fssai',
+              processingDays: 30,
+              documents: [],
+            },
+          ],
+        }),
+      } as Response),
+    );
+    const error = await new RulesEngineClient(options).evaluate(input, 'p1').catch((e) => e);
+    expect(error).toBeInstanceOf(RulesEngineError);
+    expect(error.kind).toBe('invalid-response');
+  });
+
   it('reports a 500 as a bad-status failure (retryable)', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 } as Response));
     const error = await new RulesEngineClient(options).evaluate(input, 'p1').catch((e) => e);
     expect(error.kind).toBe('bad-status');
+  });
+
+  it('treats a 422 contract rejection as a loud invalid-response, not a retryable blip', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 422 } as Response));
+    const error = await new RulesEngineClient(options).evaluate(input, 'p1').catch((e) => e);
+    expect(error.kind).toBe('invalid-response');
+  });
+
+  it('treats a 400 bad request as a loud invalid-response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 400 } as Response));
+    const error = await new RulesEngineClient(options).evaluate(input, 'p1').catch((e) => e);
+    expect(error.kind).toBe('invalid-response');
   });
 
   it('aborts a slow engine and reports it as unreachable', async () => {

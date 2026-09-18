@@ -168,22 +168,27 @@ describe('RulesEngineClient', () => {
     expect(error.kind).toBe('invalid-response');
   });
 
-  it('logs engine-reported blocking issues instead of discarding them', async () => {
+  it('throws a blocked failure carrying the engine-reported issues', async () => {
     const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
+    const blockingIssues = [{ code: 'SUBMISSION_BLOCKED', message: 'Blocked.' }];
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
           approvals: engineResponse.approvals,
-          blockingIssues: [{ code: 'SUBMISSION_BLOCKED', message: 'Blocked.' }],
+          blockingIssues,
         }),
       } as Response),
     );
 
-    const approvals = await new RulesEngineClient(options).evaluate(input, 'project-123');
+    const error = await new RulesEngineClient(options)
+      .evaluate(input, 'project-123')
+      .catch((e) => e);
 
-    expect(approvals).toHaveLength(1);
+    expect(error).toBeInstanceOf(RulesEngineError);
+    expect(error.kind).toBe('blocked');
+    expect(error.blockingIssues).toEqual(blockingIssues);
     expect(warn).toHaveBeenCalledWith(
       expect.objectContaining({ blockingIssues: expect.any(Array) }),
       expect.stringMatching(/blocking issues/i),

@@ -97,7 +97,7 @@ export const deriveApprovals = (input: DerivationInput): RecommendedApproval[] =
     approvals.push(boilerRegistration);
   }
 
-  return approvals;
+  return approvals.map((approval) => structuredClone(approval));
 };
 
 const needsConsentToOperate = (input: DerivationInput): boolean =>

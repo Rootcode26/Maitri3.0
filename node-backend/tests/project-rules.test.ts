@@ -28,7 +28,7 @@ describe('deriveApprovals (fallback)', () => {
       {
         ...base,
         industry: 'steel' as const,
-        furnaceType: 'Induction furnace',
+        furnaceType: 'Induction furnace' as const,
         boiler: 'yes' as const,
       },
     ];
@@ -60,7 +60,11 @@ describe('deriveApprovals (fallback)', () => {
   });
 
   it('omits the food licence for non-food industries', () => {
-    const approvals = deriveApprovals({ ...base, industry: 'textile', primaryActivity: 'Weaving' });
+    const approvals = deriveApprovals({
+      ...base,
+      industry: 'textile',
+      primaryActivity: 'Weaving' as const,
+    });
     expect(approvals.map((a) => a.key)).not.toContain('food-licence');
     expect(approvals.map((a) => a.key)).toEqual(['factory-registration', 'fire-noc']);
   });
@@ -74,7 +78,7 @@ describe('deriveApprovals (fallback)', () => {
     const approvals = deriveApprovals({
       ...base,
       industry: 'textile',
-      primaryActivity: 'Dyeing & processing',
+      primaryActivity: 'Dyeing & processing' as const,
       wetProcessing: 'yes',
     });
     const consent = approvals.find((a) => a.key === 'consent-to-operate');
@@ -86,8 +90,8 @@ describe('deriveApprovals (fallback)', () => {
     const approvals = deriveApprovals({
       ...base,
       industry: 'steel',
-      primaryActivity: 'Foundry / casting',
-      furnaceType: 'Induction furnace',
+      primaryActivity: 'Foundry / casting' as const,
+      furnaceType: 'Induction furnace' as const,
     });
     expect(approvals.map((a) => a.key)).toContain('consent-to-operate');
   });
@@ -96,7 +100,7 @@ describe('deriveApprovals (fallback)', () => {
     const approvals = deriveApprovals({
       ...base,
       industry: 'steel',
-      primaryActivity: 'Rolling mill',
+      primaryActivity: 'Rolling mill' as const,
     });
     expect(approvals.map((a) => a.key)).not.toContain('consent-to-operate');
     expect(approvals.map((a) => a.key)).toEqual(['factory-registration', 'fire-noc']);
@@ -131,7 +135,7 @@ describe('deriveApprovals (fallback)', () => {
     const approvals = deriveApprovals({
       ...base,
       industry: 'steel',
-      furnaceType: 'Induction furnace',
+      furnaceType: 'Induction furnace' as const,
       boiler: 'yes',
     });
     for (const approval of approvals) {

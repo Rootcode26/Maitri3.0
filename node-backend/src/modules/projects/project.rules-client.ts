@@ -19,13 +19,13 @@ const documentSchema = z.object({
 });
 
 const approvalSchema = z.object({
-  key: z.string().min(1),
-  title: z.string().min(1),
+  key: z.string().min(1).max(60),
+  title: z.string().min(1).max(120),
   status: z.enum(['required', 'recommended']),
   reason: z.string().optional(),
-  ruleId: z.string().optional(),
+  ruleId: z.string().max(100).optional(),
   departmentKey: z.enum(departmentKeys),
-  processingDays: z.number().int().nonnegative(),
+  processingDays: z.number().int().positive(),
   documents: z.array(documentSchema),
 });
 
@@ -36,13 +36,20 @@ const evaluateResponseSchema = z.object({
   blockingIssues: z.array(blockingIssueSchema).optional(),
 });
 
-export type RulesEngineFailure = 'unreachable' | 'unauthorized' | 'bad-status' | 'invalid-response';
+export type RulesEngineFailure =
+  'unreachable' | 'unauthorized' | 'bad-status' | 'invalid-response' | 'blocked';
+
+export interface BlockingIssue {
+  code: string;
+  message: string;
+}
 
 export class RulesEngineError extends Error {
   constructor(
     readonly kind: RulesEngineFailure,
     message: string,
     readonly cause?: unknown,
+    readonly blockingIssues?: BlockingIssue[],
   ) {
     super(message);
     this.name = 'RulesEngineError';
@@ -90,6 +97,12 @@ export class RulesEngineClient {
         `Rules engine rejected the internal token (status ${response.status})`,
       );
     }
+    if (response.status === 400 || response.status === 422) {
+      throw new RulesEngineError(
+        'invalid-response',
+        `Rules engine rejected the request as invalid (status ${response.status})`,
+      );
+    }
     if (!response.ok) {
       throw new RulesEngineError(
         'bad-status',
@@ -114,9 +127,19 @@ export class RulesEngineClient {
     }
 
     if (parsed.data.blockingIssues && parsed.data.blockingIssues.length > 0) {
+      const issues: BlockingIssue[] = parsed.data.blockingIssues.map((issue) => ({
+        code: issue.code,
+        message: issue.message,
+      }));
       logger.warn(
-        { projectId, blockingIssues: parsed.data.blockingIssues },
-        'Rules engine returned blocking issues at evaluation time',
+        { projectId, blockingIssues: issues },
+        'Rules engine reported blocking issues; submission cannot proceed',
+      );
+      throw new RulesEngineError(
+        'blocked',
+        'The rules engine blocked this submission',
+        undefined,
+        issues,
       );
     }
 
