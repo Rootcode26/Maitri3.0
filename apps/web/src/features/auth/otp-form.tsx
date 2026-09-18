@@ -41,7 +41,7 @@ export function OtpForm() {
     try {
       const response = await authRequest<{ data: { user: AuthUser } }>("/otp/verify", { phoneNumber, otp });
       queryClient.setQueryData(sessionQueryKey, response.data.user);
-      router.push(role === "inspector" ? "/inspector/login" : "/auth/login");
+      router.push(role === "inspector" ? "/inspector/dashboard" : "/applicant/dashboard");
       router.refresh();
     } catch (cause) {
       setServerError(getAuthErrorMessage(cause, "verifyOtp"));
