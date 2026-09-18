@@ -13,10 +13,16 @@ import { AuthRepository } from './modules/auth/auth.repository.js';
 import { AuthService } from './modules/auth/auth.service.js';
 import { OtpService } from './modules/auth/otp.service.js';
 import { otpProvider } from './modules/auth/otp-provider.js';
+import { DocumentController } from './modules/documents/document.controller.js';
+import { DocumentRepository } from './modules/documents/document.repository.js';
+import { DocumentService } from './modules/documents/document.service.js';
+import { createValidationClient } from './modules/documents/document.validation-client.js';
 import { ProjectController } from './modules/projects/project.controller.js';
 import { ProjectRepository } from './modules/projects/project.repository.js';
 import { createRulesEngineClient } from './modules/projects/project.rules-client.js';
 import { ProjectService } from './modules/projects/project.service.js';
+import { createMalwareScanner } from './integrations/clamav/scanner.js';
+import { createObjectStorage } from './integrations/s3/storage.js';
 import { env } from './config/env.js';
 import { notFoundHandler } from './middleware/not-found.js';
 import { HealthRepository } from './repositories/health.repository.js';
@@ -41,8 +47,23 @@ export const createApp = ({
   const authController = new AuthController(
     new AuthService(new AuthRepository(), new OtpService(otpProvider)),
   );
+  const projectRepository = new ProjectRepository();
   const projectController = new ProjectController(
-    new ProjectService(new ProjectRepository(), createRulesEngineClient(env)),
+    new ProjectService(projectRepository, createRulesEngineClient(env)),
+  );
+  const documentController = new DocumentController(
+    new DocumentService(
+      projectRepository,
+      new DocumentRepository(),
+      createObjectStorage(env),
+      createMalwareScanner(env),
+      createValidationClient(env),
+      {
+        defaultMaxSizeMb: env.UPLOAD_MAX_SIZE_MB,
+        rulesVersion: env.RULES_VERSION,
+        includeDocumentBytes: env.VALIDATION_INCLUDE_DOCUMENT_BYTES,
+      },
+    ),
   );
 
   app.disable('x-powered-by');
@@ -53,7 +74,10 @@ export const createApp = ({
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-  app.use('/api/v1', createV1Router(healthController, authController, projectController));
+  app.use(
+    '/api/v1',
+    createV1Router(healthController, authController, projectController, documentController),
+  );
 
   app.use(notFoundHandler);
   app.use(errorHandler);
