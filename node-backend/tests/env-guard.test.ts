@@ -19,6 +19,9 @@ const baseEnv = {
 const loadEnv = async (overrides: Record<string, string>) => {
   vi.resetModules();
   vi.stubEnv('NODE_ENV', overrides.NODE_ENV ?? 'test');
+  if (!('OTP_DEVELOPMENT_CODE' in overrides)) {
+    vi.stubEnv('OTP_DEVELOPMENT_CODE', undefined);
+  }
   for (const [key, value] of Object.entries({ ...baseEnv, ...overrides })) {
     vi.stubEnv(key, value);
   }
