@@ -5,6 +5,7 @@ import {
   PlusSquare,
   ScrollText,
   ShieldCheck,
+  UserRound,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,15 +14,15 @@ type NavItem = {
   label: string;
   href: string;
   icon: typeof LayoutDashboard;
-  badge?: number;
+  ready?: boolean;
 };
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/applicant/dashboard", icon: LayoutDashboard },
-  { label: "New project", href: "/applicant/projects/new", icon: PlusSquare },
-  { label: "Applications", href: "/applicant/applications", icon: FileText, badge: 3 },
+  { label: "Dashboard", href: "/applicant/dashboard", icon: LayoutDashboard, ready: true },
+  { label: "New project", href: "/applicant/projects/new", icon: PlusSquare, ready: true },
+  { label: "Applications", href: "/applicant/applications", icon: FileText },
   { label: "Documents", href: "/applicant/documents", icon: ScrollText },
-  { label: "Notifications", href: "/applicant/notifications", icon: Bell, badge: 2 },
+  { label: "Notifications", href: "/applicant/notifications", icon: Bell },
   { label: "Verify certificate", href: "/applicant/verify", icon: ShieldCheck },
 ];
 
@@ -53,6 +54,22 @@ export function DashboardSidebar({ activeHref = "/applicant/dashboard" }: { acti
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = item.href === activeHref;
+            if (!item.ready) {
+              return (
+                <li key={item.href}>
+                  <span
+                    aria-disabled="true"
+                    className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-md px-3 text-sm font-medium text-slate-400"
+                  >
+                    <Icon className="size-5 shrink-0" aria-hidden="true" />
+                    <span className="flex-1">{item.label}</span>
+                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-400">
+                      Soon
+                    </span>
+                  </span>
+                </li>
+              );
+            }
             return (
               <li key={item.href}>
                 <Link
@@ -66,15 +83,6 @@ export function DashboardSidebar({ activeHref = "/applicant/dashboard" }: { acti
                 >
                   <Icon className="size-5 shrink-0" aria-hidden="true" />
                   <span className="flex-1">{item.label}</span>
-                  {item.badge ? (
-                    <span
-                      className={`inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                        active ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  ) : null}
                 </Link>
               </li>
             );
@@ -84,11 +92,11 @@ export function DashboardSidebar({ activeHref = "/applicant/dashboard" }: { acti
 
       {/* User */}
       <div className="flex items-center gap-3 border-t border-[#e4e0d6] px-6 py-4">
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-          SP
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+          <UserRound className="size-5" aria-hidden="true" />
         </span>
         <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold text-[#142b45]">Surya Patil</span>
+          <span className="block truncate text-sm font-semibold text-[#142b45]">Your account</span>
           <span className="block truncate text-xs text-slate-500">Applicant account</span>
         </span>
       </div>

@@ -1,12 +1,14 @@
+import Link from "next/link";
+
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const stats = [
-  { label: "Active projects", value: "2", note: "1 project awaiting an action" },
-  { label: "Approvals in progress", value: "7", note: "Across four departments" },
-  { label: "Action needed", value: "1", note: "Correction due in 3 days" },
-  { label: "Certificates issued", value: "4", note: "Available in your repository" },
+  { label: "Active projects", value: "0", note: "No projects started yet" },
+  { label: "Approvals in progress", value: "0", note: "Nothing under review" },
+  { label: "Action needed", value: "0", note: "No corrections pending" },
+  { label: "Certificates issued", value: "0", note: "None issued yet" },
 ];
 
 export default function ApplicantDashboardPage() {
@@ -16,15 +18,18 @@ export default function ApplicantDashboardPage() {
           {/* Greeting */}
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-slate-500">Monday, 15 September 2026</p>
               <h1 className="mt-1 text-4xl font-bold tracking-tight text-[#142b45] sm:text-5xl">
-                Good afternoon, Surya
+                Welcome back
               </h1>
               <p className="mt-2 text-base text-slate-600">
                 Here is what needs attention across your industrial projects.
               </p>
             </div>
-            <Button size="lg" className="h-11 rounded-full px-6">
+            <Button
+              render={<Link href="/applicant/projects/new" />}
+              size="lg"
+              className="h-11 rounded-full px-6"
+            >
               Create new project
             </Button>
           </div>
@@ -35,24 +40,22 @@ export default function ApplicantDashboardPage() {
           <section className="relative overflow-hidden rounded-xl bg-[#142b45] px-8 py-12 text-white sm:px-12 sm:py-16">
             <div className="max-w-2xl">
               <h2 className="text-4xl leading-tight font-bold sm:text-5xl">
-                Your Sahyadri Foods project is moving.
+                Start your first clearance project.
               </h2>
               <p className="mt-4 max-w-md text-base text-slate-200">
-                Three approvals are under review. One correction is due by 18 September.
+                Answer a few questions about your enterprise and we will identify the approvals
+                and documents you need.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
-                <Button size="lg" className="h-11 rounded-full px-6">
-                  Respond to correction
-                </Button>
-                <Button variant="secondary" size="lg" className="h-11 rounded-full bg-white px-6 text-[#142b45]">
-                  View all applications
+                <Button
+                  render={<Link href="/applicant/projects/new" />}
+                  size="lg"
+                  className="h-11 rounded-full bg-white px-6 text-[#142b45]"
+                >
+                  Create new project
                 </Button>
               </div>
             </div>
-            <span className="mt-8 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium">
-              <span className="size-2 rounded-full bg-white" aria-hidden="true" />
-              Project active
-            </span>
           </section>
 
           {/* Stat cards */}
@@ -78,12 +81,9 @@ export default function ApplicantDashboardPage() {
                   </CardTitle>
                   <p className="mt-1 text-sm text-slate-500">Recent departmental movement</p>
                 </div>
-                <a href="#" className="text-sm font-semibold text-primary underline-offset-4 hover:underline">
-                  View all
-                </a>
               </CardHeader>
               <CardContent className="px-6 pb-6 text-sm text-slate-500">
-                {/* Application list rows go here */}
+                You have no applications yet. Start by creating a new project.
               </CardContent>
             </Card>
 
@@ -93,7 +93,7 @@ export default function ApplicantDashboardPage() {
                 <p className="mt-1 text-sm text-slate-500">Ordered by deadline</p>
               </CardHeader>
               <CardContent className="px-6 pb-6 text-sm text-slate-500">
-                {/* Action list rows go here */}
+                Nothing needs your attention right now.
               </CardContent>
             </Card>
           </section>

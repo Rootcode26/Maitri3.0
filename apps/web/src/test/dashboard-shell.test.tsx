@@ -24,18 +24,23 @@ describe("DashboardSidebar", () => {
     expect(screen.getByText("UdyogSetu")).toBeInTheDocument();
     expect(screen.getByText("Applicant portal")).toBeInTheDocument();
     expect(screen.getByText("Workspace")).toBeInTheDocument();
-    expect(screen.getByText("Surya Patil")).toBeInTheDocument();
+    expect(screen.getByText("Your account")).toBeInTheDocument();
     expect(screen.getByText("Applicant account")).toBeInTheDocument();
 
-    for (const label of ["Dashboard", "New project", "Applications", "Documents", "Notifications", "Verify certificate"]) {
+    for (const label of ["Dashboard", "New project"]) {
       expect(screen.getByRole("link", { name: new RegExp(label, "i") })).toBeInTheDocument();
+    }
+    for (const label of ["Applications", "Documents", "Notifications", "Verify certificate"]) {
+      expect(screen.getByText(new RegExp(label, "i"))).toBeInTheDocument();
     }
   });
 
-  it("shows unread badges for Applications and Notifications", () => {
+  it("shows unbuilt sections as disabled and not as links", () => {
     render(<DashboardSidebar activeHref="/applicant/dashboard" />);
-    expect(within(screen.getByRole("link", { name: /applications/i })).getByText("3")).toBeInTheDocument();
-    expect(within(screen.getByRole("link", { name: /notifications/i })).getByText("2")).toBeInTheDocument();
+    for (const label of ["Applications", "Documents", "Notifications", "Verify certificate"]) {
+      expect(screen.queryByRole("link", { name: new RegExp(label, "i") })).toBeNull();
+    }
+    expect(screen.getAllByText("Soon")).toHaveLength(4);
   });
 
   it("marks only the active route with aria-current=page", () => {

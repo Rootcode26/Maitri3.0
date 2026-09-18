@@ -2,6 +2,7 @@ import { ArrowRight, ClipboardCheck, ShieldCheck, UserRound } from "lucide-react
 import Link from "next/link";
 
 import { SiteHeader } from "@/components/layout/site-header";
+import { SessionPanel } from "@/features/auth/session-panel";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 const workspaces = [
@@ -15,6 +16,7 @@ export default function Home() {
       <a href="#main-content" className="sr-only z-50 bg-white p-3 text-[#142b45] focus:fixed focus:top-4 focus:left-4 focus:not-sr-only">Skip to main content</a>
       <SiteHeader actionLabel="About the portal" actionHref="#portal-note" />
       <main id="main-content" className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-8 md:py-16 lg:px-10">
+        <SessionPanel />
         <section className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-semibold text-primary">Secure portal access</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#142b45] sm:text-4xl">Choose your workspace</h1>

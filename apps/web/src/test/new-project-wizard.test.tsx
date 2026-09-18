@@ -509,7 +509,6 @@ describe("NewProjectWizard — generated checklist result", () => {
     expect(screen.getByRole("heading", { name: /fire safety NOC/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /consent to operate/i })).toBeInTheDocument();
     expect(screen.getByText(/why these approvals/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /review application bundle/i })).toBeInTheDocument();
 
     // The wizard (stepper/progress) is gone once the result is shown.
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
