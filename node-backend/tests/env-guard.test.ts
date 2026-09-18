@@ -18,6 +18,7 @@ const baseEnv = {
 
 const loadEnv = async (overrides: Record<string, string>) => {
   vi.resetModules();
+  vi.unstubAllEnvs();
   vi.stubEnv('NODE_ENV', overrides.NODE_ENV ?? 'test');
   if (!('OTP_DEVELOPMENT_CODE' in overrides)) {
     vi.stubEnv('OTP_DEVELOPMENT_CODE', undefined);
@@ -43,5 +44,18 @@ describe('env configuration guards', () => {
     const { env } = await loadEnv({ NODE_ENV: 'production' });
     expect(env.NODE_ENV).toBe('production');
     expect(env.OTP_DEVELOPMENT_CODE).toBeUndefined();
+  });
+
+  it('parses boolean env vars correctly (the string "false" is false)', async () => {
+    const off = await loadEnv({
+      VALIDATION_INCLUDE_DOCUMENT_BYTES: 'false',
+      S3_FORCE_PATH_STYLE: 'false',
+    });
+    expect(off.env.VALIDATION_INCLUDE_DOCUMENT_BYTES).toBe(false);
+    expect(off.env.S3_FORCE_PATH_STYLE).toBe(false);
+    const on = await loadEnv({ VALIDATION_INCLUDE_DOCUMENT_BYTES: 'true' });
+    expect(on.env.VALIDATION_INCLUDE_DOCUMENT_BYTES).toBe(true);
+    const dflt = await loadEnv({});
+    expect(dflt.env.VALIDATION_INCLUDE_DOCUMENT_BYTES).toBe(false);
   });
 });

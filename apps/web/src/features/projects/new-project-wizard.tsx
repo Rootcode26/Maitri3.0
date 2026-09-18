@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Check, ChevronRight, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ChevronRight,
+  Info,
+  Loader2,
+  ShieldCheck,
+  TriangleAlert,
+} from "lucide-react";
 import { Fragment, type FormEvent, useEffect, useId, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -8,11 +17,16 @@ import { DocumentCollection } from "@/features/projects/document-collection";
 import {
   createProject,
   listDepartments,
+  listProjectDocuments,
   ProjectApiError,
   updateApprovalDepartment,
+  validateProjectDocuments,
   type Department,
   type Project,
   type ProjectApproval,
+  type ProjectDocument,
+  type ValidationIssue,
+  type ValidationResult,
 } from "@/features/projects/project-api";
 
 type FieldType = "text" | "select" | "number" | "textarea" | "checkboxes";
@@ -327,18 +341,159 @@ function ChecklistSkeleton() {
   );
 }
 
+const documentCheckStyles: Record<string, { className: string; label: string }> = {
+  matched: { className: "bg-emerald-100 text-emerald-800", label: "Matched" },
+  mismatched: { className: "bg-destructive/10 text-destructive", label: "Mismatch" },
+  unavailable: { className: "bg-slate-100 text-slate-600", label: "Unavailable" },
+  review_required: { className: "bg-amber-100 text-amber-800", label: "Review" },
+};
+
+function IssueList({
+  title,
+  issues,
+  tone,
+  onOpenApproval,
+}: {
+  title: string;
+  issues: ValidationIssue[];
+  tone: "error" | "warning" | "review";
+  onOpenApproval?: (approvalKey: string) => void;
+}) {
+  if (issues.length === 0) return null;
+  const toneClass = {
+    error: "border-destructive/30 bg-destructive/5 text-destructive",
+    warning: "border-amber-300 bg-amber-50 text-amber-900",
+    review: "border-slate-200 bg-slate-50 text-slate-700",
+  }[tone];
+  return (
+    <div className={`mt-4 rounded-lg border px-4 py-3 ${toneClass}`}>
+      <p className="text-sm font-semibold">{title}</p>
+      <ul className="mt-2 space-y-2">
+        {issues.map((issue, index) => (
+          <li key={`${issue.code}-${index}`} className="flex items-start justify-between gap-3 text-sm">
+            <span>
+              <span className="font-medium">{issue.message}</span>
+              {issue.suggestedAction ? (
+                <span className="mt-0.5 block text-xs opacity-80">{issue.suggestedAction}</span>
+              ) : null}
+            </span>
+            {issue.approvalKey && onOpenApproval ? (
+              <button
+                type="button"
+                onClick={() => onOpenApproval(issue.approvalKey!)}
+                className="shrink-0 rounded-sm text-xs font-semibold underline underline-offset-4 hover:opacity-80 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-current"
+              >
+                Review documents
+              </button>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ValidationReport({
+  result,
+  onOpenApproval,
+}: {
+  result: ValidationResult;
+  onOpenApproval?: (approvalKey: string) => void;
+}) {
+  const banner = {
+    complete: {
+      icon: ShieldCheck,
+      className: "border-emerald-300 bg-emerald-50 text-emerald-900",
+      label: "All checks passed",
+    },
+    review_required: {
+      icon: TriangleAlert,
+      className: "border-amber-300 bg-amber-50 text-amber-900",
+      label: "Some items need attention",
+    },
+    not_evaluated: {
+      icon: Info,
+      className: "border-slate-200 bg-slate-50 text-slate-700",
+      label: "Not evaluated yet",
+    },
+  }[result.validationStatus];
+  const Icon = banner.icon;
+
+  return (
+    <div className="mt-5">
+      <div className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${banner.className}`}>
+        <Icon className="size-5 shrink-0" aria-hidden="true" />
+        <span className="text-sm font-semibold">{banner.label}</span>
+      </div>
+      <IssueList
+        title="Must be resolved before submitting"
+        issues={result.blockingIssues}
+        tone="error"
+        onOpenApproval={onOpenApproval}
+      />
+      <IssueList
+        title="Please double-check these"
+        issues={result.warnings}
+        tone="warning"
+        onOpenApproval={onOpenApproval}
+      />
+      <IssueList
+        title="Needs review by an officer"
+        issues={result.reviewItems}
+        tone="review"
+        onOpenApproval={onOpenApproval}
+      />
+      {result.documentChecks.length > 0 && (
+        <div className="mt-4">
+          <p className="text-sm font-semibold text-[#142b45]">Document checks</p>
+          <ul className="mt-2 divide-y divide-[#e4e0d6] rounded-lg ring-1 ring-[#e4e0d6]">
+            {result.documentChecks.map((check, index) => {
+              const style = documentCheckStyles[check.status] ?? documentCheckStyles.review_required!;
+              return (
+                <li
+                  key={`${check.documentId}-${check.field ?? index}`}
+                  className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium text-[#142b45]">
+                      {check.documentKey}
+                    </span>
+                    <span className="block truncate text-xs text-slate-500">{check.reason}</span>
+                  </span>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${style.className}`}
+                  >
+                    {style.label}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ChecklistResult({ project }: { project: Project }) {
   const [approvals, setApprovals] = useState<ProjectApproval[]>(project.approvals);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [departmentsLoading, setDepartmentsLoading] = useState(true);
   const [openApproval, setOpenApproval] = useState<ProjectApproval | null>(null);
+  const [documents, setDocuments] = useState<ProjectDocument[]>([]);
+  const [validation, setValidation] = useState<ValidationResult | null>(null);
+  const [validating, setValidating] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   useEffect(() => {
     listDepartments()
       .then(setDepartments)
       .catch(() => setDepartments([]))
       .finally(() => setDepartmentsLoading(false));
-  }, []);
+    listProjectDocuments(project.id)
+      .then(setDocuments)
+      .catch(() => setDocuments([]));
+  }, [project.id]);
 
   async function changeDepartment(approvalId: string, departmentKey: string) {
     const previous = approvals;
@@ -357,12 +512,35 @@ function ChecklistResult({ project }: { project: Project }) {
     }
   }
 
+  async function runValidation() {
+    setValidating(true);
+    setValidationError(null);
+    try {
+      setValidation(await validateProjectDocuments(project.id));
+    } catch (cause) {
+      setValidationError(
+        cause instanceof ProjectApiError ? cause.message : "Could not validate the documents.",
+      );
+    } finally {
+      setValidating(false);
+    }
+  }
+
   if (openApproval) {
     return (
       <DocumentCollection
+        projectId={project.id}
+        approvalKey={openApproval.approvalKey}
         approvalTitle={openApproval.title}
         documents={openApproval.documents}
+        uploaded={documents.filter((doc) => doc.approvalKey === openApproval.approvalKey)}
         onBack={() => setOpenApproval(null)}
+        onUploadedChange={(next) =>
+          setDocuments((current) => [
+            ...current.filter((doc) => doc.approvalKey !== openApproval.approvalKey),
+            ...next,
+          ])
+        }
       />
     );
   }
@@ -400,6 +578,47 @@ function ChecklistResult({ project }: { project: Project }) {
       <aside className="mt-6 border-l-4 border-amber-500 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-900">
         <strong>Why these approvals?</strong> This checklist is generated from the project&rsquo;s activity, location, workforce, utilities and process profile.
       </aside>
+
+      <section className="mt-6 rounded-2xl bg-white p-6 ring-1 ring-[#e4e0d6] sm:p-7">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 className="font-heading text-xl font-semibold text-[#142b45]">Check your documents</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Run a pre-submission check on the documents you have uploaded so far.
+            </p>
+          </div>
+          <Button
+            size="lg"
+            className="h-11 rounded-full px-6"
+            onClick={runValidation}
+            disabled={validating}
+            aria-busy={validating}
+          >
+            {validating ? "Checking…" : validation ? "Re-check documents" : "Check documents"}
+            {validating ? (
+              <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+            ) : (
+              <ShieldCheck className="size-4" aria-hidden="true" />
+            )}
+          </Button>
+        </div>
+
+        {validationError && (
+          <p role="alert" className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive">
+            {validationError}
+          </p>
+        )}
+
+        {validation && !validationError && (
+          <ValidationReport
+            result={validation}
+            onOpenApproval={(approvalKey) => {
+              const approval = approvals.find((a) => a.approvalKey === approvalKey);
+              if (approval) setOpenApproval(approval);
+            }}
+          />
+        )}
+      </section>
     </div>
   );
 }

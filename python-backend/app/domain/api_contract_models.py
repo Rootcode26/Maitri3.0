@@ -9,6 +9,7 @@ YesNo = Literal["yes", "no"]
 NumberText = Annotated[str, Field(pattern=r"^[0-9]+(?:\.[0-9]+)?$")]
 Count = Annotated[int, Field(ge=0)]
 PositiveCount = Annotated[int, Field(gt=0)]
+Base64Content = Annotated[str, Field(min_length=1, max_length=20_000_000)]
 
 
 class ProjectProfile(ContractModel):
@@ -167,6 +168,7 @@ class UploadedDocument(ContractModel):
     extraction_status: Literal["not_run", "succeeded", "failed", "review_required"]
     extracted_data: ExtractedCredentials | None
     expires_on: date | None
+    content: Base64Content | None = None
 
     @model_validator(mode="after")
     def extraction_state_consistent(self):

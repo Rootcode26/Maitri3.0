@@ -6,6 +6,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { AppError } from '../src/errors/app-error.js';
 import { errorHandler } from '../src/middleware/error-handler.js';
 import { issueAccessToken } from '../src/modules/auth/token.service.js';
+import { DocumentController } from '../src/modules/documents/document.controller.js';
+import type { DocumentService } from '../src/modules/documents/document.service.js';
 import { ProjectController } from '../src/modules/projects/project.controller.js';
 import { createProjectRouter } from '../src/modules/projects/project.routes.js';
 import type { ProjectService } from '../src/modules/projects/project.service.js';
@@ -54,9 +56,13 @@ const createTestApp = () => {
   const app = express();
   app.use(express.json());
   app.use(cookieParser());
+  const documentController = new DocumentController({} as unknown as DocumentService);
   app.use(
     '/api/v1/projects',
-    createProjectRouter(new ProjectController(service as unknown as ProjectService)),
+    createProjectRouter(
+      new ProjectController(service as unknown as ProjectService),
+      documentController,
+    ),
   );
   app.use(errorHandler);
   return { app, service };

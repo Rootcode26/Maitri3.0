@@ -16,6 +16,9 @@ const sensitiveKeys = [
   'privateKey',
   'otp',
   'otpHash',
+  'content',
+  'extractedData',
+  'storageKey',
   'DATABASE_URL',
   'REDIS_URL',
 ] as const;

@@ -1,12 +1,19 @@
 "use client";
 
-import { ArrowLeft, Check, Upload, X } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Upload, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import type { ApprovalDocument } from "@/features/projects/project-api";
+import {
+  deleteProjectDocument,
+  ProjectApiError,
+  uploadProjectDocument,
+  type ApprovalDocument,
+  type ProjectDocument,
+} from "@/features/projects/project-api";
 
 type DocSpec = {
+  key: string;
   name: string;
   formats: string[];
   maxSizeMb: number;
@@ -17,7 +24,7 @@ type DocSpec = {
   required: boolean;
 };
 
-const knownSpecs: Record<string, Omit<DocSpec, "name" | "required">> = {
+const knownSpecs: Record<string, Omit<DocSpec, "key" | "name" | "required">> = {
   "food-premises-plan": {
     formats: ["PDF"],
     maxSizeMb: 5,
@@ -330,6 +337,7 @@ function specFor(document: ApprovalDocument): DocSpec {
     ? `${document.filesRequired} complete ${document.filesRequired === 1 ? "file" : "files"}`
     : (known?.filesRequired ?? "1 complete file");
   return {
+    key: document.key,
     name: document.name,
     formats,
     maxSizeMb: document.maxSizeMb ?? known?.maxSizeMb ?? generic.maxSizeMb,
@@ -345,34 +353,63 @@ function shortFormat(spec: DocSpec) {
   return `${spec.formats.join(", ")} · Up to ${spec.maxSizeMb} MB`;
 }
 
+function acceptedExtensions(formats: string[]): string[] {
+  return formats.flatMap((format) => {
+    const f = format.toLowerCase();
+    return f === "jpg" || f === "jpeg" ? ["jpg", "jpeg"] : [f];
+  });
+}
+
 function validateFile(file: File, spec: DocSpec): string | null {
-  const ext = file.name.split(".").pop()?.toUpperCase() ?? "";
-  if (!spec.formats.includes(ext)) return `File must be ${spec.formats.join(", ")}.`;
-  if (file.size > spec.maxSizeMb * 1024 * 1024) return `File must be ${spec.maxSizeMb} MB or smaller.`;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (!acceptedExtensions(spec.formats).includes(ext)) {
+    return `File must be ${spec.formats.join(", ")}.`;
+  }
+  if (file.size > spec.maxSizeMb * 1_000_000) {
+    return `File must be ${spec.maxSizeMb} MB or smaller.`;
+  }
   return null;
 }
 
 export function DocumentCollection({
+  projectId,
+  approvalKey,
   approvalTitle,
   documents,
+  uploaded,
   onBack,
+  onUploadedChange,
 }: {
+  projectId: string;
+  approvalKey: string;
   approvalTitle: string;
   documents: ApprovalDocument[];
+  uploaded: ProjectDocument[];
   onBack: () => void;
+  onUploadedChange?: (documents: ProjectDocument[]) => void;
 }) {
   const specs = useMemo(() => documents.map(specFor), [documents]);
   const total = specs.length;
 
+  const initialByKey = useMemo(() => {
+    const map: Record<string, ProjectDocument> = {};
+    for (const doc of uploaded) {
+      const existing = map[doc.documentKey];
+      if (!existing || doc.version > existing.version) map[doc.documentKey] = doc;
+    }
+    return map;
+  }, [uploaded]);
+
+  const [uploadedByKey, setUploadedByKey] = useState<Record<string, ProjectDocument>>(initialByKey);
   const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState<Record<number, string>>({});
-  const [errors, setErrors] = useState<Record<number, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [busyKey, setBusyKey] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const selectedCount = Object.keys(selected).length;
-  const remaining = total - selectedCount;
-  const progress = total ? Math.round((selectedCount / total) * 100) : 0;
+  const uploadedCount = Object.keys(uploadedByKey).length;
+  const remaining = total - uploadedCount;
+  const progress = total ? Math.round((uploadedCount / total) * 100) : 0;
 
   if (total === 0) {
     return (
@@ -398,36 +435,70 @@ export function DocumentCollection({
   const spec = specs[current]!;
   const isLast = current === total - 1;
 
-  function acceptFile(file: File | undefined) {
-    if (!file) return;
-    const error = validateFile(file, spec);
-    if (error) {
-      setErrors((prev) => ({ ...prev, [current]: error }));
-      setSelected((prev) => {
-        const next = { ...prev };
-        delete next[current];
-        return next;
-      });
-      return;
-    }
+  const errorFor = (key: string, message: string) =>
+    setErrors((prev) => ({ ...prev, [key]: message }));
+  const clearError = (key: string) =>
     setErrors((prev) => {
       const next = { ...prev };
-      delete next[current];
+      delete next[key];
       return next;
     });
-    setSelected((prev) => ({ ...prev, [current]: file.name }));
+
+  async function acceptFile(file: File | undefined) {
+    if (!file) return;
+    const key = spec.key;
+    const localError = validateFile(file, spec);
+    if (localError) {
+      errorFor(key, localError);
+      return;
+    }
+    clearError(key);
+    setBusyKey(key);
+    try {
+      const document = await uploadProjectDocument(projectId, approvalKey, key, file);
+      setUploadedByKey((prev) => {
+        const next = { ...prev, [key]: document };
+        onUploadedChange?.(Object.values(next));
+        return next;
+      });
+    } catch (cause) {
+      errorFor(
+        key,
+        cause instanceof ProjectApiError
+          ? cause.message
+          : "Could not upload the file. Please try again.",
+      );
+    } finally {
+      setBusyKey(null);
+    }
   }
 
-  function removeFile() {
-    setSelected((prev) => {
-      const next = { ...prev };
-      delete next[current];
-      return next;
-    });
+  async function removeFile() {
+    const key = spec.key;
+    const document = uploadedByKey[key];
+    if (!document) return;
+    setBusyKey(key);
+    try {
+      await deleteProjectDocument(projectId, document.id);
+      setUploadedByKey((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        onUploadedChange?.(Object.values(next));
+        return next;
+      });
+    } catch (cause) {
+      errorFor(
+        key,
+        cause instanceof ProjectApiError ? cause.message : "Could not remove the file.",
+      );
+    } finally {
+      setBusyKey(null);
+    }
   }
 
-  const currentError = errors[current];
-  const currentFile = selected[current];
+  const currentError = errors[spec.key];
+  const currentUploaded = uploadedByKey[spec.key];
+  const busy = busyKey === spec.key;
 
   return (
     <div>
@@ -446,7 +517,7 @@ export function DocumentCollection({
           <h2 className="font-heading text-xl font-semibold text-[#142b45]">Required documents</h2>
           <p className="mt-1 text-xs font-medium tracking-wide text-slate-400 uppercase">{approvalTitle}</p>
           <p className="mt-1 text-sm text-slate-500">
-            {selectedCount} of {total} files selected
+            {uploadedCount} of {total} files uploaded
           </p>
           <div
             className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100"
@@ -461,7 +532,7 @@ export function DocumentCollection({
           <ol className="mt-5 space-y-1">
             {specs.map((docSpec, index) => {
               const isCurrent = index === current;
-              const done = selected[index] !== undefined;
+              const done = uploadedByKey[docSpec.key] !== undefined;
               return (
                 <li key={docSpec.name}>
                   <button
@@ -570,24 +641,46 @@ export function DocumentCollection({
             ref={inputRef}
             type="file"
             className="sr-only"
-            accept={spec.formats.map((f) => `.${f.toLowerCase()}`).join(",")}
-            onChange={(e) => acceptFile(e.target.files?.[0])}
+            accept={acceptedExtensions(spec.formats)
+              .map((ext) => `.${ext}`)
+              .join(",")}
+            onChange={(e) => {
+              void acceptFile(e.target.files?.[0]);
+              e.target.value = "";
+            }}
           />
 
-          {currentFile ? (
+          {busy ? (
+            <div className="mt-4 flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-5 py-4">
+              <Loader2 className="size-5 shrink-0 animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" />
+              <span className="text-sm font-medium text-[#142b45]">Uploading…</span>
+            </div>
+          ) : currentUploaded ? (
             <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-emerald-300 bg-emerald-50 px-5 py-4">
               <span className="flex min-w-0 items-center gap-3">
                 <Check className="size-5 shrink-0 text-emerald-600" aria-hidden="true" />
-                <span className="truncate text-sm font-medium text-[#142b45]">{currentFile}</span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-[#142b45]">{currentUploaded.fileName}</span>
+                  <span className="block text-xs text-slate-500">Uploaded · version {currentUploaded.version}</span>
+                </span>
               </span>
-              <button
-                type="button"
-                onClick={removeFile}
-                className="inline-flex items-center gap-1 rounded-sm text-sm font-medium text-slate-600 hover:text-destructive focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                <X className="size-4" aria-hidden="true" />
-                Remove
-              </button>
+              <div className="flex shrink-0 items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  className="rounded-sm text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  Replace
+                </button>
+                <button
+                  type="button"
+                  onClick={removeFile}
+                  className="inline-flex items-center gap-1 rounded-sm text-sm font-medium text-slate-600 hover:text-destructive focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  <X className="size-4" aria-hidden="true" />
+                  Remove
+                </button>
+              </div>
             </div>
           ) : (
             <div
@@ -599,7 +692,7 @@ export function DocumentCollection({
               onDrop={(e) => {
                 e.preventDefault();
                 setDragging(false);
-                acceptFile(e.dataTransfer.files?.[0]);
+                void acceptFile(e.dataTransfer.files?.[0]);
               }}
               className={`mt-4 flex flex-col items-center gap-3 rounded-xl border-2 border-dashed px-6 py-12 text-center transition-colors ${
                 dragging ? "border-primary bg-primary/5" : currentError ? "border-destructive/50 bg-destructive/5" : "border-primary/40 bg-primary/5"
@@ -620,7 +713,7 @@ export function DocumentCollection({
           {currentError && <p className="mt-3 text-sm font-medium text-destructive">{currentError}</p>}
 
           <p className="mt-6 text-sm leading-relaxed text-slate-500">
-            Files are checked locally for format and size. They are not uploaded to a department or stored on a server.
+            Files are uploaded securely and their type and size are verified on the server. This does not submit your application.
           </p>
 
           <hr className="my-6 border-[#e4e0d6]" />

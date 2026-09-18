@@ -46,6 +46,20 @@ const envSchema = z
     RULES_SERVICE_TOKEN: z.string().min(1).optional(),
     RULES_VERSION: z.string().trim().min(1).default('2026.09'),
     RULES_SERVICE_TIMEOUT_MS: z.coerce.number().int().positive().default(5_000),
+    S3_REGION: z.string().trim().min(1).default('us-east-1'),
+    S3_BUCKET: z.string().trim().min(1).optional(),
+    S3_ENDPOINT: z.url({ protocol: /^https?$/ }).optional(),
+    S3_ACCESS_KEY_ID: z.string().trim().min(1).optional(),
+    S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    S3_FORCE_PATH_STYLE: z.stringbool().default(false),
+    S3_SIGNED_URL_TTL_SECONDS: z.coerce.number().int().positive().default(300),
+    UPLOAD_MAX_SIZE_MB: z.coerce.number().positive().default(10),
+    CLAMAV_HOST: z.string().trim().min(1).optional(),
+    CLAMAV_PORT: z.coerce.number().int().positive().max(65_535).default(3310),
+    CLAMAV_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
+    UPLOAD_RATE_LIMIT: z.coerce.number().int().positive().default(60),
+    UPLOAD_RATE_WINDOW_SECONDS: z.coerce.number().int().positive().default(60),
+    VALIDATION_INCLUDE_DOCUMENT_BYTES: z.stringbool().default(false),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV === 'production' && value.OTP_DEVELOPMENT_CODE !== undefined) {
