@@ -73,6 +73,12 @@ export class DocumentService {
     }
 
     const project = await this.ownedProject(applicantId, projectId);
+    if (['submitted', 'under_review', 'approved', 'rejected'].includes(project.status)) {
+      throw new AppError('Documents cannot be changed while this application is under review', {
+        statusCode: 409,
+        code: 'PROJECT_NOT_EDITABLE',
+      });
+    }
     const approval = project.approvals.find((a) => a.approvalKey === input.approvalKey);
     if (!approval) {
       throw new AppError('Approval not found for this project', {
@@ -171,7 +177,13 @@ export class DocumentService {
   }
 
   async deleteDocument(applicantId: string, projectId: string, documentId: string): Promise<void> {
-    await this.ownedProject(applicantId, projectId);
+    const project = await this.ownedProject(applicantId, projectId);
+    if (['submitted', 'under_review', 'approved', 'rejected'].includes(project.status)) {
+      throw new AppError('Documents cannot be changed while this application is under review', {
+        statusCode: 409,
+        code: 'PROJECT_NOT_EDITABLE',
+      });
+    }
     const document = await this.documentRepository.findById(projectId, documentId);
     if (!document) {
       throw new AppError('Document not found', { statusCode: 404, code: 'DOCUMENT_NOT_FOUND' });

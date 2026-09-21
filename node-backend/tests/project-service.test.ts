@@ -31,6 +31,60 @@ const input = createProjectSchema.parse({
 });
 
 describe('ProjectService', () => {
+  it('submits a complete draft project', async () => {
+    const project = { id: 'p1', status: 'submitted' };
+    const submitProject = vi.fn().mockResolvedValue({
+      project,
+      missingDocuments: [],
+      conflict: false,
+    });
+    const service = new ProjectService({ submitProject } as unknown as ProjectRepository);
+
+    await expect(service.submitProject('applicant-1', 'p1')).resolves.toBe(project);
+    expect(submitProject).toHaveBeenCalledWith('applicant-1', 'p1');
+  });
+
+  it('rejects submission when required documents are missing', async () => {
+    const submitProject = vi.fn().mockResolvedValue({
+      project: null,
+      missingDocuments: ['Factory plan', 'Identity proof'],
+      conflict: false,
+    });
+    const service = new ProjectService({ submitProject } as unknown as ProjectRepository);
+
+    await expect(service.submitProject('applicant-1', 'p1')).rejects.toMatchObject({
+      statusCode: 422,
+      code: 'REQUIRED_DOCUMENTS_MISSING',
+      details: { missingDocuments: ['Factory plan', 'Identity proof'] },
+    });
+  });
+
+  it('rejects repeat submission of a non-draft project', async () => {
+    const submitProject = vi.fn().mockResolvedValue({
+      project: null,
+      missingDocuments: [],
+      conflict: true,
+    });
+    const service = new ProjectService({ submitProject } as unknown as ProjectRepository);
+    await expect(service.submitProject('applicant-1', 'p1')).rejects.toMatchObject({
+      statusCode: 409,
+      code: 'PROJECT_NOT_DRAFT',
+    });
+  });
+
+  it('does not expose whether an unowned project exists during submission', async () => {
+    const submitProject = vi.fn().mockResolvedValue({
+      project: null,
+      missingDocuments: [],
+      conflict: false,
+    });
+    const service = new ProjectService({ submitProject } as unknown as ProjectRepository);
+    await expect(service.submitProject('applicant-1', 'p1')).rejects.toMatchObject({
+      statusCode: 404,
+      code: 'PROJECT_NOT_FOUND',
+    });
+  });
+
   it('derives approvals with the built-in rules when no engine is configured', async () => {
     const createProject = vi.fn().mockResolvedValue({ id: 'project-1' });
     const service = new ProjectService({ createProject } as unknown as ProjectRepository);

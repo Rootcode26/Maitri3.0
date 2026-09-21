@@ -30,6 +30,14 @@ export class ProjectController {
     response.status(200).json({ status: 'success', data: { departments } });
   };
 
+  readonly submit: RequestHandler = async (request, response) => {
+    const project = await this.projectService.submitProject(
+      request.user!.userId,
+      request.params.id as string,
+    );
+    response.status(200).json({ status: 'success', data: { project } });
+  };
+
   readonly updateApprovalDepartment: RequestHandler = async (request, response) => {
     const { departmentKey } = updateApprovalDepartmentSchema.parse(request.body);
     const approval = await this.projectService.setApprovalDepartment(

@@ -2,7 +2,10 @@ import type { ApprovalStatus } from './project.rules.js';
 import type { CreateProjectInput } from './project.schemas.js';
 
 export type Industry = 'food' | 'textile' | 'steel';
-export type ProjectStatus = 'draft' | 'submitted';
+export type ProjectStatus =
+  'draft' | 'submitted' | 'under_review' | 'correction_required' | 'approved' | 'rejected';
+export type ApprovalReviewStatus =
+  'pending' | 'under_review' | 'correction_required' | 'approved' | 'rejected';
 
 export interface ProjectDepartment {
   id: string;
@@ -32,6 +35,11 @@ export interface ProjectApprovalRecord {
   documents: ApprovalDocument[];
   processingDays: number;
   department: ProjectDepartment;
+  reviewStatus: ApprovalReviewStatus;
+  reviewStartedAt: string | null;
+  decidedAt: string | null;
+  decidedBy: string | null;
+  decisionNote: string | null;
 }
 
 export interface ProjectSummary {
@@ -42,6 +50,7 @@ export interface ProjectSummary {
   primaryActivity: string;
   status: ProjectStatus;
   createdAt: string;
+  submittedAt: string | null;
 }
 
 export interface ProjectRecord extends ProjectSummary {

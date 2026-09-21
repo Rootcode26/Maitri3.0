@@ -22,6 +22,7 @@ interface ProjectRow {
   details: CreateProjectInput;
   created_at: Date;
   updated_at: Date;
+  submitted_at: Date | null;
 }
 
 interface ProjectSummaryRow {
@@ -32,6 +33,7 @@ interface ProjectSummaryRow {
   primary_activity: string;
   status: ProjectStatus;
   created_at: Date;
+  submitted_at: Date | null;
 }
 
 interface ApprovalRow {
@@ -46,6 +48,11 @@ interface ApprovalRow {
   department_id: string;
   department_key: string;
   department_name: string;
+  review_status: ProjectApprovalRecord['reviewStatus'];
+  review_started_at: Date | null;
+  decided_at: Date | null;
+  decided_by: string | null;
+  decision_note: string | null;
 }
 
 const mapSummary = (row: ProjectSummaryRow): ProjectSummary => ({
@@ -56,6 +63,7 @@ const mapSummary = (row: ProjectSummaryRow): ProjectSummary => ({
   primaryActivity: row.primary_activity,
   status: row.status,
   createdAt: row.created_at.toISOString(),
+  submittedAt: row.submitted_at?.toISOString() ?? null,
 });
 
 const mapApproval = (row: ApprovalRow): ProjectApprovalRecord => ({
@@ -68,6 +76,11 @@ const mapApproval = (row: ApprovalRow): ProjectApprovalRecord => ({
   documents: row.documents,
   processingDays: row.processing_days,
   department: { id: row.department_id, key: row.department_key, name: row.department_name },
+  reviewStatus: row.review_status,
+  reviewStartedAt: row.review_started_at?.toISOString() ?? null,
+  decidedAt: row.decided_at?.toISOString() ?? null,
+  decidedBy: row.decided_by,
+  decisionNote: row.decision_note,
 });
 
 const mapProject = (row: ProjectRow, approvals: ProjectApprovalRecord[]): ProjectRecord => ({
@@ -82,6 +95,7 @@ const mapProject = (row: ProjectRow, approvals: ProjectApprovalRecord[]): Projec
   approvals,
   createdAt: row.created_at.toISOString(),
   updatedAt: row.updated_at.toISOString(),
+  submittedAt: row.submitted_at?.toISOString() ?? null,
 });
 
 export class ProjectRepository {
@@ -143,7 +157,7 @@ export class ProjectRepository {
   async findProjectById(projectId: string): Promise<ProjectRecord | null> {
     const result = await query<ProjectRow>(
       `SELECT id, applicant_id, enterprise_name, industry, district, primary_activity,
-              status, details, created_at, updated_at
+              status, details, created_at, updated_at, submitted_at
        FROM projects WHERE id = $1`,
       [projectId],
     );
@@ -155,7 +169,8 @@ export class ProjectRepository {
 
   async findProjectsByApplicant(applicantId: string): Promise<ProjectSummary[]> {
     const result = await query<ProjectSummaryRow>(
-      `SELECT id, enterprise_name, industry, district, primary_activity, status, created_at
+      `SELECT id, enterprise_name, industry, district, primary_activity, status, created_at,
+              submitted_at
        FROM projects WHERE applicant_id = $1
        ORDER BY created_at DESC`,
       [applicantId],
@@ -170,6 +185,75 @@ export class ProjectRepository {
     return result.rows.map((row) => ({ id: row.id, key: row.key, name: row.name }));
   }
 
+  async submitProject(
+    applicantId: string,
+    projectId: string,
+  ): Promise<{ project: ProjectRecord | null; missingDocuments: string[]; conflict: boolean }> {
+    const client = await databasePool.connect();
+    try {
+      await client.query('BEGIN');
+      const projectResult = await client.query<{ status: ProjectStatus }>(
+        `SELECT status FROM projects WHERE id = $1 AND applicant_id = $2 FOR UPDATE`,
+        [projectId, applicantId],
+      );
+      const current = projectResult.rows[0];
+      if (!current) {
+        await client.query('ROLLBACK');
+        return { project: null, missingDocuments: [], conflict: false };
+      }
+      if (current.status !== 'draft') {
+        await client.query('ROLLBACK');
+        return { project: null, missingDocuments: [], conflict: true };
+      }
+
+      const approvalResult = await client.query<{
+        approval_key: string;
+        documents: ApprovalDocument[];
+      }>(`SELECT approval_key, documents FROM project_approvals WHERE project_id = $1`, [
+        projectId,
+      ]);
+      const uploadedResult = await client.query<{ approval_key: string; document_key: string }>(
+        `SELECT DISTINCT approval_key, document_key FROM project_documents WHERE project_id = $1`,
+        [projectId],
+      );
+      const uploaded = new Set(
+        uploadedResult.rows.map((row) => `${row.approval_key}:${row.document_key}`),
+      );
+      const missingDocuments = approvalResult.rows.flatMap((approval) =>
+        approval.documents
+          .filter((document) => document.required !== false)
+          .filter((document) => !uploaded.has(`${approval.approval_key}:${document.key}`))
+          .map((document) => document.name),
+      );
+      if (missingDocuments.length > 0) {
+        await client.query('ROLLBACK');
+        return { project: null, missingDocuments, conflict: false };
+      }
+
+      await client.query(
+        `UPDATE projects SET status = 'submitted', submitted_at = NOW() WHERE id = $1`,
+        [projectId],
+      );
+      await client.query(
+        `INSERT INTO application_status_history
+           (project_id, actor_id, from_status, to_status, note)
+         VALUES ($1, $2, 'draft', 'submitted', 'Application submitted for departmental review')`,
+        [projectId, applicantId],
+      );
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+    return {
+      project: await this.findProjectById(projectId),
+      missingDocuments: [],
+      conflict: false,
+    };
+  }
+
   async updateApprovalDepartment(
     projectId: string,
     approvalId: string,
@@ -182,7 +266,9 @@ export class ProjectRepository {
        WHERE pa.id = $2 AND pa.project_id = $1 AND d."key" = $3
        RETURNING pa.id, pa.approval_key, pa.title, pa.status, pa.reason, pa.rule_id,
                  pa.documents, pa.processing_days,
-                 d.id AS department_id, d."key" AS department_key, d.name AS department_name`,
+                 d.id AS department_id, d."key" AS department_key, d.name AS department_name,
+                 pa.review_status, pa.review_started_at, pa.decided_at, pa.decided_by,
+                 pa.decision_note`,
       [projectId, approvalId, departmentKey],
     );
     return result.rows[0] ? mapApproval(result.rows[0]) : null;
@@ -192,7 +278,9 @@ export class ProjectRepository {
     const result = await query<ApprovalRow>(
       `SELECT pa.id, pa.approval_key, pa.title, pa.status, pa.reason, pa.rule_id,
               pa.documents, pa.processing_days,
-              d.id AS department_id, d."key" AS department_key, d.name AS department_name
+              d.id AS department_id, d."key" AS department_key, d.name AS department_name,
+              pa.review_status, pa.review_started_at, pa.decided_at, pa.decided_by,
+              pa.decision_note
        FROM project_approvals pa
        JOIN departments d ON d.id = pa.department_id
        WHERE pa.project_id = $1

@@ -49,6 +49,7 @@ const createTestApp = () => {
     createProject: vi.fn().mockResolvedValue(projectRecord),
     listProjects: vi.fn().mockResolvedValue([{ id: 'project-1' }]),
     getProject: vi.fn().mockResolvedValue(projectRecord),
+    submitProject: vi.fn().mockResolvedValue({ ...projectRecord, status: 'submitted' }),
     setApprovalDepartment: vi
       .fn()
       .mockResolvedValue({ approvalKey: 'consent-to-operate', department: { key: 'mpcb' } }),
@@ -73,6 +74,17 @@ const inspectorCookie = () =>
   `access_token=${issueAccessToken('inspector-1', 'inspector', 'department-1')}`;
 
 describe('project routes', () => {
+  it('submits an owned draft project', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .post('/api/v1/projects/project-1/submit')
+      .set('Cookie', applicantCookie());
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.project.status).toBe('submitted');
+    expect(service.submitProject).toHaveBeenCalledWith('applicant-1', 'project-1');
+  });
+
   it('creates a project for an authenticated applicant', async () => {
     const { app, service } = createTestApp();
     const response = await request(app)

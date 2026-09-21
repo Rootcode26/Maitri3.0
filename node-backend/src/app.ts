@@ -21,6 +21,9 @@ import { ProjectController } from './modules/projects/project.controller.js';
 import { ProjectRepository } from './modules/projects/project.repository.js';
 import { createRulesEngineClient } from './modules/projects/project.rules-client.js';
 import { ProjectService } from './modules/projects/project.service.js';
+import { InspectorController } from './modules/inspector/inspector.controller.js';
+import { InspectorRepository } from './modules/inspector/inspector.repository.js';
+import { InspectorService } from './modules/inspector/inspector.service.js';
 import { createMalwareScanner } from './integrations/clamav/scanner.js';
 import { createObjectStorage } from './integrations/s3/storage.js';
 import { env } from './config/env.js';
@@ -51,11 +54,12 @@ export const createApp = ({
   const projectController = new ProjectController(
     new ProjectService(projectRepository, createRulesEngineClient(env)),
   );
+  const objectStorage = createObjectStorage(env);
   const documentController = new DocumentController(
     new DocumentService(
       projectRepository,
       new DocumentRepository(),
-      createObjectStorage(env),
+      objectStorage,
       createMalwareScanner(env),
       createValidationClient(env),
       {
@@ -64,6 +68,9 @@ export const createApp = ({
         includeDocumentBytes: env.VALIDATION_INCLUDE_DOCUMENT_BYTES,
       },
     ),
+  );
+  const inspectorController = new InspectorController(
+    new InspectorService(new InspectorRepository(), objectStorage),
   );
 
   app.disable('x-powered-by');
@@ -76,7 +83,13 @@ export const createApp = ({
 
   app.use(
     '/api/v1',
-    createV1Router(healthController, authController, projectController, documentController),
+    createV1Router(
+      healthController,
+      authController,
+      projectController,
+      documentController,
+      inspectorController,
+    ),
   );
 
   app.use(notFoundHandler);
