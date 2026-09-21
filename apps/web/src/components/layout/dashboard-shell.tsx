@@ -55,15 +55,17 @@ export function DashboardTopbar({ breadcrumb }: { breadcrumb: string[] }) {
 export function DashboardShell({
   activeHref,
   breadcrumb,
+  workspace = "applicant",
   children,
 }: {
   activeHref: string;
   breadcrumb: string[];
+  workspace?: "applicant" | "inspector";
   children: ReactNode;
 }) {
   return (
     <div className="flex min-h-svh bg-[#f7f6f2]">
-      <DashboardSidebar activeHref={activeHref} />
+      <DashboardSidebar activeHref={activeHref} workspace={workspace} />
       <div className="flex min-w-0 flex-1 flex-col bg-white">
         <DashboardTopbar breadcrumb={breadcrumb} />
         <main id="main-content" className="flex-1">

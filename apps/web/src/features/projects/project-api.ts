@@ -39,6 +39,38 @@ export interface Project {
   primaryActivity: string;
   status: string;
   approvals: ProjectApproval[];
+  submittedAt?: string | null;
+}
+
+export async function submitProject(projectId: string): Promise<Project> {
+  const response = await fetch(`/api/v1/projects/${projectId}/submit`, {
+    method: "POST",
+    credentials: "include",
+  });
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string;
+    code?: string;
+    details?: { missingDocuments?: string[] };
+    data?: { project: Project };
+  };
+  if (!response.ok || !body.data) {
+    if (body.code === "REQUIRED_DOCUMENTS_MISSING") {
+      const missing = body.details?.missingDocuments ?? [];
+      throw new ProjectApiError(
+        missing.length
+          ? `Upload these required documents first: ${missing.join(", ")}.`
+          : "Upload all required documents before submitting.",
+        response.status,
+        body.code,
+      );
+    }
+    throw new ProjectApiError(
+      body.message ?? "Could not submit the application.",
+      response.status,
+      body.code,
+    );
+  }
+  return body.data.project;
 }
 
 export class ProjectApiError extends Error {

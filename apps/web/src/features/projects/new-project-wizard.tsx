@@ -21,6 +21,7 @@ import {
   ProjectApiError,
   updateApprovalDepartment,
   validateProjectDocuments,
+  submitProject,
   type Department,
   type Project,
   type ProjectApproval,
@@ -476,6 +477,7 @@ function ValidationReport({
 }
 
 function ChecklistResult({ project }: { project: Project }) {
+  const [savedProject, setSavedProject] = useState(project);
   const [approvals, setApprovals] = useState<ProjectApproval[]>(project.approvals);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [departmentsLoading, setDepartmentsLoading] = useState(true);
@@ -484,6 +486,8 @@ function ChecklistResult({ project }: { project: Project }) {
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [validating, setValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [submittingApplication, setSubmittingApplication] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   useEffect(() => {
     listDepartments()
@@ -523,6 +527,20 @@ function ChecklistResult({ project }: { project: Project }) {
       );
     } finally {
       setValidating(false);
+    }
+  }
+
+  async function submitApplication() {
+    setSubmittingApplication(true);
+    setSubmissionError(null);
+    try {
+      setSavedProject(await submitProject(project.id));
+    } catch (cause) {
+      setSubmissionError(
+        cause instanceof ProjectApiError ? cause.message : "Could not submit the application.",
+      );
+    } finally {
+      setSubmittingApplication(false);
     }
   }
 
@@ -618,6 +636,46 @@ function ChecklistResult({ project }: { project: Project }) {
             }}
           />
         )}
+      </section>
+
+      <section className="mt-6 border border-[#d8d3c8] bg-[#faf9f6] p-6 sm:p-7">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 className="font-heading text-xl font-semibold text-[#142b45]">
+              {savedProject.status === "draft" ? "Submit for departmental review" : "Application submitted"}
+            </h3>
+            <p className="mt-1 max-w-2xl text-sm text-slate-600">
+              {savedProject.status === "draft"
+                ? "Submission checks that every required file is present. Automated Python validation is not required."
+                : "Your assigned departments can now review the application and its documents."}
+            </p>
+          </div>
+          {savedProject.status === "draft" ? (
+            <Button
+              size="lg"
+              className="h-11 rounded-md px-6"
+              onClick={submitApplication}
+              disabled={submittingApplication}
+              aria-busy={submittingApplication}
+            >
+              {submittingApplication ? "Submitting…" : "Submit application"}
+              {submittingApplication ? (
+                <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+              ) : (
+                <ArrowRight className="size-4" aria-hidden="true" />
+              )}
+            </Button>
+          ) : (
+            <span className="border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">
+              Submitted
+            </span>
+          )}
+        </div>
+        {submissionError ? (
+          <p role="alert" className="mt-4 border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive">
+            {submissionError}
+          </p>
+        ) : null}
       </section>
     </div>
   );

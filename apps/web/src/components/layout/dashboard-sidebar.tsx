@@ -17,7 +17,7 @@ type NavItem = {
   ready?: boolean;
 };
 
-const navItems: NavItem[] = [
+const applicantNavItems: NavItem[] = [
   { label: "Dashboard", href: "/applicant/dashboard", icon: LayoutDashboard, ready: true },
   { label: "New project", href: "/applicant/projects/new", icon: PlusSquare, ready: true },
   { label: "Applications", href: "/applicant/applications", icon: FileText },
@@ -26,7 +26,18 @@ const navItems: NavItem[] = [
   { label: "Verify certificate", href: "/applicant/verify", icon: ShieldCheck },
 ];
 
-export function DashboardSidebar({ activeHref = "/applicant/dashboard" }: { activeHref?: string }) {
+const inspectorNavItems: NavItem[] = [
+  { label: "Review queue", href: "/inspector/dashboard", icon: LayoutDashboard, ready: true },
+];
+
+export function DashboardSidebar({
+  activeHref = "/applicant/dashboard",
+  workspace = "applicant",
+}: {
+  activeHref?: string;
+  workspace?: "applicant" | "inspector";
+}) {
+  const navItems = workspace === "inspector" ? inspectorNavItems : applicantNavItems;
   return (
     <aside className="flex w-72 shrink-0 flex-col border-r border-[#e4e0d6] bg-[#f7f6f2]">
       {/* Brand */}
@@ -42,7 +53,9 @@ export function DashboardSidebar({ activeHref = "/applicant/dashboard" }: { acti
           />
           <span className="text-xl font-bold tracking-tight">UdyogSetu</span>
         </span>
-        <span className="text-sm text-slate-500">Applicant portal</span>
+        <span className="text-sm text-slate-500">
+          {workspace === "inspector" ? "Inspector portal" : "Applicant portal"}
+        </span>
       </div>
 
       {/* Nav */}
@@ -97,7 +110,9 @@ export function DashboardSidebar({ activeHref = "/applicant/dashboard" }: { acti
         </span>
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold text-[#142b45]">Your account</span>
-          <span className="block truncate text-xs text-slate-500">Applicant account</span>
+          <span className="block truncate text-xs text-slate-500">
+            {workspace === "inspector" ? "Inspector account" : "Applicant account"}
+          </span>
         </span>
       </div>
     </aside>
