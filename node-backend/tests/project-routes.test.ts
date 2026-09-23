@@ -49,6 +49,13 @@ const createTestApp = () => {
     createProject: vi.fn().mockResolvedValue(projectRecord),
     listProjects: vi.fn().mockResolvedValue([{ id: 'project-1' }]),
     getProject: vi.fn().mockResolvedValue(projectRecord),
+    getApplicationDetail: vi
+      .fn()
+      .mockResolvedValue({ ...projectRecord, documents: [], timeline: [] }),
+    listDocuments: vi.fn().mockResolvedValue([]),
+    submitProject: vi.fn().mockResolvedValue({ ...projectRecord, status: 'submitted' }),
+    listClarifications: vi.fn().mockResolvedValue([]),
+    respondToClarification: vi.fn().mockResolvedValue([]),
     setApprovalDepartment: vi
       .fn()
       .mockResolvedValue({ approvalKey: 'consent-to-operate', department: { key: 'mpcb' } }),
@@ -73,6 +80,17 @@ const inspectorCookie = () =>
   `access_token=${issueAccessToken('inspector-1', 'inspector', 'department-1')}`;
 
 describe('project routes', () => {
+  it('submits an owned draft project', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .post('/api/v1/projects/project-1/submit')
+      .set('Cookie', applicantCookie());
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.project.status).toBe('submitted');
+    expect(service.submitProject).toHaveBeenCalledWith('applicant-1', 'project-1');
+  });
+
   it('creates a project for an authenticated applicant', async () => {
     const { app, service } = createTestApp();
     const response = await request(app)
@@ -173,6 +191,62 @@ describe('project routes', () => {
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({ data: { projects: [{ id: 'project-1' }] } });
     expect(service.listProjects).toHaveBeenCalledWith('applicant-1');
+  });
+
+  it('returns the complete applicant application workspace', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .get('/api/v1/projects/project-1/application')
+      .set('Cookie', applicantCookie());
+    expect(response.status).toBe(200);
+    expect(service.getApplicationDetail).toHaveBeenCalledWith('applicant-1', 'project-1');
+  });
+
+  it('lists documents across all projects owned by the applicant', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .get('/api/v1/projects/documents')
+      .set('Cookie', applicantCookie());
+    expect(response.status).toBe(200);
+    expect(service.listDocuments).toHaveBeenCalledWith('applicant-1');
+  });
+
+  it('lists clarification requests for an owned project', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .get('/api/v1/projects/project-1/clarifications')
+      .set('Cookie', applicantCookie());
+    expect(response.status).toBe(200);
+    expect(service.listClarifications).toHaveBeenCalledWith('applicant-1', 'project-1');
+  });
+
+  it('validates and records an applicant clarification response', async () => {
+    const { app, service } = createTestApp();
+    const projectId = '11111111-1111-4111-8111-111111111111';
+    const clarificationId = '77777777-7777-4777-8777-777777777777';
+    const response = await request(app)
+      .post(`/api/v1/projects/${projectId}/clarifications/${clarificationId}/responses`)
+      .set('Cookie', applicantCookie())
+      .send({ message: 'The corrected plan has now been uploaded.' });
+    expect(response.status).toBe(201);
+    expect(service.respondToClarification).toHaveBeenCalledWith(
+      'applicant-1',
+      projectId,
+      clarificationId,
+      { message: 'The corrected plan has now been uploaded.' },
+    );
+  });
+
+  it('rejects an empty clarification response', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .post(
+        '/api/v1/projects/11111111-1111-4111-8111-111111111111/clarifications/77777777-7777-4777-8777-777777777777/responses',
+      )
+      .set('Cookie', applicantCookie())
+      .send({ message: ' ' });
+    expect(response.status).toBe(400);
+    expect(service.respondToClarification).not.toHaveBeenCalled();
   });
 
   it('returns a single owned project', async () => {

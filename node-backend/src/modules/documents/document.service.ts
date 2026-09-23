@@ -73,6 +73,12 @@ export class DocumentService {
     }
 
     const project = await this.ownedProject(applicantId, projectId);
+    if (['submitted', 'under_review', 'approved', 'rejected'].includes(project.status)) {
+      throw new AppError('Documents cannot be changed while this application is under review', {
+        statusCode: 409,
+        code: 'PROJECT_NOT_EDITABLE',
+      });
+    }
     const approval = project.approvals.find((a) => a.approvalKey === input.approvalKey);
     if (!approval) {
       throw new AppError('Approval not found for this project', {
@@ -86,6 +92,26 @@ export class DocumentService {
         statusCode: 404,
         code: 'DOCUMENT_NOT_FOUND',
       });
+    }
+
+    if (project.status === 'correction_required') {
+      if (approval.reviewStatus !== 'correction_required') {
+        throw new AppError('Only documents requested for correction can be replaced', {
+          statusCode: 409,
+          code: 'DOCUMENT_CORRECTION_NOT_REQUESTED',
+        });
+      }
+      const latestReview = await this.documentRepository.findLatestReview(
+        projectId,
+        input.approvalKey,
+        input.documentKey,
+      );
+      if (!latestReview || !['correction_required', 'rejected'].includes(latestReview.status)) {
+        throw new AppError('This document has not been requested for correction', {
+          statusCode: 409,
+          code: 'DOCUMENT_CORRECTION_NOT_REQUESTED',
+        });
+      }
     }
 
     const maxSizeMb = spec.maxSizeMb ?? this.options.defaultMaxSizeMb;
@@ -137,8 +163,9 @@ export class DocumentService {
     const storageKey = `projects/${projectId}/${input.approvalKey}/${input.documentKey}/${randomUUID()}-${sanitizeFileName(file.originalName)}`;
 
     await this.storage.put(storageKey, file.buffer, detectedMimeType);
+    let document: ProjectDocumentRecord;
     try {
-      return await this.documentRepository.create({
+      document = await this.documentRepository.create({
         projectId,
         approvalKey: input.approvalKey,
         documentKey: input.documentKey,
@@ -163,6 +190,14 @@ export class DocumentService {
       }
       throw error;
     }
+    if (project.status === 'correction_required') {
+      await this.documentRepository.markCorrectionResubmitted({
+        projectId,
+        approvalKey: input.approvalKey,
+        applicantId,
+      });
+    }
+    return document;
   }
 
   async listDocuments(applicantId: string, projectId: string): Promise<ProjectDocumentRecord[]> {
@@ -171,7 +206,13 @@ export class DocumentService {
   }
 
   async deleteDocument(applicantId: string, projectId: string, documentId: string): Promise<void> {
-    await this.ownedProject(applicantId, projectId);
+    const project = await this.ownedProject(applicantId, projectId);
+    if (['submitted', 'under_review', 'approved', 'rejected'].includes(project.status)) {
+      throw new AppError('Documents cannot be changed while this application is under review', {
+        statusCode: 409,
+        code: 'PROJECT_NOT_EDITABLE',
+      });
+    }
     const document = await this.documentRepository.findById(projectId, documentId);
     if (!document) {
       throw new AppError('Document not found', { statusCode: 404, code: 'DOCUMENT_NOT_FOUND' });

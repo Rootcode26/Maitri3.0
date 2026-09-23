@@ -157,3 +157,13 @@ export const updateApprovalDepartmentSchema = z.object({
   departmentKey: z.enum(departmentKeys),
 });
 export type UpdateApprovalDepartmentInput = z.infer<typeof updateApprovalDepartmentSchema>;
+
+export const clarificationResponseSchema = z.object({
+  message: z.string().trim().min(2).max(2_000),
+});
+export type ClarificationResponseInput = z.infer<typeof clarificationResponseSchema>;
+
+export const projectClarificationParamsSchema = z.object({
+  id: z.uuid(),
+  clarificationId: z.uuid(),
+});

@@ -6,6 +6,7 @@ import type { ProjectRepository } from './project.repository.js';
 import { RulesEngineError, type RulesEngineClient } from './project.rules-client.js';
 import { deriveApprovals, type RecommendedApproval } from './project.rules.js';
 import type { CreateProjectInput } from './project.schemas.js';
+import type { ClarificationResponseInput } from './project.schemas.js';
 import type {
   ProjectApprovalRecord,
   ProjectDepartment,
@@ -70,6 +71,39 @@ export class ProjectService {
     return this.repository.findProjectsByApplicant(applicantId);
   }
 
+  async listDocuments(applicantId: string) {
+    return this.repository.findDocumentsByApplicant(applicantId);
+  }
+
+  async getApplicationDetail(applicantId: string, projectId: string) {
+    const project = await this.repository.findApplicationDetailByApplicant(applicantId, projectId);
+    if (!project) {
+      throw new AppError('Project not found', { statusCode: 404, code: 'PROJECT_NOT_FOUND' });
+    }
+    return project;
+  }
+
+  async submitProject(applicantId: string, projectId: string): Promise<ProjectRecord> {
+    const result = await this.repository.submitProject(applicantId, projectId);
+    if (result.missingDocuments.length > 0) {
+      throw new AppError('Upload all required documents before submitting', {
+        statusCode: 422,
+        code: 'REQUIRED_DOCUMENTS_MISSING',
+        details: { missingDocuments: result.missingDocuments },
+      });
+    }
+    if (result.conflict) {
+      throw new AppError('Only draft projects can be submitted', {
+        statusCode: 409,
+        code: 'PROJECT_NOT_DRAFT',
+      });
+    }
+    if (!result.project) {
+      throw new AppError('Project not found', { statusCode: 404, code: 'PROJECT_NOT_FOUND' });
+    }
+    return result.project;
+  }
+
   async getProject(applicantId: string, projectId: string): Promise<ProjectRecord> {
     const project = await this.repository.findProjectById(projectId);
     if (!project || project.applicantId !== applicantId) {
@@ -82,13 +116,55 @@ export class ProjectService {
     return this.repository.listDepartments();
   }
 
+  async listClarifications(applicantId: string, projectId: string) {
+    const clarifications = await this.repository.findClarificationsByApplicant(
+      applicantId,
+      projectId,
+    );
+    if (!clarifications) {
+      throw new AppError('Project not found', { statusCode: 404, code: 'PROJECT_NOT_FOUND' });
+    }
+    return clarifications;
+  }
+
+  async respondToClarification(
+    applicantId: string,
+    projectId: string,
+    clarificationId: string,
+    input: ClarificationResponseInput,
+  ) {
+    const responded = await this.repository.respondToClarification({
+      applicantId,
+      projectId,
+      clarificationId,
+      message: input.message,
+    });
+    if (!responded) {
+      throw new AppError('Open clarification request not found', {
+        statusCode: 404,
+        code: 'CLARIFICATION_NOT_FOUND',
+      });
+    }
+    return this.listClarifications(applicantId, projectId);
+  }
+
   async setApprovalDepartment(
     applicantId: string,
     projectId: string,
     approvalId: string,
     departmentKey: string,
   ): Promise<ProjectApprovalRecord> {
-    await this.getProject(applicantId, projectId);
+    const project = await this.getProject(applicantId, projectId);
+    if (
+      ['submitted', 'under_review', 'correction_required', 'approved', 'rejected'].includes(
+        project.status,
+      )
+    ) {
+      throw new AppError('Department assignments cannot be changed after submission', {
+        statusCode: 409,
+        code: 'PROJECT_NOT_EDITABLE',
+      });
+    }
     const approval = await this.repository.updateApprovalDepartment(
       projectId,
       approvalId,

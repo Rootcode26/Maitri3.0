@@ -108,6 +108,9 @@ services:
 
   clamav:
     image: ${CLAMAV_IMAGE:?CLAMAV_IMAGE is required}
+    # The official ClamAV image currently publishes amd64 manifests only.
+    # Docker Desktop emulates it on Apple Silicon development machines.
+    platform: linux/amd64
     container_name: maitri-3-clamav
     restart: unless-stopped
     init: true

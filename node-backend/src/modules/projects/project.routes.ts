@@ -13,7 +13,12 @@ export const createProjectRouter = (
   router.use(requireAuthentication, requireRoles('applicant'));
   router.post('/', controller.create);
   router.get('/', controller.list);
+  router.get('/documents', controller.listDocuments);
+  router.get('/:id/application', controller.getApplicationDetail);
   router.get('/:id', controller.getOne);
+  router.post('/:id/submit', controller.submit);
+  router.get('/:id/clarifications', controller.listClarifications);
+  router.post('/:id/clarifications/:clarificationId/responses', controller.respondToClarification);
   router.patch('/:id/approvals/:approvalId', controller.updateApprovalDepartment);
   router.post('/:id/validate', documentController.validate);
   router.use('/:id/documents', createDocumentRouter(documentController));

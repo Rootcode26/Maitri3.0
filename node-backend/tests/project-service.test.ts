@@ -31,6 +31,79 @@ const input = createProjectSchema.parse({
 });
 
 describe('ProjectService', () => {
+  it('returns an applicant-scoped application detail workspace', async () => {
+    const detail = { id: 'p1', applicantId: 'applicant-1', documents: [], timeline: [] };
+    const findApplicationDetailByApplicant = vi.fn().mockResolvedValue(detail);
+    const service = new ProjectService({
+      findApplicationDetailByApplicant,
+    } as unknown as ProjectRepository);
+    await expect(service.getApplicationDetail('applicant-1', 'p1')).resolves.toBe(detail);
+    expect(findApplicationDetailByApplicant).toHaveBeenCalledWith('applicant-1', 'p1');
+  });
+
+  it('hides an unowned application detail workspace', async () => {
+    const service = new ProjectService({
+      findApplicationDetailByApplicant: vi.fn().mockResolvedValue(null),
+    } as unknown as ProjectRepository);
+    await expect(service.getApplicationDetail('applicant-1', 'p1')).rejects.toMatchObject({
+      statusCode: 404,
+      code: 'PROJECT_NOT_FOUND',
+    });
+  });
+  it('submits a complete draft project', async () => {
+    const project = { id: 'p1', status: 'submitted' };
+    const submitProject = vi.fn().mockResolvedValue({
+      project,
+      missingDocuments: [],
+      conflict: false,
+    });
+    const service = new ProjectService({ submitProject } as unknown as ProjectRepository);
+
+    await expect(service.submitProject('applicant-1', 'p1')).resolves.toBe(project);
+    expect(submitProject).toHaveBeenCalledWith('applicant-1', 'p1');
+  });
+
+  it('rejects submission when required documents are missing', async () => {
+    const submitProject = vi.fn().mockResolvedValue({
+      project: null,
+      missingDocuments: ['Factory plan', 'Identity proof'],
+      conflict: false,
+    });
+    const service = new ProjectService({ submitProject } as unknown as ProjectRepository);
+
+    await expect(service.submitProject('applicant-1', 'p1')).rejects.toMatchObject({
+      statusCode: 422,
+      code: 'REQUIRED_DOCUMENTS_MISSING',
+      details: { missingDocuments: ['Factory plan', 'Identity proof'] },
+    });
+  });
+
+  it('rejects repeat submission of a non-draft project', async () => {
+    const submitProject = vi.fn().mockResolvedValue({
+      project: null,
+      missingDocuments: [],
+      conflict: true,
+    });
+    const service = new ProjectService({ submitProject } as unknown as ProjectRepository);
+    await expect(service.submitProject('applicant-1', 'p1')).rejects.toMatchObject({
+      statusCode: 409,
+      code: 'PROJECT_NOT_DRAFT',
+    });
+  });
+
+  it('does not expose whether an unowned project exists during submission', async () => {
+    const submitProject = vi.fn().mockResolvedValue({
+      project: null,
+      missingDocuments: [],
+      conflict: false,
+    });
+    const service = new ProjectService({ submitProject } as unknown as ProjectRepository);
+    await expect(service.submitProject('applicant-1', 'p1')).rejects.toMatchObject({
+      statusCode: 404,
+      code: 'PROJECT_NOT_FOUND',
+    });
+  });
+
   it('derives approvals with the built-in rules when no engine is configured', async () => {
     const createProject = vi.fn().mockResolvedValue({ id: 'project-1' });
     const service = new ProjectService({ createProject } as unknown as ProjectRepository);
@@ -176,5 +249,48 @@ describe('ProjectService', () => {
       service.setApprovalDepartment('applicant-1', 'p1', 'a1', 'mpcb'),
     ).rejects.toMatchObject({ statusCode: 404 });
     expect(updateApprovalDepartment).not.toHaveBeenCalled();
+  });
+
+  it('lists clarifications only through the applicant-scoped repository query', async () => {
+    const clarifications = [{ id: 'clarification-1', status: 'open' }];
+    const findClarificationsByApplicant = vi.fn().mockResolvedValue(clarifications);
+    const service = new ProjectService({
+      findClarificationsByApplicant,
+    } as unknown as ProjectRepository);
+    await expect(service.listClarifications('applicant-1', 'project-1')).resolves.toBe(
+      clarifications,
+    );
+    expect(findClarificationsByApplicant).toHaveBeenCalledWith('applicant-1', 'project-1');
+  });
+
+  it('does not reveal clarification data for an unowned project', async () => {
+    const service = new ProjectService({
+      findClarificationsByApplicant: vi.fn().mockResolvedValue(null),
+    } as unknown as ProjectRepository);
+    await expect(service.listClarifications('applicant-1', 'other-project')).rejects.toMatchObject({
+      statusCode: 404,
+      code: 'PROJECT_NOT_FOUND',
+    });
+  });
+
+  it('records a response and returns the refreshed clarification thread', async () => {
+    const respondToClarification = vi.fn().mockResolvedValue(true);
+    const refreshed = [{ id: 'clarification-1', status: 'responded' }];
+    const findClarificationsByApplicant = vi.fn().mockResolvedValue(refreshed);
+    const service = new ProjectService({
+      respondToClarification,
+      findClarificationsByApplicant,
+    } as unknown as ProjectRepository);
+    await expect(
+      service.respondToClarification('applicant-1', 'project-1', 'clarification-1', {
+        message: 'The requested detail has been added.',
+      }),
+    ).resolves.toBe(refreshed);
+    expect(respondToClarification).toHaveBeenCalledWith({
+      applicantId: 'applicant-1',
+      projectId: 'project-1',
+      clarificationId: 'clarification-1',
+      message: 'The requested detail has been added.',
+    });
   });
 });
