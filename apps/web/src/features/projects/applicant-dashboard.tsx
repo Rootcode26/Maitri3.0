@@ -19,6 +19,7 @@ import {
   type ApplicantClarification,
   type ProjectSummary,
 } from "@/features/projects/project-api";
+import { StatusBadge } from "@/features/projects/status-badge";
 
 function humanize(value: string) {
   return value
@@ -142,9 +143,13 @@ export function ApplicantDashboard() {
   const active = (projects.data ?? []).filter(
     (project) => !["draft", "approved", "rejected"].includes(project.status),
   ).length;
-  const actionNeeded = clarifications.filter(
+  const clarificationActions = clarifications.filter(
     ({ clarification }) => clarification.status !== "resolved",
   ).length;
+  const correctionActions = (projects.data ?? []).filter(
+    (project) => project.status === "correction_required",
+  ).length;
+  const actionNeeded = clarificationActions + correctionActions;
 
   if (projects.isPending)
     return (
@@ -253,8 +258,9 @@ export function ApplicantDashboard() {
           {projects.data.length ? (
             <div className="divide-y divide-[#e4e0d6]">
               {projects.data.map((project) => (
-                <div
+                <Link
                   key={project.id}
+                  href={`/applicant/applications/${project.id}`}
                   className="flex flex-wrap items-center justify-between gap-3 py-4"
                 >
                   <div>
@@ -265,10 +271,8 @@ export function ApplicantDashboard() {
                       {humanize(project.industry)} · {project.district}
                     </p>
                   </div>
-                  <span className="border border-slate-300 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-700">
-                    {humanize(project.status)}
-                  </span>
-                </div>
+                  <StatusBadge status={project.status} />
+                </Link>
               ))}
             </div>
           ) : (

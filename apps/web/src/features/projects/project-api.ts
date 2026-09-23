@@ -29,6 +29,15 @@ export interface ProjectApproval {
   documents: ApprovalDocument[];
   processingDays: number;
   department: Department;
+  reviewStatus?:
+    | "pending"
+    | "under_review"
+    | "correction_required"
+    | "approved"
+    | "rejected";
+  decisionNote?: string | null;
+  reviewStartedAt?: string | null;
+  decidedAt?: string | null;
 }
 
 export interface Project {
@@ -40,6 +49,9 @@ export interface Project {
   status: string;
   approvals: ProjectApproval[];
   submittedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  details?: Record<string, unknown>;
 }
 
 export interface ProjectSummary {
@@ -363,8 +375,12 @@ export async function updateApprovalDepartment(
 
 export interface ProjectDocument {
   id: string;
+  projectId?: string;
   approvalKey: string;
+  approvalTitle?: string;
+  departmentName?: string;
   documentKey: string;
+  documentName?: string;
   version: number;
   fileName: string;
   mimeType: string;
@@ -374,6 +390,88 @@ export interface ProjectDocument {
   extractionStatus: string;
   expiresOn: string | null;
   createdAt: string;
+  review?: {
+    status: "pending" | "accepted" | "correction_required" | "rejected";
+    comment: string | null;
+    reviewedAt: string | null;
+  };
+}
+
+export interface ApplicationStatusEvent {
+  id: string;
+  approvalId: string | null;
+  approvalTitle: string | null;
+  actorName: string;
+  actorRole: "applicant" | "inspector";
+  fromStatus: string;
+  toStatus: string;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface ApplicantApplication extends Project {
+  applicantId: string;
+  details: Record<string, unknown>;
+  documents: ProjectDocument[];
+  clarifications: ApplicantClarification[];
+  timeline: ApplicationStatusEvent[];
+}
+
+export async function getApplicantApplication(projectId: string) {
+  const response = await fetch(`/api/v1/projects/${projectId}/application`, {
+    credentials: "include",
+  });
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string;
+    data?: { application: ApplicantApplication };
+  };
+  if (!response.ok || !body.data) {
+    throw new ProjectApiError(
+      body.message ?? "Could not load this application.",
+      response.status,
+    );
+  }
+  return body.data.application;
+}
+
+export async function listApplicantDocuments() {
+  const response = await fetch("/api/v1/projects/documents", {
+    credentials: "include",
+  });
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string;
+    data?: { documents: ProjectDocument[] };
+  };
+  if (!response.ok || !body.data) {
+    throw new ProjectApiError(
+      body.message ?? "Could not load your documents.",
+      response.status,
+    );
+  }
+  return body.data.documents;
+}
+
+export async function getProjectDocumentDownload(
+  projectId: string,
+  documentId: string,
+) {
+  const response = await fetch(
+    `/api/v1/projects/${projectId}/documents/${documentId}/download`,
+    {
+      credentials: "include",
+    },
+  );
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string;
+    data?: { url: string };
+  };
+  if (!response.ok || !body.data) {
+    throw new ProjectApiError(
+      body.message ?? "Could not open this document.",
+      response.status,
+    );
+  }
+  return body.data.url;
 }
 
 export async function listProjectDocuments(
