@@ -50,6 +50,7 @@ const application = (
       review: { status: 'pending', comment: null, inspectorId: null, reviewedAt: null },
     },
   ],
+  clarifications: [],
 });
 
 const makeService = (
@@ -167,6 +168,37 @@ describe('InspectorService', () => {
     ).rejects.toMatchObject({ statusCode: 422, code: 'DOCUMENT_REVIEWS_INCOMPLETE' });
   });
 
+  it('requires clarification threads to be resolved before approval', async () => {
+    const pending = application('under_review');
+    pending.documents[0]!.review.status = 'accepted';
+    pending.clarifications = [
+      {
+        id: 'clarification-1',
+        projectId: pending.projectId,
+        approvalId: pending.approvals[0]!.id,
+        documentId: null,
+        inspectorId: 'inspector-1',
+        inspectorName: 'Inspector',
+        message: 'Please confirm the document details.',
+        status: 'responded',
+        dueAt: null,
+        createdAt: '2026-09-22T00:00:00.000Z',
+        updatedAt: '2026-09-22T00:00:00.000Z',
+        responses: [],
+      },
+    ];
+    const service = makeService({ findApplication: vi.fn().mockResolvedValue(pending) });
+    await expect(
+      service.decideApproval(
+        'inspector-1',
+        'department-1',
+        pending.projectId,
+        pending.approvals[0]!.id,
+        { decision: 'approved' },
+      ),
+    ).rejects.toMatchObject({ statusCode: 422, code: 'CLARIFICATIONS_UNRESOLVED' });
+  });
+
   it('records approval after all required documents are accepted', async () => {
     const ready = application('under_review');
     ready.documents[0]!.review.status = 'accepted';
@@ -186,5 +218,57 @@ describe('InspectorService', () => {
     expect(decideApproval).toHaveBeenCalledWith(
       expect.objectContaining({ decision: 'approved', departmentId: 'department-1' }),
     );
+  });
+
+  it('creates a clarification only after review starts', async () => {
+    const createClarification = vi.fn().mockResolvedValue(true);
+    const findApplication = vi
+      .fn()
+      .mockResolvedValueOnce(application('under_review'))
+      .mockResolvedValueOnce(application('under_review'));
+    const service = makeService({ findApplication, createClarification });
+    await service.createClarification(
+      'inspector-1',
+      'department-1',
+      application().projectId,
+      application().approvals[0]!.id,
+      { message: 'Please provide the missing technical specification.' },
+    );
+    expect(createClarification).toHaveBeenCalledWith(
+      expect.objectContaining({ departmentId: 'department-1', inspectorId: 'inspector-1' }),
+    );
+  });
+
+  it('rejects a clarification for a document outside the selected approval', async () => {
+    const service = makeService({
+      findApplication: vi.fn().mockResolvedValue(application('under_review')),
+    });
+    await expect(
+      service.createClarification(
+        'inspector-1',
+        'department-1',
+        application().projectId,
+        application().approvals[0]!.id,
+        {
+          message: 'Please provide the missing technical specification.',
+          documentId: '99999999-9999-4999-8999-999999999999',
+        },
+      ),
+    ).rejects.toMatchObject({ statusCode: 404, code: 'DOCUMENT_NOT_FOUND' });
+  });
+
+  it('resolves only a clarification visible to the inspector department', async () => {
+    const resolveClarification = vi.fn().mockResolvedValue(true);
+    const findApplication = vi
+      .fn()
+      .mockResolvedValueOnce(application('under_review'))
+      .mockResolvedValueOnce(application('under_review'));
+    const service = makeService({ findApplication, resolveClarification });
+    await service.resolveClarification('department-1', application().projectId, 'clarification-1');
+    expect(resolveClarification).toHaveBeenCalledWith({
+      departmentId: 'department-1',
+      projectId: application().projectId,
+      clarificationId: 'clarification-1',
+    });
   });
 });

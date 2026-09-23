@@ -15,6 +15,8 @@ export const createProjectRouter = (
   router.get('/', controller.list);
   router.get('/:id', controller.getOne);
   router.post('/:id/submit', controller.submit);
+  router.get('/:id/clarifications', controller.listClarifications);
+  router.post('/:id/clarifications/:clarificationId/responses', controller.respondToClarification);
   router.patch('/:id/approvals/:approvalId', controller.updateApprovalDepartment);
   router.post('/:id/validate', documentController.validate);
   router.use('/:id/documents', createDocumentRouter(documentController));

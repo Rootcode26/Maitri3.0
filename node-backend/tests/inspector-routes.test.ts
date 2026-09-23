@@ -26,6 +26,8 @@ const createTestApp = () => {
     startReview: vi.fn().mockResolvedValue({ projectId, approvals: [], documents: [] }),
     reviewDocument: vi.fn().mockResolvedValue({ id: documentId, review: { status: 'accepted' } }),
     decideApproval: vi.fn().mockResolvedValue({ projectId, approvals: [], documents: [] }),
+    createClarification: vi.fn().mockResolvedValue({ projectId, clarifications: [] }),
+    resolveClarification: vi.fn().mockResolvedValue({ projectId, clarifications: [] }),
   };
   const app = express();
   app.use(express.json());
@@ -134,5 +136,45 @@ describe('inspector routes', () => {
       data: { url: 'https://storage.example/signed' },
     });
     expect(JSON.stringify(response.body)).not.toContain('storageKey');
+  });
+
+  it('creates a validated clarification request for the inspector department', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .post(`/api/v1/inspector/applications/${projectId}/approvals/${approvalId}/clarifications`)
+      .set('Cookie', inspectorCookie())
+      .send({ message: 'Please provide a clearer copy of the factory plan.' });
+    expect(response.status).toBe(201);
+    expect(service.createClarification).toHaveBeenCalledWith(
+      '55555555-5555-4555-8555-555555555555',
+      departmentId,
+      projectId,
+      approvalId,
+      { message: 'Please provide a clearer copy of the factory plan.' },
+    );
+  });
+
+  it('rejects a clarification message that is too short', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .post(`/api/v1/inspector/applications/${projectId}/approvals/${approvalId}/clarifications`)
+      .set('Cookie', inspectorCookie())
+      .send({ message: 'Why?' });
+    expect(response.status).toBe(400);
+    expect(service.createClarification).not.toHaveBeenCalled();
+  });
+
+  it('resolves a department clarification request', async () => {
+    const { app, service } = createTestApp();
+    const clarificationId = '77777777-7777-4777-8777-777777777777';
+    const response = await request(app)
+      .post(`/api/v1/inspector/applications/${projectId}/clarifications/${clarificationId}/resolve`)
+      .set('Cookie', inspectorCookie());
+    expect(response.status).toBe(200);
+    expect(service.resolveClarification).toHaveBeenCalledWith(
+      departmentId,
+      projectId,
+      clarificationId,
+    );
   });
 });

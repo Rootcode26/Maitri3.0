@@ -121,6 +121,44 @@ describe.runIf(runDbTests)('inspector manual review workflow (integration)', () 
     await expect(
       inspector.startReview(projectId, approvalId, departmentId, inspectorId),
     ).resolves.toBe(true);
+
+    await expect(
+      inspector.createClarification({
+        projectId,
+        approvalId,
+        departmentId,
+        inspectorId,
+        documentId,
+        message: 'Please confirm that this is the final approved factory plan.',
+      }),
+    ).resolves.toBe(true);
+    const applicantClarifications = await projects.findClarificationsByApplicant(
+      applicantId,
+      projectId,
+    );
+    expect(applicantClarifications).toHaveLength(1);
+    const clarificationId = applicantClarifications![0]!.id;
+    await expect(
+      projects.respondToClarification({
+        applicantId,
+        projectId,
+        clarificationId,
+        message: 'Confirmed. This is the final plan submitted to the department.',
+      }),
+    ).resolves.toBe(true);
+    const responded = await inspector.findApplication(projectId, departmentId);
+    expect(responded?.clarifications[0]).toMatchObject({
+      status: 'responded',
+      responses: [
+        expect.objectContaining({
+          message: 'Confirmed. This is the final plan submitted to the department.',
+        }),
+      ],
+    });
+    await expect(
+      inspector.resolveClarification({ projectId, clarificationId, departmentId }),
+    ).resolves.toBe(true);
+
     const reviewed = await inspector.reviewDocument({
       projectId,
       documentId,

@@ -3,6 +3,7 @@ import type { RecommendedApproval } from './project.rules.js';
 import type { CreateProjectInput } from './project.schemas.js';
 import type {
   ApprovalDocument,
+  ApplicantClarification,
   Industry,
   ProjectApprovalRecord,
   ProjectDepartment,
@@ -10,6 +11,29 @@ import type {
   ProjectStatus,
   ProjectSummary,
 } from './project.types.js';
+
+interface ApplicantClarificationRow {
+  id: string;
+  project_id: string;
+  approval_id: string;
+  approval_title: string;
+  department_name: string;
+  document_id: string | null;
+  document_name: string | null;
+  inspector_name: string;
+  message: string;
+  status: 'open' | 'responded' | 'resolved';
+  due_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface ApplicantClarificationResponseRow {
+  id: string;
+  clarification_id: string;
+  message: string;
+  created_at: Date;
+}
 
 interface ProjectRow {
   id: string;
@@ -272,6 +296,101 @@ export class ProjectRepository {
       [projectId, approvalId, departmentKey],
     );
     return result.rows[0] ? mapApproval(result.rows[0]) : null;
+  }
+
+  async findClarificationsByApplicant(
+    applicantId: string,
+    projectId: string,
+  ): Promise<ApplicantClarification[] | null> {
+    const ownsProject = await query(`SELECT 1 FROM projects WHERE id = $1 AND applicant_id = $2`, [
+      projectId,
+      applicantId,
+    ]);
+    if (!ownsProject.rowCount) return null;
+    const requests = await query<ApplicantClarificationRow>(
+      `SELECT cr.id, cr.project_id, cr.approval_id, pa.title AS approval_title,
+              department.name AS department_name, cr.document_id,
+              document.file_name AS document_name, inspector.name AS inspector_name,
+              cr.message, cr.status, cr.due_at, cr.created_at, cr.updated_at
+       FROM clarification_requests cr
+       JOIN project_approvals pa ON pa.id = cr.approval_id
+       JOIN departments department ON department.id = pa.department_id
+       JOIN users inspector ON inspector.id = cr.inspector_id
+       LEFT JOIN project_documents document ON document.id = cr.document_id
+       WHERE cr.project_id = $1
+       ORDER BY cr.created_at DESC`,
+      [projectId],
+    );
+    const responses = await query<ApplicantClarificationResponseRow>(
+      `SELECT response.id, response.clarification_id, response.message, response.created_at
+       FROM clarification_responses response
+       JOIN clarification_requests cr ON cr.id = response.clarification_id
+       WHERE cr.project_id = $1 AND response.applicant_id = $2
+       ORDER BY response.created_at`,
+      [projectId, applicantId],
+    );
+    return requests.rows.map((row) => ({
+      id: row.id,
+      projectId: row.project_id,
+      approvalId: row.approval_id,
+      approvalTitle: row.approval_title,
+      departmentName: row.department_name,
+      documentId: row.document_id,
+      documentName: row.document_name,
+      inspectorName: row.inspector_name,
+      message: row.message,
+      status: row.status,
+      dueAt: row.due_at?.toISOString() ?? null,
+      createdAt: row.created_at.toISOString(),
+      updatedAt: row.updated_at.toISOString(),
+      responses: responses.rows
+        .filter((response) => response.clarification_id === row.id)
+        .map((response) => ({
+          id: response.id,
+          message: response.message,
+          createdAt: response.created_at.toISOString(),
+        })),
+    }));
+  }
+
+  async respondToClarification(input: {
+    applicantId: string;
+    projectId: string;
+    clarificationId: string;
+    message: string;
+  }): Promise<boolean> {
+    const client = await databasePool.connect();
+    try {
+      await client.query('BEGIN');
+      const clarification = await client.query(
+        `SELECT cr.id
+         FROM clarification_requests cr
+         JOIN projects p ON p.id = cr.project_id
+         WHERE cr.id = $1 AND cr.project_id = $2 AND p.applicant_id = $3
+           AND cr.status IN ('open', 'responded')
+         FOR UPDATE`,
+        [input.clarificationId, input.projectId, input.applicantId],
+      );
+      if (!clarification.rowCount) {
+        await client.query('ROLLBACK');
+        return false;
+      }
+      await client.query(
+        `INSERT INTO clarification_responses (clarification_id, applicant_id, message)
+         VALUES ($1, $2, $3)`,
+        [input.clarificationId, input.applicantId, input.message],
+      );
+      await client.query(`UPDATE clarification_requests SET status = 'responded' WHERE id = $1`, [
+        input.clarificationId,
+      ]);
+      await client.query('COMMIT');
+      return true;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   private async findApprovalsByProject(projectId: string): Promise<ProjectApprovalRecord[]> {

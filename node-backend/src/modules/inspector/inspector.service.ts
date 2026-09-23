@@ -2,6 +2,7 @@ import { AppError } from '../../errors/app-error.js';
 import type { ObjectStorage } from '../../integrations/s3/storage.js';
 import type {
   ApprovalDecisionInput,
+  CreateClarificationInput,
   DocumentReviewInput,
   InspectorQueueQuery,
 } from './inspector.schemas.js';
@@ -95,6 +96,72 @@ export class InspectorService {
     return this.getApplication(resolvedDepartmentId, projectId);
   }
 
+  async createClarification(
+    inspectorId: string,
+    departmentId: string | null,
+    projectId: string,
+    approvalId: string,
+    input: CreateClarificationInput,
+  ) {
+    const resolvedDepartmentId = this.departmentId(departmentId);
+    const application = await this.getApplication(resolvedDepartmentId, projectId);
+    const approval = application.approvals.find((item) => item.id === approvalId);
+    if (!approval) {
+      throw new AppError('Approval not found', { statusCode: 404, code: 'APPROVAL_NOT_FOUND' });
+    }
+    if (!['under_review', 'correction_required'].includes(approval.reviewStatus)) {
+      throw new AppError('Start the approval review before requesting clarification', {
+        statusCode: 409,
+        code: 'REVIEW_NOT_STARTED',
+      });
+    }
+    if (input.documentId) {
+      const document = application.documents.find(
+        (item) => item.id === input.documentId && item.approvalKey === approval.approvalKey,
+      );
+      if (!document) {
+        throw new AppError('Document not found', { statusCode: 404, code: 'DOCUMENT_NOT_FOUND' });
+      }
+    }
+    const created = await this.repository.createClarification({
+      inspectorId,
+      departmentId: resolvedDepartmentId,
+      projectId,
+      approvalId,
+      message: input.message,
+      ...(input.documentId ? { documentId: input.documentId } : {}),
+      ...(input.dueAt ? { dueAt: input.dueAt } : {}),
+    });
+    if (!created) {
+      throw new AppError('The clarification request could not be created', {
+        statusCode: 409,
+        code: 'CLARIFICATION_CONFLICT',
+      });
+    }
+    return this.getApplication(resolvedDepartmentId, projectId);
+  }
+
+  async resolveClarification(
+    departmentId: string | null,
+    projectId: string,
+    clarificationId: string,
+  ) {
+    const resolvedDepartmentId = this.departmentId(departmentId);
+    await this.getApplication(resolvedDepartmentId, projectId);
+    const resolved = await this.repository.resolveClarification({
+      departmentId: resolvedDepartmentId,
+      projectId,
+      clarificationId,
+    });
+    if (!resolved) {
+      throw new AppError('Open clarification request not found', {
+        statusCode: 404,
+        code: 'CLARIFICATION_NOT_FOUND',
+      });
+    }
+    return this.getApplication(resolvedDepartmentId, projectId);
+  }
+
   async reviewDocument(
     inspectorId: string,
     departmentId: string | null,
@@ -159,6 +226,16 @@ export class InspectorService {
     }
 
     if (input.decision === 'approved') {
+      const unresolvedClarifications = application.clarifications.filter(
+        (item) => item.approvalId === approvalId && item.status !== 'resolved',
+      );
+      if (unresolvedClarifications.length > 0) {
+        throw new AppError('Resolve all clarification requests before approving', {
+          statusCode: 422,
+          code: 'CLARIFICATIONS_UNRESOLVED',
+          details: { clarificationIds: unresolvedClarifications.map((item) => item.id) },
+        });
+      }
       const latest = new Map<string, (typeof application.documents)[number]>();
       for (const document of application.documents.filter(
         (item) => item.approvalKey === approval.approvalKey,

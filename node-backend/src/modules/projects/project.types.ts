@@ -59,3 +59,24 @@ export interface ProjectRecord extends ProjectSummary {
   approvals: ProjectApprovalRecord[];
   updatedAt: string;
 }
+
+export interface ApplicantClarification {
+  id: string;
+  projectId: string;
+  approvalId: string;
+  approvalTitle: string;
+  departmentName: string;
+  documentId: string | null;
+  documentName: string | null;
+  inspectorName: string;
+  message: string;
+  status: 'open' | 'responded' | 'resolved';
+  dueAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  responses: {
+    id: string;
+    message: string;
+    createdAt: string;
+  }[];
+}

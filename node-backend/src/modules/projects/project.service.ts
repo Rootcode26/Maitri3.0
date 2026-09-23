@@ -6,6 +6,7 @@ import type { ProjectRepository } from './project.repository.js';
 import { RulesEngineError, type RulesEngineClient } from './project.rules-client.js';
 import { deriveApprovals, type RecommendedApproval } from './project.rules.js';
 import type { CreateProjectInput } from './project.schemas.js';
+import type { ClarificationResponseInput } from './project.schemas.js';
 import type {
   ProjectApprovalRecord,
   ProjectDepartment,
@@ -101,6 +102,38 @@ export class ProjectService {
 
   async listDepartments(): Promise<ProjectDepartment[]> {
     return this.repository.listDepartments();
+  }
+
+  async listClarifications(applicantId: string, projectId: string) {
+    const clarifications = await this.repository.findClarificationsByApplicant(
+      applicantId,
+      projectId,
+    );
+    if (!clarifications) {
+      throw new AppError('Project not found', { statusCode: 404, code: 'PROJECT_NOT_FOUND' });
+    }
+    return clarifications;
+  }
+
+  async respondToClarification(
+    applicantId: string,
+    projectId: string,
+    clarificationId: string,
+    input: ClarificationResponseInput,
+  ) {
+    const responded = await this.repository.respondToClarification({
+      applicantId,
+      projectId,
+      clarificationId,
+      message: input.message,
+    });
+    if (!responded) {
+      throw new AppError('Open clarification request not found', {
+        statusCode: 404,
+        code: 'CLARIFICATION_NOT_FOUND',
+      });
+    }
+    return this.listClarifications(applicantId, projectId);
   }
 
   async setApprovalDepartment(

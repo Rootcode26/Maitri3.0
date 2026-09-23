@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   approvalDecisionSchema,
+  createClarificationSchema,
   documentReviewSchema,
   inspectorQueueQuerySchema,
 } from '../src/modules/inspector/inspector.schemas.js';
@@ -27,6 +28,22 @@ describe('inspector schemas', () => {
     expect(
       documentReviewSchema.safeParse({ status: 'correction_required', comment: 'Upload all pages' })
         .success,
+    ).toBe(true);
+  });
+
+  it('validates clarification messages and optional deadlines', () => {
+    expect(createClarificationSchema.safeParse({ message: 'Too short' }).success).toBe(false);
+    expect(
+      createClarificationSchema.safeParse({
+        message: 'Please confirm the installed furnace capacity.',
+        dueAt: 'not-a-date',
+      }).success,
+    ).toBe(false);
+    expect(
+      createClarificationSchema.safeParse({
+        message: 'Please confirm the installed furnace capacity.',
+        dueAt: '2026-10-01T18:29:59.000Z',
+      }).success,
     ).toBe(true);
   });
 });

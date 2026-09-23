@@ -231,4 +231,47 @@ describe('ProjectService', () => {
     ).rejects.toMatchObject({ statusCode: 404 });
     expect(updateApprovalDepartment).not.toHaveBeenCalled();
   });
+
+  it('lists clarifications only through the applicant-scoped repository query', async () => {
+    const clarifications = [{ id: 'clarification-1', status: 'open' }];
+    const findClarificationsByApplicant = vi.fn().mockResolvedValue(clarifications);
+    const service = new ProjectService({
+      findClarificationsByApplicant,
+    } as unknown as ProjectRepository);
+    await expect(service.listClarifications('applicant-1', 'project-1')).resolves.toBe(
+      clarifications,
+    );
+    expect(findClarificationsByApplicant).toHaveBeenCalledWith('applicant-1', 'project-1');
+  });
+
+  it('does not reveal clarification data for an unowned project', async () => {
+    const service = new ProjectService({
+      findClarificationsByApplicant: vi.fn().mockResolvedValue(null),
+    } as unknown as ProjectRepository);
+    await expect(service.listClarifications('applicant-1', 'other-project')).rejects.toMatchObject({
+      statusCode: 404,
+      code: 'PROJECT_NOT_FOUND',
+    });
+  });
+
+  it('records a response and returns the refreshed clarification thread', async () => {
+    const respondToClarification = vi.fn().mockResolvedValue(true);
+    const refreshed = [{ id: 'clarification-1', status: 'responded' }];
+    const findClarificationsByApplicant = vi.fn().mockResolvedValue(refreshed);
+    const service = new ProjectService({
+      respondToClarification,
+      findClarificationsByApplicant,
+    } as unknown as ProjectRepository);
+    await expect(
+      service.respondToClarification('applicant-1', 'project-1', 'clarification-1', {
+        message: 'The requested detail has been added.',
+      }),
+    ).resolves.toBe(refreshed);
+    expect(respondToClarification).toHaveBeenCalledWith({
+      applicantId: 'applicant-1',
+      projectId: 'project-1',
+      clarificationId: 'clarification-1',
+      message: 'The requested detail has been added.',
+    });
+  });
 });

@@ -1,9 +1,5 @@
 export type ReviewStatus =
-  | "pending"
-  | "under_review"
-  | "correction_required"
-  | "approved"
-  | "rejected";
+  "pending" | "under_review" | "correction_required" | "approved" | "rejected";
 
 export interface InspectorApplicationSummary {
   projectId: string;
@@ -54,6 +50,24 @@ export interface InspectorApproval {
   documents: { key: string; name: string; required?: boolean }[];
 }
 
+export interface ClarificationRequest {
+  id: string;
+  projectId: string;
+  approvalId: string;
+  documentId: string | null;
+  inspectorName: string;
+  message: string;
+  status: "open" | "responded" | "resolved";
+  dueAt: string | null;
+  createdAt: string;
+  responses: {
+    id: string;
+    applicantName: string;
+    message: string;
+    createdAt: string;
+  }[];
+}
+
 export interface InspectorApplication {
   projectId: string;
   enterpriseName: string;
@@ -66,6 +80,7 @@ export interface InspectorApplication {
   details: Record<string, unknown>;
   approvals: InspectorApproval[];
   documents: InspectorDocument[];
+  clarifications: ClarificationRequest[];
 }
 
 export class InspectorApiError extends Error {
@@ -83,7 +98,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`/api/v1/inspector${path}`, {
     ...init,
     credentials: "include",
-    headers: init?.body ? { "Content-Type": "application/json", ...init.headers } : init?.headers,
+    headers: init?.body
+      ? { "Content-Type": "application/json", ...init.headers }
+      : init?.headers,
   });
   const body = (await response.json().catch(() => ({}))) as {
     message?: string;
@@ -104,24 +121,33 @@ export async function listInspectorApplications(status?: ReviewStatus) {
   const response = await request<{
     data: {
       applications: InspectorApplicationSummary[];
-      pagination: { page: number; pageSize: number; total: number; totalPages: number };
+      pagination: {
+        page: number;
+        pageSize: number;
+        total: number;
+        totalPages: number;
+      };
     };
   }>(`/applications${search}`);
   return response.data;
 }
 
 export async function getInspectorApplication(projectId: string) {
-  const response = await request<{ data: { application: InspectorApplication } }>(
-    `/applications/${projectId}`,
-  );
+  const response = await request<{
+    data: { application: InspectorApplication };
+  }>(`/applications/${projectId}`);
   return response.data.application;
 }
 
-export async function startInspectorReview(projectId: string, approvalId: string) {
-  const response = await request<{ data: { application: InspectorApplication } }>(
-    `/applications/${projectId}/approvals/${approvalId}/start-review`,
-    { method: "POST" },
-  );
+export async function startInspectorReview(
+  projectId: string,
+  approvalId: string,
+) {
+  const response = await request<{
+    data: { application: InspectorApplication };
+  }>(`/applications/${projectId}/approvals/${approvalId}/start-review`, {
+    method: "POST",
+  });
   return response.data.application;
 }
 
@@ -144,16 +170,47 @@ export async function decideInspectorApproval(
   decision: "approved" | "correction_required" | "rejected",
   note?: string,
 ) {
-  const response = await request<{ data: { application: InspectorApplication } }>(
-    `/applications/${projectId}/approvals/${approvalId}/decision`,
-    { method: "POST", body: JSON.stringify({ decision, note }) },
-  );
+  const response = await request<{
+    data: { application: InspectorApplication };
+  }>(`/applications/${projectId}/approvals/${approvalId}/decision`, {
+    method: "POST",
+    body: JSON.stringify({ decision, note }),
+  });
   return response.data.application;
 }
 
-export async function getInspectorDocumentDownload(projectId: string, documentId: string) {
+export async function getInspectorDocumentDownload(
+  projectId: string,
+  documentId: string,
+) {
   const response = await request<{ data: { url: string } }>(
     `/applications/${projectId}/documents/${documentId}/download`,
   );
   return response.data.url;
+}
+
+export async function createInspectorClarification(
+  projectId: string,
+  approvalId: string,
+  input: { message: string; documentId?: string; dueAt?: string },
+) {
+  const response = await request<{
+    data: { application: InspectorApplication };
+  }>(`/applications/${projectId}/approvals/${approvalId}/clarifications`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return response.data.application;
+}
+
+export async function resolveInspectorClarification(
+  projectId: string,
+  clarificationId: string,
+) {
+  const response = await request<{
+    data: { application: InspectorApplication };
+  }>(`/applications/${projectId}/clarifications/${clarificationId}/resolve`, {
+    method: "POST",
+  });
+  return response.data.application;
 }

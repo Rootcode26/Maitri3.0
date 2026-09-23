@@ -13,6 +13,14 @@ export const createInspectorRouter = (controller: InspectorController): Router =
     controller.startReview,
   );
   router.post('/applications/:projectId/approvals/:approvalId/decision', controller.decide);
+  router.post(
+    '/applications/:projectId/approvals/:approvalId/clarifications',
+    controller.createClarification,
+  );
+  router.post(
+    '/applications/:projectId/clarifications/:clarificationId/resolve',
+    controller.resolveClarification,
+  );
   router.get('/applications/:projectId/documents/:documentId/download', controller.download);
   router.post('/applications/:projectId/documents/:documentId/review', controller.reviewDocument);
   return router;

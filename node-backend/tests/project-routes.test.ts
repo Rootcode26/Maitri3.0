@@ -50,6 +50,8 @@ const createTestApp = () => {
     listProjects: vi.fn().mockResolvedValue([{ id: 'project-1' }]),
     getProject: vi.fn().mockResolvedValue(projectRecord),
     submitProject: vi.fn().mockResolvedValue({ ...projectRecord, status: 'submitted' }),
+    listClarifications: vi.fn().mockResolvedValue([]),
+    respondToClarification: vi.fn().mockResolvedValue([]),
     setApprovalDepartment: vi
       .fn()
       .mockResolvedValue({ approvalKey: 'consent-to-operate', department: { key: 'mpcb' } }),
@@ -185,6 +187,44 @@ describe('project routes', () => {
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({ data: { projects: [{ id: 'project-1' }] } });
     expect(service.listProjects).toHaveBeenCalledWith('applicant-1');
+  });
+
+  it('lists clarification requests for an owned project', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .get('/api/v1/projects/project-1/clarifications')
+      .set('Cookie', applicantCookie());
+    expect(response.status).toBe(200);
+    expect(service.listClarifications).toHaveBeenCalledWith('applicant-1', 'project-1');
+  });
+
+  it('validates and records an applicant clarification response', async () => {
+    const { app, service } = createTestApp();
+    const projectId = '11111111-1111-4111-8111-111111111111';
+    const clarificationId = '77777777-7777-4777-8777-777777777777';
+    const response = await request(app)
+      .post(`/api/v1/projects/${projectId}/clarifications/${clarificationId}/responses`)
+      .set('Cookie', applicantCookie())
+      .send({ message: 'The corrected plan has now been uploaded.' });
+    expect(response.status).toBe(201);
+    expect(service.respondToClarification).toHaveBeenCalledWith(
+      'applicant-1',
+      projectId,
+      clarificationId,
+      { message: 'The corrected plan has now been uploaded.' },
+    );
+  });
+
+  it('rejects an empty clarification response', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .post(
+        '/api/v1/projects/11111111-1111-4111-8111-111111111111/clarifications/77777777-7777-4777-8777-777777777777/responses',
+      )
+      .set('Cookie', applicantCookie())
+      .send({ message: ' ' });
+    expect(response.status).toBe(400);
+    expect(service.respondToClarification).not.toHaveBeenCalled();
   });
 
   it('returns a single owned project', async () => {

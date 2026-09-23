@@ -3,6 +3,8 @@ import type { RequestHandler } from 'express';
 import {
   approvalDecisionSchema,
   approvalParamsSchema,
+  clarificationParamsSchema,
+  createClarificationSchema,
   documentParamsSchema,
   documentReviewSchema,
   inspectorQueueQuerySchema,
@@ -68,6 +70,29 @@ export class InspectorController {
       input,
     );
     response.status(200).json({ status: 'success', data: { document } });
+  };
+
+  readonly createClarification: RequestHandler = async (request, response) => {
+    const { projectId, approvalId } = approvalParamsSchema.parse(request.params);
+    const input = createClarificationSchema.parse(request.body);
+    const application = await this.service.createClarification(
+      request.user!.userId,
+      request.user!.departmentId,
+      projectId,
+      approvalId,
+      input,
+    );
+    response.status(201).json({ status: 'success', data: { application } });
+  };
+
+  readonly resolveClarification: RequestHandler = async (request, response) => {
+    const { projectId, clarificationId } = clarificationParamsSchema.parse(request.params);
+    const application = await this.service.resolveClarification(
+      request.user!.departmentId,
+      projectId,
+      clarificationId,
+    );
+    response.status(200).json({ status: 'success', data: { application } });
   };
 
   readonly decide: RequestHandler = async (request, response) => {

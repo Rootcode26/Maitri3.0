@@ -8,6 +8,30 @@ import type {
 import type { ProjectDocumentRecord } from '../documents/document.types.js';
 
 export type DocumentReviewStatus = 'pending' | 'accepted' | 'correction_required' | 'rejected';
+export type ClarificationStatus = 'open' | 'responded' | 'resolved';
+
+export interface ClarificationResponse {
+  id: string;
+  applicantId: string;
+  applicantName: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface ClarificationRequest {
+  id: string;
+  projectId: string;
+  approvalId: string;
+  documentId: string | null;
+  inspectorId: string;
+  inspectorName: string;
+  message: string;
+  status: ClarificationStatus;
+  dueAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  responses: ClarificationResponse[];
+}
 
 export interface InspectorApplicationSummary {
   projectId: string;
@@ -57,4 +81,5 @@ export interface InspectorApplicationDetail {
   details: CreateProjectInput;
   approvals: InspectorApproval[];
   documents: InspectorDocument[];
+  clarifications: ClarificationRequest[];
 }

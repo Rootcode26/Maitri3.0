@@ -3,6 +3,10 @@ import { z } from 'zod';
 export const projectIdParamsSchema = z.object({ projectId: z.uuid() });
 export const approvalParamsSchema = z.object({ projectId: z.uuid(), approvalId: z.uuid() });
 export const documentParamsSchema = z.object({ projectId: z.uuid(), documentId: z.uuid() });
+export const clarificationParamsSchema = z.object({
+  projectId: z.uuid(),
+  clarificationId: z.uuid(),
+});
 
 export const inspectorQueueQuerySchema = z.object({
   status: z
@@ -44,6 +48,13 @@ export const documentReviewSchema = z
     }
   });
 
+export const createClarificationSchema = z.object({
+  message: z.string().trim().min(10).max(2_000),
+  documentId: z.uuid().optional(),
+  dueAt: z.iso.datetime({ offset: true }).optional(),
+});
+
 export type InspectorQueueQuery = z.infer<typeof inspectorQueueQuerySchema>;
 export type ApprovalDecisionInput = z.infer<typeof approvalDecisionSchema>;
 export type DocumentReviewInput = z.infer<typeof documentReviewSchema>;
+export type CreateClarificationInput = z.infer<typeof createClarificationSchema>;

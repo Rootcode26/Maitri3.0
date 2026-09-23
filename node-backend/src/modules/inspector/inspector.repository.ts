@@ -10,11 +10,35 @@ import type { DocumentExtractionStatus, DocumentReadStatus } from '../documents/
 import type { InspectorQueueQuery } from './inspector.schemas.js';
 import type {
   DocumentReviewStatus,
+  ClarificationRequest,
   InspectorApplicationDetail,
   InspectorApplicationSummary,
   InspectorApproval,
   InspectorDocument,
 } from './inspector.types.js';
+
+interface ClarificationRow {
+  id: string;
+  project_id: string;
+  approval_id: string;
+  document_id: string | null;
+  inspector_id: string;
+  inspector_name: string;
+  message: string;
+  status: 'open' | 'responded' | 'resolved';
+  due_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface ClarificationResponseRow {
+  id: string;
+  clarification_id: string;
+  applicant_id: string;
+  applicant_name: string;
+  message: string;
+  created_at: Date;
+}
 
 interface QueueRow {
   project_id: string;
@@ -129,6 +153,33 @@ const mapDocument = (row: DocumentRow): InspectorDocument => ({
   },
 });
 
+const mapClarifications = (
+  rows: ClarificationRow[],
+  responseRows: ClarificationResponseRow[],
+): ClarificationRequest[] =>
+  rows.map((row) => ({
+    id: row.id,
+    projectId: row.project_id,
+    approvalId: row.approval_id,
+    documentId: row.document_id,
+    inspectorId: row.inspector_id,
+    inspectorName: row.inspector_name,
+    message: row.message,
+    status: row.status,
+    dueAt: row.due_at?.toISOString() ?? null,
+    createdAt: row.created_at.toISOString(),
+    updatedAt: row.updated_at.toISOString(),
+    responses: responseRows
+      .filter((response) => response.clarification_id === row.id)
+      .map((response) => ({
+        id: response.id,
+        applicantId: response.applicant_id,
+        applicantName: response.applicant_name,
+        message: response.message,
+        createdAt: response.created_at.toISOString(),
+      })),
+  }));
+
 export class InspectorRepository {
   async listApplications(
     departmentId: string,
@@ -215,6 +266,28 @@ export class InspectorRepository {
        ORDER BY pd.approval_key, pd.document_key, pd.version DESC`,
       [projectId, departmentId],
     );
+    const clarifications = await query<ClarificationRow>(
+      `SELECT cr.id, cr.project_id, cr.approval_id, cr.document_id, cr.inspector_id,
+              inspector.name AS inspector_name, cr.message, cr.status, cr.due_at,
+              cr.created_at, cr.updated_at
+       FROM clarification_requests cr
+       JOIN project_approvals pa ON pa.id = cr.approval_id
+       JOIN users inspector ON inspector.id = cr.inspector_id
+       WHERE cr.project_id = $1 AND pa.department_id = $2
+       ORDER BY cr.created_at DESC`,
+      [projectId, departmentId],
+    );
+    const clarificationResponses = await query<ClarificationResponseRow>(
+      `SELECT response.id, response.clarification_id, response.applicant_id,
+              applicant.name AS applicant_name, response.message, response.created_at
+       FROM clarification_responses response
+       JOIN clarification_requests cr ON cr.id = response.clarification_id
+       JOIN project_approvals pa ON pa.id = cr.approval_id
+       JOIN users applicant ON applicant.id = response.applicant_id
+       WHERE cr.project_id = $1 AND pa.department_id = $2
+       ORDER BY response.created_at`,
+      [projectId, departmentId],
+    );
     return {
       projectId: project.project_id,
       enterpriseName: project.enterprise_name,
@@ -231,7 +304,58 @@ export class InspectorRepository {
       details: project.details,
       approvals: approvals.rows.map(mapApproval),
       documents: documents.rows.map(mapDocument),
+      clarifications: mapClarifications(clarifications.rows, clarificationResponses.rows),
     };
+  }
+
+  async createClarification(input: {
+    projectId: string;
+    approvalId: string;
+    departmentId: string;
+    inspectorId: string;
+    message: string;
+    documentId?: string;
+    dueAt?: string;
+  }): Promise<boolean> {
+    const result = await query(
+      `INSERT INTO clarification_requests
+         (project_id, approval_id, document_id, inspector_id, message, due_at)
+       SELECT $1, pa.id, $5, $4, $6, $7
+       FROM project_approvals pa
+       WHERE pa.id = $2 AND pa.project_id = $1 AND pa.department_id = $3
+         AND pa.review_status IN ('under_review', 'correction_required')
+         AND ($5::uuid IS NULL OR EXISTS (
+           SELECT 1 FROM project_documents pd
+           WHERE pd.id = $5 AND pd.project_id = $1 AND pd.approval_key = pa.approval_key
+         ))
+       RETURNING id`,
+      [
+        input.projectId,
+        input.approvalId,
+        input.departmentId,
+        input.inspectorId,
+        input.documentId ?? null,
+        input.message,
+        input.dueAt ?? null,
+      ],
+    );
+    return Boolean(result.rowCount);
+  }
+
+  async resolveClarification(input: {
+    projectId: string;
+    clarificationId: string;
+    departmentId: string;
+  }): Promise<boolean> {
+    const result = await query(
+      `UPDATE clarification_requests cr SET status = 'resolved'
+       FROM project_approvals pa
+       WHERE cr.id = $2 AND cr.project_id = $1 AND pa.id = cr.approval_id
+         AND pa.department_id = $3 AND cr.status IN ('open', 'responded')
+       RETURNING cr.id`,
+      [input.projectId, input.clarificationId, input.departmentId],
+    );
+    return Boolean(result.rowCount);
   }
 
   async findDocumentForDepartment(
