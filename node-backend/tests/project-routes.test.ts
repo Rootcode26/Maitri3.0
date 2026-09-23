@@ -49,6 +49,10 @@ const createTestApp = () => {
     createProject: vi.fn().mockResolvedValue(projectRecord),
     listProjects: vi.fn().mockResolvedValue([{ id: 'project-1' }]),
     getProject: vi.fn().mockResolvedValue(projectRecord),
+    getApplicationDetail: vi
+      .fn()
+      .mockResolvedValue({ ...projectRecord, documents: [], timeline: [] }),
+    listDocuments: vi.fn().mockResolvedValue([]),
     submitProject: vi.fn().mockResolvedValue({ ...projectRecord, status: 'submitted' }),
     listClarifications: vi.fn().mockResolvedValue([]),
     respondToClarification: vi.fn().mockResolvedValue([]),
@@ -187,6 +191,24 @@ describe('project routes', () => {
     expect(response.status).toBe(200);
     expect(response.body).toMatchObject({ data: { projects: [{ id: 'project-1' }] } });
     expect(service.listProjects).toHaveBeenCalledWith('applicant-1');
+  });
+
+  it('returns the complete applicant application workspace', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .get('/api/v1/projects/project-1/application')
+      .set('Cookie', applicantCookie());
+    expect(response.status).toBe(200);
+    expect(service.getApplicationDetail).toHaveBeenCalledWith('applicant-1', 'project-1');
+  });
+
+  it('lists documents across all projects owned by the applicant', async () => {
+    const { app, service } = createTestApp();
+    const response = await request(app)
+      .get('/api/v1/projects/documents')
+      .set('Cookie', applicantCookie());
+    expect(response.status).toBe(200);
+    expect(service.listDocuments).toHaveBeenCalledWith('applicant-1');
   });
 
   it('lists clarification requests for an owned project', async () => {

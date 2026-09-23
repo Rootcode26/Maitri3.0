@@ -80,3 +80,42 @@ export interface ApplicantClarification {
     createdAt: string;
   }[];
 }
+
+export interface ApplicantDocument {
+  id: string;
+  projectId: string;
+  approvalKey: string;
+  approvalTitle: string;
+  departmentName: string;
+  documentKey: string;
+  documentName: string;
+  version: number;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  expiresOn: string | null;
+  createdAt: string;
+  review: {
+    status: 'pending' | 'accepted' | 'correction_required' | 'rejected';
+    comment: string | null;
+    reviewedAt: string | null;
+  };
+}
+
+export interface ApplicationStatusEvent {
+  id: string;
+  approvalId: string | null;
+  approvalTitle: string | null;
+  actorName: string;
+  actorRole: 'applicant' | 'inspector';
+  fromStatus: string;
+  toStatus: string;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface ApplicantApplicationDetail extends ProjectRecord {
+  documents: ApplicantDocument[];
+  clarifications: ApplicantClarification[];
+  timeline: ApplicationStatusEvent[];
+}

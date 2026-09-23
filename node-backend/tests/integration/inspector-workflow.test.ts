@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { closeDatabase, connectDatabase, query } from '../../src/database/database.js';
 import { InspectorRepository } from '../../src/modules/inspector/inspector.repository.js';
+import { DocumentRepository } from '../../src/modules/documents/document.repository.js';
 import { ProjectRepository } from '../../src/modules/projects/project.repository.js';
 import type { CreateProjectInput } from '../../src/modules/projects/project.schemas.js';
 
@@ -37,6 +38,7 @@ const projectInput: CreateProjectInput = {
 describe.runIf(runDbTests)('inspector manual review workflow (integration)', () => {
   const projects = new ProjectRepository();
   const inspector = new InspectorRepository();
+  const documents = new DocumentRepository();
   let applicantId: string;
   let inspectorId: string;
   let departmentId: string;
@@ -159,9 +161,61 @@ describe.runIf(runDbTests)('inspector manual review workflow (integration)', () 
       inspector.resolveClarification({ projectId, clarificationId, departmentId }),
     ).resolves.toBe(true);
 
-    const reviewed = await inspector.reviewDocument({
+    const correction = await inspector.reviewDocument({
       projectId,
       documentId,
+      departmentId,
+      inspectorId,
+      status: 'correction_required',
+      comment: 'Upload a clearer final plan',
+    });
+    expect(correction?.review.status).toBe('correction_required');
+    const correctionDecision = await inspector.decideApproval({
+      projectId,
+      approvalId,
+      departmentId,
+      inspectorId,
+      decision: 'correction_required',
+      note: 'Replace the factory plan',
+    });
+    expect(correctionDecision?.projectStatus).toBe('correction_required');
+
+    const replacement = await query<{ id: string }>(
+      `INSERT INTO project_documents
+         (project_id, approval_key, document_key, version, file_name, mime_type,
+          detected_mime_type, size_bytes, storage_key, uploaded_by)
+       VALUES ($1, 'factory-registration', 'factory-plan', 2, 'plan-corrected.pdf',
+               'application/pdf', 'application/pdf', 120, 'tests/plan-corrected.pdf', $2)
+       RETURNING id`,
+      [projectId, applicantId],
+    );
+    const replacementId = replacement.rows[0]!.id;
+    await documents.markCorrectionResubmitted({
+      projectId,
+      approvalKey: 'factory-registration',
+      applicantId,
+    });
+    const resubmitted = await projects.findApplicationDetailByApplicant(applicantId, projectId);
+    expect(resubmitted).toMatchObject({
+      status: 'under_review',
+      documents: expect.arrayContaining([
+        expect.objectContaining({
+          id: replacementId,
+          version: 2,
+          review: expect.objectContaining({ status: 'pending' }),
+        }),
+      ]),
+      timeline: expect.arrayContaining([
+        expect.objectContaining({
+          fromStatus: 'correction_required',
+          toStatus: 'under_review',
+        }),
+      ]),
+    });
+
+    const reviewed = await inspector.reviewDocument({
+      projectId,
+      documentId: replacementId,
       departmentId,
       inspectorId,
       status: 'accepted',

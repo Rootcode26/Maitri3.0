@@ -94,6 +94,26 @@ export class DocumentService {
       });
     }
 
+    if (project.status === 'correction_required') {
+      if (approval.reviewStatus !== 'correction_required') {
+        throw new AppError('Only documents requested for correction can be replaced', {
+          statusCode: 409,
+          code: 'DOCUMENT_CORRECTION_NOT_REQUESTED',
+        });
+      }
+      const latestReview = await this.documentRepository.findLatestReview(
+        projectId,
+        input.approvalKey,
+        input.documentKey,
+      );
+      if (!latestReview || !['correction_required', 'rejected'].includes(latestReview.status)) {
+        throw new AppError('This document has not been requested for correction', {
+          statusCode: 409,
+          code: 'DOCUMENT_CORRECTION_NOT_REQUESTED',
+        });
+      }
+    }
+
     const maxSizeMb = spec.maxSizeMb ?? this.options.defaultMaxSizeMb;
     if (file.size > Math.round(maxSizeMb * 1_000_000)) {
       throw new AppError(`File must be ${maxSizeMb} MB or smaller`, {
@@ -143,8 +163,9 @@ export class DocumentService {
     const storageKey = `projects/${projectId}/${input.approvalKey}/${input.documentKey}/${randomUUID()}-${sanitizeFileName(file.originalName)}`;
 
     await this.storage.put(storageKey, file.buffer, detectedMimeType);
+    let document: ProjectDocumentRecord;
     try {
-      return await this.documentRepository.create({
+      document = await this.documentRepository.create({
         projectId,
         approvalKey: input.approvalKey,
         documentKey: input.documentKey,
@@ -169,6 +190,14 @@ export class DocumentService {
       }
       throw error;
     }
+    if (project.status === 'correction_required') {
+      await this.documentRepository.markCorrectionResubmitted({
+        projectId,
+        approvalKey: input.approvalKey,
+        applicantId,
+      });
+    }
+    return document;
   }
 
   async listDocuments(applicantId: string, projectId: string): Promise<ProjectDocumentRecord[]> {

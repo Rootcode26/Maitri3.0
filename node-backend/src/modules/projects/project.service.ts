@@ -71,6 +71,18 @@ export class ProjectService {
     return this.repository.findProjectsByApplicant(applicantId);
   }
 
+  async listDocuments(applicantId: string) {
+    return this.repository.findDocumentsByApplicant(applicantId);
+  }
+
+  async getApplicationDetail(applicantId: string, projectId: string) {
+    const project = await this.repository.findApplicationDetailByApplicant(applicantId, projectId);
+    if (!project) {
+      throw new AppError('Project not found', { statusCode: 404, code: 'PROJECT_NOT_FOUND' });
+    }
+    return project;
+  }
+
   async submitProject(applicantId: string, projectId: string): Promise<ProjectRecord> {
     const result = await this.repository.submitProject(applicantId, projectId);
     if (result.missingDocuments.length > 0) {

@@ -31,6 +31,25 @@ const input = createProjectSchema.parse({
 });
 
 describe('ProjectService', () => {
+  it('returns an applicant-scoped application detail workspace', async () => {
+    const detail = { id: 'p1', applicantId: 'applicant-1', documents: [], timeline: [] };
+    const findApplicationDetailByApplicant = vi.fn().mockResolvedValue(detail);
+    const service = new ProjectService({
+      findApplicationDetailByApplicant,
+    } as unknown as ProjectRepository);
+    await expect(service.getApplicationDetail('applicant-1', 'p1')).resolves.toBe(detail);
+    expect(findApplicationDetailByApplicant).toHaveBeenCalledWith('applicant-1', 'p1');
+  });
+
+  it('hides an unowned application detail workspace', async () => {
+    const service = new ProjectService({
+      findApplicationDetailByApplicant: vi.fn().mockResolvedValue(null),
+    } as unknown as ProjectRepository);
+    await expect(service.getApplicationDetail('applicant-1', 'p1')).rejects.toMatchObject({
+      statusCode: 404,
+      code: 'PROJECT_NOT_FOUND',
+    });
+  });
   it('submits a complete draft project', async () => {
     const project = { id: 'p1', status: 'submitted' };
     const submitProject = vi.fn().mockResolvedValue({

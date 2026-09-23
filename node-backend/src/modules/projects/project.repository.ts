@@ -4,6 +4,9 @@ import type { CreateProjectInput } from './project.schemas.js';
 import type {
   ApprovalDocument,
   ApplicantClarification,
+  ApplicantApplicationDetail,
+  ApplicantDocument,
+  ApplicationStatusEvent,
   Industry,
   ProjectApprovalRecord,
   ProjectDepartment,
@@ -32,6 +35,37 @@ interface ApplicantClarificationResponseRow {
   id: string;
   clarification_id: string;
   message: string;
+  created_at: Date;
+}
+
+interface ApplicantDocumentRow {
+  id: string;
+  project_id: string;
+  approval_key: string;
+  approval_title: string;
+  department_name: string;
+  document_key: string;
+  document_name: string;
+  version: number;
+  file_name: string;
+  mime_type: string;
+  size_bytes: string;
+  expires_on: Date | null;
+  created_at: Date;
+  review_status: ApplicantDocument['review']['status'] | null;
+  review_comment: string | null;
+  reviewed_at: Date | null;
+}
+
+interface StatusEventRow {
+  id: string;
+  approval_id: string | null;
+  approval_title: string | null;
+  actor_name: string;
+  actor_role: 'applicant' | 'inspector';
+  from_status: string;
+  to_status: string;
+  note: string | null;
   created_at: Date;
 }
 
@@ -105,6 +139,39 @@ const mapApproval = (row: ApprovalRow): ProjectApprovalRecord => ({
   decidedAt: row.decided_at?.toISOString() ?? null,
   decidedBy: row.decided_by,
   decisionNote: row.decision_note,
+});
+
+const mapApplicantDocument = (row: ApplicantDocumentRow): ApplicantDocument => ({
+  id: row.id,
+  projectId: row.project_id,
+  approvalKey: row.approval_key,
+  approvalTitle: row.approval_title,
+  departmentName: row.department_name,
+  documentKey: row.document_key,
+  documentName: row.document_name,
+  version: row.version,
+  fileName: row.file_name,
+  mimeType: row.mime_type,
+  sizeBytes: Number(row.size_bytes),
+  expiresOn: row.expires_on?.toISOString().slice(0, 10) ?? null,
+  createdAt: row.created_at.toISOString(),
+  review: {
+    status: row.review_status ?? 'pending',
+    comment: row.review_comment,
+    reviewedAt: row.reviewed_at?.toISOString() ?? null,
+  },
+});
+
+const mapStatusEvent = (row: StatusEventRow): ApplicationStatusEvent => ({
+  id: row.id,
+  approvalId: row.approval_id,
+  approvalTitle: row.approval_title,
+  actorName: row.actor_name,
+  actorRole: row.actor_role,
+  fromStatus: row.from_status,
+  toStatus: row.to_status,
+  note: row.note,
+  createdAt: row.created_at.toISOString(),
 });
 
 const mapProject = (row: ProjectRow, approvals: ProjectApprovalRecord[]): ProjectRecord => ({
@@ -391,6 +458,64 @@ export class ProjectRepository {
     } finally {
       client.release();
     }
+  }
+
+  async findDocumentsByApplicant(
+    applicantId: string,
+    projectId?: string,
+  ): Promise<ApplicantDocument[]> {
+    const values: unknown[] = [applicantId];
+    const projectFilter = projectId ? `AND p.id = $2` : '';
+    if (projectId) values.push(projectId);
+    const result = await query<ApplicantDocumentRow>(
+      `SELECT pd.id, pd.project_id, pd.approval_key, pa.title AS approval_title,
+              department.name AS department_name, pd.document_key,
+              COALESCE(spec.value->>'name', pd.document_key) AS document_name,
+              pd.version, pd.file_name, pd.mime_type, pd.size_bytes, pd.expires_on,
+              pd.created_at, dr.status AS review_status, dr.comment AS review_comment,
+              dr.reviewed_at
+       FROM project_documents pd
+       JOIN projects p ON p.id = pd.project_id
+       JOIN project_approvals pa
+         ON pa.project_id = pd.project_id AND pa.approval_key = pd.approval_key
+       JOIN departments department ON department.id = pa.department_id
+       LEFT JOIN LATERAL jsonb_array_elements(pa.documents) spec(value)
+         ON spec.value->>'key' = pd.document_key
+       LEFT JOIN document_reviews dr ON dr.document_id = pd.id
+       WHERE p.applicant_id = $1 ${projectFilter}
+       ORDER BY pd.created_at DESC, pd.version DESC`,
+      values,
+    );
+    return result.rows.map(mapApplicantDocument);
+  }
+
+  async findApplicationDetailByApplicant(
+    applicantId: string,
+    projectId: string,
+  ): Promise<ApplicantApplicationDetail | null> {
+    const project = await this.findProjectById(projectId);
+    if (!project || project.applicantId !== applicantId) return null;
+    const [documents, clarifications, history] = await Promise.all([
+      this.findDocumentsByApplicant(applicantId, projectId),
+      this.findClarificationsByApplicant(applicantId, projectId),
+      query<StatusEventRow>(
+        `SELECT history.id, history.approval_id, pa.title AS approval_title,
+                actor.name AS actor_name, actor.role AS actor_role,
+                history.from_status, history.to_status, history.note, history.created_at
+         FROM application_status_history history
+         JOIN users actor ON actor.id = history.actor_id
+         LEFT JOIN project_approvals pa ON pa.id = history.approval_id
+         WHERE history.project_id = $1
+         ORDER BY history.created_at DESC`,
+        [projectId],
+      ),
+    ]);
+    return {
+      ...project,
+      documents,
+      clarifications: clarifications ?? [],
+      timeline: history.rows.map(mapStatusEvent),
+    };
   }
 
   private async findApprovalsByProject(projectId: string): Promise<ProjectApprovalRecord[]> {

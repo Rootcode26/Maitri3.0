@@ -21,10 +21,12 @@ const inspectMock = vi.mocked(inspectFileContent);
 const project = {
   id: 'project-1',
   applicantId: 'applicant-1',
+  status: 'draft',
   approvals: [
     {
       id: 'a1',
       approvalKey: 'food-licence',
+      reviewStatus: 'pending',
       documents: [{ key: 'factory-plan', name: 'Factory plan', formats: ['PDF'], maxSizeMb: 5 }],
     },
   ],
@@ -198,6 +200,65 @@ describe('DocumentService.uploadDocument', () => {
       }),
     );
     expect(record.id).toBe('doc-1');
+  });
+
+  it('accepts only explicitly corrected documents during correction resubmission', async () => {
+    inspectMock.mockResolvedValue({ detectedMimeType: 'application/pdf' });
+    const correctedProject = {
+      ...project,
+      status: 'correction_required',
+      approvals: [{ ...project.approvals[0], reviewStatus: 'correction_required' }],
+    };
+    const markCorrectionResubmitted = vi.fn().mockResolvedValue(undefined);
+    const { service } = makeService({
+      project: correctedProject,
+      repo: {
+        findLatestReview: vi.fn().mockResolvedValue({
+          documentId: 'doc-1',
+          status: 'correction_required',
+          comment: 'Upload a clearer scan',
+        }),
+        markCorrectionResubmitted,
+      },
+    });
+    await service.uploadDocument(
+      'applicant-1',
+      'project-1',
+      { approvalKey: 'food-licence', documentKey: 'factory-plan' },
+      file(),
+    );
+    expect(markCorrectionResubmitted).toHaveBeenCalledWith({
+      projectId: 'project-1',
+      approvalKey: 'food-licence',
+      applicantId: 'applicant-1',
+    });
+  });
+
+  it('blocks replacement when no correction was requested for that document', async () => {
+    const correctedProject = {
+      ...project,
+      status: 'correction_required',
+      approvals: [{ ...project.approvals[0], reviewStatus: 'correction_required' }],
+    };
+    const { service, storage } = makeService({
+      project: correctedProject,
+      repo: {
+        findLatestReview: vi.fn().mockResolvedValue({
+          documentId: 'doc-1',
+          status: 'accepted',
+          comment: null,
+        }),
+      },
+    });
+    await expect(
+      service.uploadDocument(
+        'applicant-1',
+        'project-1',
+        { approvalKey: 'food-licence', documentKey: 'factory-plan' },
+        file(),
+      ),
+    ).rejects.toMatchObject({ statusCode: 409, code: 'DOCUMENT_CORRECTION_NOT_REQUESTED' });
+    expect((storage as unknown as { put: ReturnType<typeof vi.fn> }).put).not.toHaveBeenCalled();
   });
 
   it('rejects a file flagged by the malware scanner and never stores it', async () => {

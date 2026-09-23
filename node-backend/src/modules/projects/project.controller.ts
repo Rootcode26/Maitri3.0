@@ -30,6 +30,19 @@ export class ProjectController {
     response.status(200).json({ status: 'success', data: { project } });
   };
 
+  readonly getApplicationDetail: RequestHandler = async (request, response) => {
+    const application = await this.projectService.getApplicationDetail(
+      request.user!.userId,
+      request.params.id as string,
+    );
+    response.status(200).json({ status: 'success', data: { application } });
+  };
+
+  readonly listDocuments: RequestHandler = async (request, response) => {
+    const documents = await this.projectService.listDocuments(request.user!.userId);
+    response.status(200).json({ status: 'success', data: { documents } });
+  };
+
   readonly listDepartments: RequestHandler = async (_request, response) => {
     const departments = await this.projectService.listDepartments();
     response.status(200).json({ status: 'success', data: { departments } });
