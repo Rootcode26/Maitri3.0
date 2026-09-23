@@ -10,7 +10,14 @@ import {
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react";
-import { Fragment, type FormEvent, useEffect, useId, useMemo, useState } from "react";
+import {
+  Fragment,
+  type FormEvent,
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 import { DocumentCollection } from "@/features/projects/document-collection";
@@ -67,13 +74,66 @@ const steps: Step[] = [
     title: "Business details",
     description: "Tell us about the enterprise applying for approvals.",
     fields: [
-      { name: "enterpriseName", label: "Enterprise name", type: "text", placeholder: "Sahyadri Foods Pvt. Ltd.", required: true, half: true },
-      { name: "orgType", label: "Organisation type", type: "select", options: ["Private limited company", "Public limited company", "Partnership", "Proprietorship", "LLP"], required: true, half: true },
-      { name: "industry", label: "Industry sector", type: "select", options: ["Food processing", "Textiles", "Steel & metals"], required: true, half: true },
-      { name: "cin", label: "CIN / registration number", type: "text", placeholder: "U15490PN2026PTC00124", helper: "As printed on your certificate of incorporation.", half: true },
-      { name: "pan", label: "Business PAN", type: "text", placeholder: "AABCS1234F", required: true, half: true },
-      { name: "gstin", label: "GSTIN", type: "text", placeholder: "27AABCS1234F1Z5", half: true },
-      { name: "udyam", label: "Udyam / MSME registration", type: "text", placeholder: "UDYAM-MH-00-0000000", helper: "Optional — used for MSME classification and incentives." },
+      {
+        name: "enterpriseName",
+        label: "Enterprise name",
+        type: "text",
+        placeholder: "Sahyadri Foods Pvt. Ltd.",
+        required: true,
+        half: true,
+      },
+      {
+        name: "orgType",
+        label: "Organisation type",
+        type: "select",
+        options: [
+          "Private limited company",
+          "Public limited company",
+          "Partnership",
+          "Proprietorship",
+          "LLP",
+        ],
+        required: true,
+        half: true,
+      },
+      {
+        name: "industry",
+        label: "Industry sector",
+        type: "select",
+        options: ["Food processing", "Textiles", "Steel & metals"],
+        required: true,
+        half: true,
+      },
+      {
+        name: "cin",
+        label: "CIN / registration number",
+        type: "text",
+        placeholder: "U15490PN2026PTC00124",
+        helper: "As printed on your certificate of incorporation.",
+        half: true,
+      },
+      {
+        name: "pan",
+        label: "Business PAN",
+        type: "text",
+        placeholder: "AABCS1234F",
+        required: true,
+        half: true,
+      },
+      {
+        name: "gstin",
+        label: "GSTIN",
+        type: "text",
+        placeholder: "27AABCS1234F1Z5",
+        half: true,
+      },
+      {
+        name: "udyam",
+        label: "Udyam / MSME registration",
+        type: "text",
+        placeholder: "UDYAM-MH-00-0000000",
+        helper: "Optional — used for MSME classification and incentives.",
+      },
     ],
   },
   {
@@ -82,14 +142,73 @@ const steps: Step[] = [
     title: "Location details",
     description: "Where will the industrial unit operate?",
     fields: [
-      { name: "district", label: "District", type: "text", placeholder: "Pune", required: true, half: true },
-      { name: "taluka", label: "Taluka / tehsil", type: "text", placeholder: "Khed", half: true },
-      { name: "pincode", label: "PIN code", type: "text", placeholder: "410501", required: true, half: true },
-      { name: "industrialArea", label: "Industrial area / estate", type: "text", placeholder: "Chakan MIDC", half: true },
-      { name: "plotNumber", label: "Plot / survey number", type: "text", placeholder: "Plot D-42", half: true },
-      { name: "plotArea", label: "Plot area (sq. m)", type: "select", options: ["Up to 500", "500–2,000", "2,000–5,000", "5,000–10,000", "Above 10,000"], required: true, half: true },
-      { name: "builtUpArea", label: "Built-up area (sq. m)", type: "select", options: ["Up to 250", "250–1,000", "1,000–5,000", "Above 5,000"], helper: "Covered construction — used for fire and building approvals.", half: true },
-      { name: "landStatus", label: "Land status", type: "select", options: ["Owned", "Leased", "Allotted (MIDC)", "Under acquisition"], required: true, half: true },
+      {
+        name: "district",
+        label: "District",
+        type: "text",
+        placeholder: "Pune",
+        required: true,
+        half: true,
+      },
+      {
+        name: "taluka",
+        label: "Taluka / tehsil",
+        type: "text",
+        placeholder: "Khed",
+        half: true,
+      },
+      {
+        name: "pincode",
+        label: "PIN code",
+        type: "text",
+        placeholder: "410501",
+        required: true,
+        half: true,
+      },
+      {
+        name: "industrialArea",
+        label: "Industrial area / estate",
+        type: "text",
+        placeholder: "Chakan MIDC",
+        half: true,
+      },
+      {
+        name: "plotNumber",
+        label: "Plot / survey number",
+        type: "text",
+        placeholder: "Plot D-42",
+        half: true,
+      },
+      {
+        name: "plotArea",
+        label: "Plot area (sq. m)",
+        type: "select",
+        options: [
+          "Up to 500",
+          "500–2,000",
+          "2,000–5,000",
+          "5,000–10,000",
+          "Above 10,000",
+        ],
+        required: true,
+        half: true,
+      },
+      {
+        name: "builtUpArea",
+        label: "Built-up area (sq. m)",
+        type: "select",
+        options: ["Up to 250", "250–1,000", "1,000–5,000", "Above 5,000"],
+        helper: "Covered construction — used for fire and building approvals.",
+        half: true,
+      },
+      {
+        name: "landStatus",
+        label: "Land status",
+        type: "select",
+        options: ["Owned", "Leased", "Allotted (MIDC)", "Under acquisition"],
+        required: true,
+        half: true,
+      },
     ],
   },
   {
@@ -99,21 +218,96 @@ const steps: Step[] = [
     description: "Describe what the unit will manufacture or process.",
     fields: [
       // Options are replaced per selected industry (see activityOptions).
-      { name: "primaryActivity", label: "Primary activity", type: "select", options: [], required: true, half: true },
-      { name: "projectStage", label: "Project stage", type: "select", options: ["New unit", "Expansion", "Modernisation"], required: true, half: true },
-      { name: "investment", label: "Proposed investment", type: "select", options: ["Up to ₹100 lakh (Micro)", "₹100–1,000 lakh (Small)", "₹1,000–5,000 lakh (Medium)", "Above ₹5,000 lakh (Large)"], half: true },
-      { name: "capacity", label: "Installed capacity", type: "text", placeholder: "18 tonnes / day", half: true },
-      { name: "shifts", label: "Operating shifts", type: "select", options: ["One shift", "Two shifts", "Three shifts"], half: true },
-      { name: "boiler", label: "Boiler / pressure vessel on site?", type: "select", options: ["No", "Yes"], required: true, half: true },
-      { name: "boilerCapacity", label: "Boiler capacity (TPH)", type: "select", options: ["Up to 1", "1–5", "5–10", "Above 10"], required: true, half: true, showIf: { field: "boiler", equals: "Yes" } },
-      { name: "boilerPressure", label: "Working pressure (kg/cm²)", type: "number", placeholder: "10.5", helper: "Declared to the Directorate of Steam Boilers.", half: true, showIf: { field: "boiler", equals: "Yes" } },
-      { name: "hazardousChemicals", label: "Stores or handles hazardous chemicals?", type: "select", options: ["No", "Yes"], required: true, half: true },
+      {
+        name: "primaryActivity",
+        label: "Primary activity",
+        type: "select",
+        options: [],
+        required: true,
+        half: true,
+      },
+      {
+        name: "projectStage",
+        label: "Project stage",
+        type: "select",
+        options: ["New unit", "Expansion", "Modernisation"],
+        required: true,
+        half: true,
+      },
+      {
+        name: "investment",
+        label: "Proposed investment",
+        type: "select",
+        options: [
+          "Up to ₹100 lakh (Micro)",
+          "₹100–1,000 lakh (Small)",
+          "₹1,000–5,000 lakh (Medium)",
+          "Above ₹5,000 lakh (Large)",
+        ],
+        half: true,
+      },
+      {
+        name: "capacity",
+        label: "Installed capacity",
+        type: "text",
+        placeholder: "18 tonnes / day",
+        half: true,
+      },
+      {
+        name: "shifts",
+        label: "Operating shifts",
+        type: "select",
+        options: ["One shift", "Two shifts", "Three shifts"],
+        half: true,
+      },
+      {
+        name: "boiler",
+        label: "Boiler / pressure vessel on site?",
+        type: "select",
+        options: ["No", "Yes"],
+        required: true,
+        half: true,
+      },
+      {
+        name: "boilerCapacity",
+        label: "Boiler capacity (TPH)",
+        type: "select",
+        options: ["Up to 1", "1–5", "5–10", "Above 10"],
+        required: true,
+        half: true,
+        showIf: { field: "boiler", equals: "Yes" },
+      },
+      {
+        name: "boilerPressure",
+        label: "Working pressure (kg/cm²)",
+        type: "number",
+        placeholder: "10.5",
+        helper: "Declared to the Directorate of Steam Boilers.",
+        half: true,
+        showIf: { field: "boiler", equals: "Yes" },
+      },
+      {
+        name: "hazardousChemicals",
+        label: "Stores or handles hazardous chemicals?",
+        type: "select",
+        options: ["No", "Yes"],
+        required: true,
+        half: true,
+      },
       {
         name: "processes",
         label: "Processes used",
         type: "checkboxes",
-        options: ["Manufacturing / processing", "Packaging and storage", "Boiler operation", "On-site effluent treatment"],
-        checkedByDefault: ["Manufacturing / processing", "Packaging and storage"],
+        options: [
+          "Manufacturing / processing",
+          "Packaging and storage",
+          "Boiler operation",
+          "On-site effluent treatment",
+        ],
+        checkedByDefault: [
+          "Manufacturing / processing",
+          "Packaging and storage",
+        ],
       },
     ],
   },
@@ -123,12 +317,64 @@ const steps: Step[] = [
     title: "Utilities details",
     description: "Power, water and effluent characteristics.",
     fields: [
-      { name: "electricity", label: "Electricity demand (kVA)", type: "select", options: ["Up to 50", "50–100", "100–500", "500–1,000", "Above 1,000"], required: true, half: true },
-      { name: "dgSet", label: "DG set capacity (kVA)", type: "select", options: ["None", "Up to 125", "125–500", "500–1,000", "Above 1,000"], helper: "Diesel generators trigger air-emission consent.", half: true },
-      { name: "waterUse", label: "Daily water use (KL)", type: "select", options: ["Up to 10", "10–50", "50–100", "100–500", "Above 500"], required: true, half: true },
-      { name: "waterSource", label: "Water source", type: "select", options: ["MIDC supply", "Municipal supply", "Borewell", "Surface water", "Tanker"], half: true },
-      { name: "wastewater", label: "Wastewater discharge", type: "select", options: ["Common treatment facility", "On-site treatment plant", "No discharge (zero liquid)", "Municipal sewer"], required: true, half: true },
-      { name: "hazardousWaste", label: "Generates hazardous waste?", type: "select", options: ["No", "Yes"], required: true, half: true },
+      {
+        name: "electricity",
+        label: "Electricity demand (kVA)",
+        type: "select",
+        options: ["Up to 50", "50–100", "100–500", "500–1,000", "Above 1,000"],
+        required: true,
+        half: true,
+      },
+      {
+        name: "dgSet",
+        label: "DG set capacity (kVA)",
+        type: "select",
+        options: ["None", "Up to 125", "125–500", "500–1,000", "Above 1,000"],
+        helper: "Diesel generators trigger air-emission consent.",
+        half: true,
+      },
+      {
+        name: "waterUse",
+        label: "Daily water use (KL)",
+        type: "select",
+        options: ["Up to 10", "10–50", "50–100", "100–500", "Above 500"],
+        required: true,
+        half: true,
+      },
+      {
+        name: "waterSource",
+        label: "Water source",
+        type: "select",
+        options: [
+          "MIDC supply",
+          "Municipal supply",
+          "Borewell",
+          "Surface water",
+          "Tanker",
+        ],
+        half: true,
+      },
+      {
+        name: "wastewater",
+        label: "Wastewater discharge",
+        type: "select",
+        options: [
+          "Common treatment facility",
+          "On-site treatment plant",
+          "No discharge (zero liquid)",
+          "Municipal sewer",
+        ],
+        required: true,
+        half: true,
+      },
+      {
+        name: "hazardousWaste",
+        label: "Generates hazardous waste?",
+        type: "select",
+        options: ["No", "Yes"],
+        required: true,
+        half: true,
+      },
     ],
   },
   {
@@ -137,10 +383,42 @@ const steps: Step[] = [
     title: "Workforce details",
     description: "Staffing informs labour and safety clearances.",
     fields: [
-      { name: "permanent", label: "Permanent employees", type: "select", options: ["Less than 10", "10–19", "20–49", "50–99", "100–499", "500 or more"], required: true, half: true },
-      { name: "contract", label: "Contract workers", type: "select", options: ["None", "1–19", "20–49", "50 or more"], half: true },
-      { name: "womenNight", label: "Women employed in night shift", type: "select", options: ["No", "Yes"], half: true },
-      { name: "accommodation", label: "Worker accommodation", type: "select", options: ["Not provided", "On-site quarters", "Nearby housing"], half: true },
+      {
+        name: "permanent",
+        label: "Permanent employees",
+        type: "select",
+        options: [
+          "Less than 10",
+          "10–19",
+          "20–49",
+          "50–99",
+          "100–499",
+          "500 or more",
+        ],
+        required: true,
+        half: true,
+      },
+      {
+        name: "contract",
+        label: "Contract workers",
+        type: "select",
+        options: ["None", "1–19", "20–49", "50 or more"],
+        half: true,
+      },
+      {
+        name: "womenNight",
+        label: "Women employed in night shift",
+        type: "select",
+        options: ["No", "Yes"],
+        half: true,
+      },
+      {
+        name: "accommodation",
+        label: "Worker accommodation",
+        type: "select",
+        options: ["Not provided", "On-site quarters", "Nearby housing"],
+        half: true,
+      },
     ],
   },
 ];
@@ -151,31 +429,100 @@ const steps: Step[] = [
  */
 const industryFields: Record<string, Field[]> = {
   "Food processing": [
-    { name: "fssaiCategory", label: "FSSAI licence category", type: "select", options: ["Central licence", "State licence", "Basic registration"], required: true, half: true, sectionStart: "Specific to food processing" },
-    { name: "coldStorage", label: "Cold storage capacity (MT)", type: "select", options: ["None", "Up to 50", "50–500", "500–2,000", "Above 2,000"], helper: "Select None if no cold chain is used.", half: true },
+    {
+      name: "fssaiCategory",
+      label: "FSSAI licence category",
+      type: "select",
+      options: ["Central licence", "State licence", "Basic registration"],
+      required: true,
+      half: true,
+      sectionStart: "Specific to food processing",
+    },
+    {
+      name: "coldStorage",
+      label: "Cold storage capacity (MT)",
+      type: "select",
+      options: ["None", "Up to 50", "50–500", "500–2,000", "Above 2,000"],
+      helper: "Select None if no cold chain is used.",
+      half: true,
+    },
   ],
   Textiles: [
-    { name: "wetProcessing", label: "Involves dyeing / bleaching?", type: "select", options: ["No", "Yes"], required: true, helper: "Wet processing raises MPCB effluent requirements.", half: true, sectionStart: "Specific to textiles" },
-    { name: "loomsSpindles", label: "Looms / spindles installed", type: "select", options: ["Up to 50", "50–200", "200–500", "Above 500"], half: true },
+    {
+      name: "wetProcessing",
+      label: "Involves dyeing / bleaching?",
+      type: "select",
+      options: ["No", "Yes"],
+      required: true,
+      helper: "Wet processing raises MPCB effluent requirements.",
+      half: true,
+      sectionStart: "Specific to textiles",
+    },
+    {
+      name: "loomsSpindles",
+      label: "Looms / spindles installed",
+      type: "select",
+      options: ["Up to 50", "50–200", "200–500", "Above 500"],
+      half: true,
+    },
   ],
   "Steel & metals": [
-    { name: "furnaceType", label: "Furnace type", type: "select", options: ["Induction furnace", "Electric arc furnace", "Cupola", "None"], required: true, half: true, sectionStart: "Specific to steel & metals" },
-    { name: "furnaceCapacity", label: "Furnace capacity (MT / heat)", type: "select", options: ["Up to 5", "5–20", "20–50", "Above 50"], half: true },
+    {
+      name: "furnaceType",
+      label: "Furnace type",
+      type: "select",
+      options: ["Induction furnace", "Electric arc furnace", "Cupola", "None"],
+      required: true,
+      half: true,
+      sectionStart: "Specific to steel & metals",
+    },
+    {
+      name: "furnaceCapacity",
+      label: "Furnace capacity (MT / heat)",
+      type: "select",
+      options: ["Up to 5", "5–20", "20–50", "Above 50"],
+      half: true,
+    },
   ],
 };
 
 /** Primary-activity options depend on the chosen industry sector. */
 const activityOptions: Record<string, string[]> = {
-  "Food processing": ["Food & beverage processing", "Dairy & cold storage", "Bakery & confectionery", "Meat & seafood processing"],
-  Textiles: ["Spinning", "Weaving", "Knitting", "Dyeing & processing", "Garment manufacturing"],
-  "Steel & metals": ["Steel & metal fabrication", "Foundry / casting", "Rolling mill", "Structural fabrication"],
+  "Food processing": [
+    "Food & beverage processing",
+    "Dairy & cold storage",
+    "Bakery & confectionery",
+    "Meat & seafood processing",
+  ],
+  Textiles: [
+    "Spinning",
+    "Weaving",
+    "Knitting",
+    "Dyeing & processing",
+    "Garment manufacturing",
+  ],
+  "Steel & metals": [
+    "Steel & metal fabrication",
+    "Foundry / casting",
+    "Rolling mill",
+    "Structural fabrication",
+  ],
 };
 
 /** Installed-capacity is measured in different units per industry sector. */
 const capacityHint: Record<string, { placeholder: string; helper: string }> = {
-  "Food processing": { placeholder: "18 tonnes / day", helper: "Processed output per day." },
-  Textiles: { placeholder: "60,000 metres / month", helper: "Fabric or yarn output per month." },
-  "Steel & metals": { placeholder: "500 MT / month", helper: "Metal output in tonnes per month." },
+  "Food processing": {
+    placeholder: "18 tonnes / day",
+    helper: "Processed output per day.",
+  },
+  Textiles: {
+    placeholder: "60,000 metres / month",
+    helper: "Fabric or yarn output per month.",
+  },
+  "Steel & metals": {
+    placeholder: "500 MT / month",
+    helper: "Metal output in tonnes per month.",
+  },
 };
 
 const totalSteps = steps.length + 1; // + checklist
@@ -185,14 +532,23 @@ const totalSteps = steps.length + 1; // + checklist
  * industry-specific fields and conditional (showIf) visibility. Used to catch
  * gaps before submitting, since the stepper rail lets users skip validation.
  */
-function requiredFieldsFor(answers: Record<string, string>): { name: string; label: string; stepIndex: number }[] {
+function requiredFieldsFor(
+  answers: Record<string, string>,
+): { name: string; label: string; stepIndex: number }[] {
   const industry = answers.industry ?? "";
   const result: { name: string; label: string; stepIndex: number }[] = [];
   steps.forEach((step, stepIndex) => {
-    const fields = step.id === "operations" ? [...step.fields, ...(industryFields[industry] ?? [])] : step.fields;
+    const fields =
+      step.id === "operations"
+        ? [...step.fields, ...(industryFields[industry] ?? [])]
+        : step.fields;
     for (const field of fields) {
       if (!field.required) continue;
-      if (field.showIf && (answers[field.showIf.field] ?? "") !== field.showIf.equals) continue;
+      if (
+        field.showIf &&
+        (answers[field.showIf.field] ?? "") !== field.showIf.equals
+      )
+        continue;
       result.push({ name: field.name, label: field.label, stepIndex });
     }
   });
@@ -221,12 +577,24 @@ function FieldControl({
   };
 
   if (field.type === "textarea") {
-    return <textarea {...common} rows={4} defaultValue={defaultValue} placeholder={field.placeholder} className={`${base} min-h-28 resize-y py-3 leading-relaxed`} />;
+    return (
+      <textarea
+        {...common}
+        rows={4}
+        defaultValue={defaultValue}
+        placeholder={field.placeholder}
+        className={`${base} min-h-28 resize-y py-3 leading-relaxed`}
+      />
+    );
   }
   if (field.type === "select") {
     return (
       <div className="relative">
-        <select {...common} defaultValue={defaultValue ?? ""} className={`${base} h-12 appearance-none pr-10`}>
+        <select
+          {...common}
+          defaultValue={defaultValue ?? ""}
+          className={`${base} h-12 appearance-none pr-10`}
+        >
           <option value="" disabled>
             Select an option
           </option>
@@ -236,11 +604,22 @@ function FieldControl({
             </option>
           ))}
         </select>
-        <ArrowRight className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 rotate-90 text-slate-400" aria-hidden="true" />
+        <ArrowRight
+          className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 rotate-90 text-slate-400"
+          aria-hidden="true"
+        />
       </div>
     );
   }
-  return <input {...common} type={field.type} defaultValue={defaultValue} placeholder={field.placeholder} className={`${base} h-12`} />;
+  return (
+    <input
+      {...common}
+      type={field.type}
+      defaultValue={defaultValue}
+      placeholder={field.placeholder}
+      className={`${base} h-12`}
+    />
+  );
 }
 
 function ApprovalCard({
@@ -262,24 +641,39 @@ function ApprovalCard({
   return (
     <article className="flex flex-col rounded-xl bg-white p-6 ring-1 ring-[#e4e0d6] transition-shadow hover:ring-2 hover:ring-primary/50 focus-within:ring-2 focus-within:ring-primary">
       <div className="flex items-start justify-between">
-        <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold capitalize ${required ? "bg-primary/10 text-primary" : "bg-slate-100 text-slate-600"}`}>
-          <span className={`size-2 rounded-full ${required ? "bg-primary" : "bg-slate-500"}`} aria-hidden="true" />
+        <span
+          className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold capitalize ${required ? "bg-primary/10 text-primary" : "bg-slate-100 text-slate-600"}`}
+        >
+          <span
+            className={`size-2 rounded-full ${required ? "bg-primary" : "bg-slate-500"}`}
+            aria-hidden="true"
+          />
           {approval.status}
         </span>
         <span className="text-4xl font-bold text-slate-200" aria-hidden="true">
           {String(index + 1).padStart(2, "0")}
         </span>
       </div>
-      <h3 className="mt-4 font-heading text-xl font-semibold text-[#142b45]">{approval.title}</h3>
+      <h3 className="mt-4 font-heading text-xl font-semibold text-[#142b45]">
+        {approval.title}
+      </h3>
       {departmentsLoading ? (
         <div className="mt-2">
-          <div className="h-3 w-24 animate-pulse rounded bg-slate-200 motion-reduce:animate-none" aria-hidden="true" />
-          <div className="mt-1 h-9 w-full animate-pulse rounded-md bg-slate-100 motion-reduce:animate-none" aria-hidden="true" />
+          <div
+            className="h-3 w-24 animate-pulse rounded bg-slate-200 motion-reduce:animate-none"
+            aria-hidden="true"
+          />
+          <div
+            className="mt-1 h-9 w-full animate-pulse rounded-md bg-slate-100 motion-reduce:animate-none"
+            aria-hidden="true"
+          />
           <span className="sr-only">Loading departments…</span>
         </div>
       ) : departments.length > 0 ? (
         <label className="mt-2 block">
-          <span className="text-xs font-medium text-slate-500">Send documents to</span>
+          <span className="text-xs font-medium text-slate-500">
+            Send documents to
+          </span>
           <select
             value={approval.department.key}
             onChange={(event) => onChangeDepartment(event.target.value)}
@@ -294,13 +688,21 @@ function ApprovalCard({
           </select>
         </label>
       ) : (
-        <p className="mt-1 text-sm text-slate-500">{approval.department.name}</p>
+        <p className="mt-1 text-sm text-slate-500">
+          {approval.department.name}
+        </p>
       )}
-      {approval.reason ? <p className="mt-2 text-sm text-slate-500">{approval.reason}</p> : null}
+      {approval.reason ? (
+        <p className="mt-2 text-sm text-slate-500">{approval.reason}</p>
+      ) : null}
       <hr className="my-4 border-[#e4e0d6]" />
       <div className="flex items-center justify-between gap-4 text-sm">
-        <span className="text-slate-600">{approval.documents.map((document) => document.name).join(", ")}</span>
-        <span className="shrink-0 font-semibold text-[#142b45]">{approval.processingDays} days</span>
+        <span className="text-slate-600">
+          {approval.documents.map((document) => document.name).join(", ")}
+        </span>
+        <span className="shrink-0 font-semibold text-[#142b45]">
+          {approval.processingDays} days
+        </span>
       </div>
       <button
         type="button"
@@ -308,7 +710,9 @@ function ApprovalCard({
         className="mt-4 inline-flex items-center gap-1 self-start rounded-sm text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         View {approval.documents.length}{" "}
-        {approval.documents.length === 1 ? "document requirement" : "document requirements"}
+        {approval.documents.length === 1
+          ? "document requirement"
+          : "document requirements"}
         <ChevronRight className="size-4" aria-hidden="true" />
       </button>
     </article>
@@ -318,14 +722,20 @@ function ApprovalCard({
 /** Placeholder cards shown while the checklist is being generated. */
 function ChecklistSkeleton() {
   return (
-    <div aria-hidden="true" className="animate-pulse motion-reduce:animate-none">
+    <div
+      aria-hidden="true"
+      className="animate-pulse motion-reduce:animate-none"
+    >
       <div className="h-4 w-40 rounded bg-slate-200" />
       <div className="mt-3 h-10 w-72 rounded bg-slate-200" />
       <div className="mt-3 h-4 w-96 max-w-full rounded bg-slate-100" />
       <hr className="my-6 border-[#e4e0d6]" />
       <div className="grid gap-5 sm:grid-cols-2">
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="rounded-xl bg-white p-6 ring-1 ring-[#e4e0d6]">
+          <div
+            key={index}
+            className="rounded-xl bg-white p-6 ring-1 ring-[#e4e0d6]"
+          >
             <div className="flex items-start justify-between">
               <div className="h-6 w-24 rounded-full bg-slate-200" />
               <div className="h-8 w-8 rounded bg-slate-100" />
@@ -342,11 +752,23 @@ function ChecklistSkeleton() {
   );
 }
 
-const documentCheckStyles: Record<string, { className: string; label: string }> = {
+const documentCheckStyles: Record<
+  string,
+  { className: string; label: string }
+> = {
   matched: { className: "bg-emerald-100 text-emerald-800", label: "Matched" },
-  mismatched: { className: "bg-destructive/10 text-destructive", label: "Mismatch" },
-  unavailable: { className: "bg-slate-100 text-slate-600", label: "Unavailable" },
-  review_required: { className: "bg-amber-100 text-amber-800", label: "Review" },
+  mismatched: {
+    className: "bg-destructive/10 text-destructive",
+    label: "Mismatch",
+  },
+  unavailable: {
+    className: "bg-slate-100 text-slate-600",
+    label: "Unavailable",
+  },
+  review_required: {
+    className: "bg-amber-100 text-amber-800",
+    label: "Review",
+  },
 };
 
 function IssueList({
@@ -371,11 +793,16 @@ function IssueList({
       <p className="text-sm font-semibold">{title}</p>
       <ul className="mt-2 space-y-2">
         {issues.map((issue, index) => (
-          <li key={`${issue.code}-${index}`} className="flex items-start justify-between gap-3 text-sm">
+          <li
+            key={`${issue.code}-${index}`}
+            className="flex items-start justify-between gap-3 text-sm"
+          >
             <span>
               <span className="font-medium">{issue.message}</span>
               {issue.suggestedAction ? (
-                <span className="mt-0.5 block text-xs opacity-80">{issue.suggestedAction}</span>
+                <span className="mt-0.5 block text-xs opacity-80">
+                  {issue.suggestedAction}
+                </span>
               ) : null}
             </span>
             {issue.approvalKey && onOpenApproval ? (
@@ -422,7 +849,9 @@ function ValidationReport({
 
   return (
     <div className="mt-5">
-      <div className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${banner.className}`}>
+      <div
+        className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${banner.className}`}
+      >
         <Icon className="size-5 shrink-0" aria-hidden="true" />
         <span className="text-sm font-semibold">{banner.label}</span>
       </div>
@@ -446,10 +875,14 @@ function ValidationReport({
       />
       {result.documentChecks.length > 0 && (
         <div className="mt-4">
-          <p className="text-sm font-semibold text-[#142b45]">Document checks</p>
+          <p className="text-sm font-semibold text-[#142b45]">
+            Document checks
+          </p>
           <ul className="mt-2 divide-y divide-[#e4e0d6] rounded-lg ring-1 ring-[#e4e0d6]">
             {result.documentChecks.map((check, index) => {
-              const style = documentCheckStyles[check.status] ?? documentCheckStyles.review_required!;
+              const style =
+                documentCheckStyles[check.status] ??
+                documentCheckStyles.review_required!;
               return (
                 <li
                   key={`${check.documentId}-${check.field ?? index}`}
@@ -459,7 +892,9 @@ function ValidationReport({
                     <span className="block truncate font-medium text-[#142b45]">
                       {check.documentKey}
                     </span>
-                    <span className="block truncate text-xs text-slate-500">{check.reason}</span>
+                    <span className="block truncate text-xs text-slate-500">
+                      {check.reason}
+                    </span>
                   </span>
                   <span
                     className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${style.className}`}
@@ -478,10 +913,14 @@ function ValidationReport({
 
 function ChecklistResult({ project }: { project: Project }) {
   const [savedProject, setSavedProject] = useState(project);
-  const [approvals, setApprovals] = useState<ProjectApproval[]>(project.approvals);
+  const [approvals, setApprovals] = useState<ProjectApproval[]>(
+    project.approvals,
+  );
   const [departments, setDepartments] = useState<Department[]>([]);
   const [departmentsLoading, setDepartmentsLoading] = useState(true);
-  const [openApproval, setOpenApproval] = useState<ProjectApproval | null>(null);
+  const [openApproval, setOpenApproval] = useState<ProjectApproval | null>(
+    null,
+  );
   const [documents, setDocuments] = useState<ProjectDocument[]>([]);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [validating, setValidating] = useState(false);
@@ -504,13 +943,24 @@ function ChecklistResult({ project }: { project: Project }) {
     setApprovals((current) =>
       current.map((a) =>
         a.id === approvalId
-          ? { ...a, department: departments.find((d) => d.key === departmentKey) ?? a.department }
+          ? {
+              ...a,
+              department:
+                departments.find((d) => d.key === departmentKey) ??
+                a.department,
+            }
           : a,
       ),
     );
     try {
-      const updated = await updateApprovalDepartment(project.id, approvalId, departmentKey);
-      setApprovals((current) => current.map((a) => (a.id === approvalId ? updated : a)));
+      const updated = await updateApprovalDepartment(
+        project.id,
+        approvalId,
+        departmentKey,
+      );
+      setApprovals((current) =>
+        current.map((a) => (a.id === approvalId ? updated : a)),
+      );
     } catch {
       setApprovals(previous);
     }
@@ -523,7 +973,9 @@ function ChecklistResult({ project }: { project: Project }) {
       setValidation(await validateProjectDocuments(project.id));
     } catch (cause) {
       setValidationError(
-        cause instanceof ProjectApiError ? cause.message : "Could not validate the documents.",
+        cause instanceof ProjectApiError
+          ? cause.message
+          : "Could not validate the documents.",
       );
     } finally {
       setValidating(false);
@@ -537,7 +989,9 @@ function ChecklistResult({ project }: { project: Project }) {
       setSavedProject(await submitProject(project.id));
     } catch (cause) {
       setSubmissionError(
-        cause instanceof ProjectApiError ? cause.message : "Could not submit the application.",
+        cause instanceof ProjectApiError
+          ? cause.message
+          : "Could not submit the application.",
       );
     } finally {
       setSubmittingApplication(false);
@@ -551,11 +1005,15 @@ function ChecklistResult({ project }: { project: Project }) {
         approvalKey={openApproval.approvalKey}
         approvalTitle={openApproval.title}
         documents={openApproval.documents}
-        uploaded={documents.filter((doc) => doc.approvalKey === openApproval.approvalKey)}
+        uploaded={documents.filter(
+          (doc) => doc.approvalKey === openApproval.approvalKey,
+        )}
         onBack={() => setOpenApproval(null)}
         onUploadedChange={(next) =>
           setDocuments((current) => [
-            ...current.filter((doc) => doc.approvalKey !== openApproval.approvalKey),
+            ...current.filter(
+              (doc) => doc.approvalKey !== openApproval.approvalKey,
+            ),
             ...next,
           ])
         }
@@ -567,19 +1025,25 @@ function ChecklistResult({ project }: { project: Project }) {
     <div>
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-slate-500">Checklist generated</p>
+          <p className="text-sm font-semibold text-slate-500">
+            Checklist generated
+          </p>
           <h2 className="mt-1 font-heading text-4xl font-bold tracking-tight text-[#142b45] sm:text-5xl">
             {approvals.length} approvals recommended
           </h2>
           <p className="mt-2 text-base text-slate-600">
-            {project.enterpriseName} · {project.primaryActivity} · {project.district} district
+            {project.enterpriseName} · {project.primaryActivity} ·{" "}
+            {project.district} district
           </p>
         </div>
       </header>
 
       <hr className="my-6 border-[#e4e0d6]" />
 
-      <section aria-label="Recommended approvals" className="grid gap-5 sm:grid-cols-2">
+      <section
+        aria-label="Recommended approvals"
+        className="grid gap-5 sm:grid-cols-2"
+      >
         {approvals.map((approval, index) => (
           <ApprovalCard
             key={approval.approvalKey}
@@ -587,22 +1051,29 @@ function ChecklistResult({ project }: { project: Project }) {
             index={index}
             departments={departments}
             departmentsLoading={departmentsLoading}
-            onChangeDepartment={(departmentKey) => changeDepartment(approval.id, departmentKey)}
+            onChangeDepartment={(departmentKey) =>
+              changeDepartment(approval.id, departmentKey)
+            }
             onOpen={() => setOpenApproval(approval)}
           />
         ))}
       </section>
 
       <aside className="mt-6 border-l-4 border-amber-500 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-900">
-        <strong>Why these approvals?</strong> This checklist is generated from the project&rsquo;s activity, location, workforce, utilities and process profile.
+        <strong>Why these approvals?</strong> This checklist is generated from
+        the project&rsquo;s activity, location, workforce, utilities and process
+        profile.
       </aside>
 
       <section className="mt-6 rounded-2xl bg-white p-6 ring-1 ring-[#e4e0d6] sm:p-7">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="font-heading text-xl font-semibold text-[#142b45]">Check your documents</h3>
+            <h3 className="font-heading text-xl font-semibold text-[#142b45]">
+              Check your documents
+            </h3>
             <p className="mt-1 text-sm text-slate-500">
-              Run a pre-submission check on the documents you have uploaded so far.
+              Run a pre-submission check on the documents you have uploaded so
+              far.
             </p>
           </div>
           <Button
@@ -612,9 +1083,16 @@ function ChecklistResult({ project }: { project: Project }) {
             disabled={validating}
             aria-busy={validating}
           >
-            {validating ? "Checking…" : validation ? "Re-check documents" : "Check documents"}
+            {validating
+              ? "Checking…"
+              : validation
+                ? "Re-check documents"
+                : "Check documents"}
             {validating ? (
-              <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+              <Loader2
+                className="size-4 animate-spin motion-reduce:animate-none"
+                aria-hidden="true"
+              />
             ) : (
               <ShieldCheck className="size-4" aria-hidden="true" />
             )}
@@ -622,7 +1100,10 @@ function ChecklistResult({ project }: { project: Project }) {
         </div>
 
         {validationError && (
-          <p role="alert" className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive">
+          <p
+            role="alert"
+            className="mt-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive"
+          >
             {validationError}
           </p>
         )}
@@ -631,7 +1112,9 @@ function ChecklistResult({ project }: { project: Project }) {
           <ValidationReport
             result={validation}
             onOpenApproval={(approvalKey) => {
-              const approval = approvals.find((a) => a.approvalKey === approvalKey);
+              const approval = approvals.find(
+                (a) => a.approvalKey === approvalKey,
+              );
               if (approval) setOpenApproval(approval);
             }}
           />
@@ -642,7 +1125,9 @@ function ChecklistResult({ project }: { project: Project }) {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="font-heading text-xl font-semibold text-[#142b45]">
-              {savedProject.status === "draft" ? "Submit for departmental review" : "Application submitted"}
+              {savedProject.status === "draft"
+                ? "Submit for departmental review"
+                : "Application submitted"}
             </h3>
             <p className="mt-1 max-w-2xl text-sm text-slate-600">
               {savedProject.status === "draft"
@@ -660,7 +1145,10 @@ function ChecklistResult({ project }: { project: Project }) {
             >
               {submittingApplication ? "Submitting…" : "Submit application"}
               {submittingApplication ? (
-                <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+                <Loader2
+                  className="size-4 animate-spin motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
               ) : (
                 <ArrowRight className="size-4" aria-hidden="true" />
               )}
@@ -672,7 +1160,10 @@ function ChecklistResult({ project }: { project: Project }) {
           )}
         </div>
         {submissionError ? (
-          <p role="alert" className="mt-4 border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive">
+          <p
+            role="alert"
+            className="mt-4 border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive"
+          >
             {submissionError}
           </p>
         ) : null}
@@ -702,24 +1193,33 @@ export function NewProjectWizard() {
   // Operations step based on the sector chosen on the Business step.
   const selectedIndustry = answers.industry ?? "";
   const currentValue = (name: string) => watched[name] ?? answers[name] ?? "";
-  const isVisible = (field: Field) => !field.showIf || currentValue(field.showIf.field) === field.showIf.equals;
+  const isVisible = (field: Field) =>
+    !field.showIf || currentValue(field.showIf.field) === field.showIf.equals;
   const activeFields: Field[] = isChecklist
     ? []
     : (step.id === "operations"
-        ? [...step.fields, ...(industryFields[selectedIndustry] ?? [])].map((field) => {
-            if (field.name === "primaryActivity") {
-              return { ...field, options: activityOptions[selectedIndustry] ?? field.options };
-            }
-            if (field.name === "capacity" && capacityHint[selectedIndustry]) {
-              return { ...field, ...capacityHint[selectedIndustry] };
-            }
-            return field;
-          })
+        ? [...step.fields, ...(industryFields[selectedIndustry] ?? [])].map(
+            (field) => {
+              if (field.name === "primaryActivity") {
+                return {
+                  ...field,
+                  options: activityOptions[selectedIndustry] ?? field.options,
+                };
+              }
+              if (field.name === "capacity" && capacityHint[selectedIndustry]) {
+                return { ...field, ...capacityHint[selectedIndustry] };
+              }
+              return field;
+            },
+          )
         : step.fields
       ).filter(isVisible);
 
   const stepList = useMemo(
-    () => [...steps.map((s) => ({ id: s.id, label: s.label })), { id: "checklist", label: "Checklist" }],
+    () => [
+      ...steps.map((s) => ({ id: s.id, label: s.label })),
+      { id: "checklist", label: "Checklist" },
+    ],
     [],
   );
 
@@ -732,11 +1232,15 @@ export function NewProjectWizard() {
 
   function validate(): boolean {
     if (isChecklist) return true;
-    const form = document.getElementById("wizard-form") as HTMLFormElement | null;
+    const form = document.getElementById(
+      "wizard-form",
+    ) as HTMLFormElement | null;
     const next: Record<string, string> = {};
     for (const field of activeFields) {
       if (!field.required) continue;
-      const value = (form?.elements.namedItem(field.name) as HTMLInputElement | null)?.value?.trim();
+      const value = (
+        form?.elements.namedItem(field.name) as HTMLInputElement | null
+      )?.value?.trim();
       if (!value) next[field.name] = `${field.label} is required.`;
     }
     setErrors(next);
@@ -746,17 +1250,22 @@ export function NewProjectWizard() {
   /** Read the current step's field values out of the DOM before we navigate away. */
   function captureForm() {
     if (isChecklist) return;
-    const form = document.getElementById("wizard-form") as HTMLFormElement | null;
+    const form = document.getElementById(
+      "wizard-form",
+    ) as HTMLFormElement | null;
     if (!form) return;
     const captured: Record<string, string> = {};
     for (const field of activeFields) {
       if (field.type === "checkboxes") {
         const checked = Array.from(
-          form.querySelectorAll<HTMLInputElement>(`input[name="${field.name}"]:checked`),
+          form.querySelectorAll<HTMLInputElement>(
+            `input[name="${field.name}"]:checked`,
+          ),
         ).map((el) => el.value);
         captured[field.name] = checked.join(", ");
       } else {
-        const el = form.elements.namedItem(field.name) as HTMLInputElement | HTMLSelectElement | null;
+        const el = form.elements.namedItem(field.name) as
+          HTMLInputElement | HTMLSelectElement | null;
         if (el) captured[field.name] = el.value.trim();
       }
     }
@@ -765,8 +1274,10 @@ export function NewProjectWizard() {
 
   // Track live control values so conditional fields react before navigation.
   function handleFieldChange(event: FormEvent<HTMLFormElement>) {
-    const target = event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-    if (target?.name) setWatched((prev) => ({ ...prev, [target.name]: target.value }));
+    const target = event.target as
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    if (target?.name)
+      setWatched((prev) => ({ ...prev, [target.name]: target.value }));
   }
 
   function goTo(index: number) {
@@ -778,7 +1289,9 @@ export function NewProjectWizard() {
 
   function handleContinue() {
     if (!validate()) {
-      const firstError = document.querySelector("[aria-invalid='true']") as HTMLElement | null;
+      const firstError = document.querySelector(
+        "[aria-invalid='true']",
+      ) as HTMLElement | null;
       firstError?.focus();
       return;
     }
@@ -791,10 +1304,18 @@ export function NewProjectWizard() {
   async function handleGenerate() {
     // Catch missing required answers before the request, and send the user to
     // the earliest step that needs attention with inline errors shown.
-    const missing = requiredFieldsFor(answers).filter((field) => !(answers[field.name] ?? "").trim());
+    const missing = requiredFieldsFor(answers).filter(
+      (field) => !(answers[field.name] ?? "").trim(),
+    );
     if (missing.length > 0) {
-      setErrors(Object.fromEntries(missing.map((field) => [field.name, `${field.label} is required.`])));
-      setSubmitError(`Please complete: ${missing.map((field) => field.label).join(", ")}.`);
+      setErrors(
+        Object.fromEntries(
+          missing.map((field) => [field.name, `${field.label} is required.`]),
+        ),
+      );
+      setSubmitError(
+        `Please complete: ${missing.map((field) => field.label).join(", ")}.`,
+      );
       setWatched({});
       setCurrent(Math.min(...missing.map((field) => field.stepIndex)));
       return;
@@ -839,8 +1360,17 @@ export function NewProjectWizard() {
             <span>Progress</span>
             <span>{progress}%</span>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/15" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
-            <div className="h-full rounded-full bg-amber-400 transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${progress}%` }} />
+          <div
+            className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/15"
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div
+              className="h-full rounded-full bg-amber-400 transition-[width] duration-500 motion-reduce:transition-none"
+              style={{ width: `${progress}%` }}
+            />
           </div>
         </div>
 
@@ -857,7 +1387,11 @@ export function NewProjectWizard() {
                   disabled={!reachable}
                   aria-current={isCurrent ? "step" : undefined}
                   className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-amber-400 ${
-                    isCurrent ? "bg-primary shadow-sm" : reachable ? "hover:bg-white/10" : "cursor-not-allowed opacity-55"
+                    isCurrent
+                      ? "bg-primary shadow-sm"
+                      : reachable
+                        ? "hover:bg-white/10"
+                        : "cursor-not-allowed opacity-55"
                   }`}
                 >
                   <span
@@ -869,9 +1403,17 @@ export function NewProjectWizard() {
                           : "border-white/40 text-slate-200"
                     }`}
                   >
-                    {isDone ? <Check className="size-4" aria-hidden="true" /> : index + 1}
+                    {isDone ? (
+                      <Check className="size-4" aria-hidden="true" />
+                    ) : (
+                      index + 1
+                    )}
                   </span>
-                  <span className={`text-sm font-medium ${isCurrent ? "text-white" : isDone ? "text-amber-400" : "text-slate-200"}`}>{s.label}</span>
+                  <span
+                    className={`text-sm font-medium ${isCurrent ? "text-white" : isDone ? "text-amber-400" : "text-slate-200"}`}
+                  >
+                    {s.label}
+                  </span>
                 </button>
               </li>
             );
@@ -890,12 +1432,21 @@ export function NewProjectWizard() {
               {isChecklist ? "Approval checklist" : step.title}
             </h2>
             <p className="mt-1.5 text-sm text-slate-500">
-              {isChecklist ? "Confirm the clearances generated from your answers." : step.description}
+              {isChecklist
+                ? "Confirm the clearances generated from your answers."
+                : step.description}
             </p>
           </div>
           <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary/10 px-3.5 py-1.5 text-sm font-medium text-primary">
-            <span className="size-2 rounded-full bg-primary" aria-hidden="true" />
-            {isChecklist ? "Review" : step.id === "operations" && selectedIndustry ? selectedIndustry : (step.badge ?? "In progress")}
+            <span
+              className="size-2 rounded-full bg-primary"
+              aria-hidden="true"
+            />
+            {isChecklist
+              ? "Review"
+              : step.id === "operations" && selectedIndustry
+                ? selectedIndustry
+                : (step.badge ?? "In progress")}
           </span>
         </div>
 
@@ -905,47 +1456,77 @@ export function NewProjectWizard() {
           <ChecklistSkeleton />
         ) : isChecklist ? (
           <div className="rounded-2xl border border-[#e4e0d6] bg-[#faf9f6] px-6 py-7 sm:px-8">
-            <h3 className="font-heading text-xl font-semibold text-[#142b45]">Ready to generate</h3>
+            <h3 className="font-heading text-xl font-semibold text-[#142b45]">
+              Ready to generate
+            </h3>
             <p className="mt-3 max-w-2xl leading-relaxed text-slate-600">
-              Your project profile is complete. UdyogSetu will apply the demonstration rules and prepare the approval checklist.
+              Your project profile is complete. UdyogSetu will apply the
+              demonstration rules and prepare the approval checklist.
             </p>
             <dl className="mt-6 grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
               {summary.map((item) => (
                 <div key={item.label}>
                   <dt className="text-sm text-slate-500">{item.label}</dt>
-                  <dd className="mt-1 font-semibold text-[#142b45]">{item.value}</dd>
+                  <dd className="mt-1 font-semibold text-[#142b45]">
+                    {item.value}
+                  </dd>
                 </div>
               ))}
             </dl>
           </div>
         ) : (
-          <form key={`${step.id}-${selectedIndustry}`} id="wizard-form" className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2" onChange={handleFieldChange} onSubmit={(e) => e.preventDefault()}>
+          <form
+            key={`${step.id}-${selectedIndustry}`}
+            id="wizard-form"
+            className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2"
+            onChange={handleFieldChange}
+            onSubmit={(e) => e.preventDefault()}
+          >
             {activeFields.map((field) => {
               const error = errors[field.name];
               const errorId = error ? `${errorPrefix}-${field.name}` : "";
-              const helperId = field.helper ? `${errorPrefix}-${field.name}-help` : "";
+              const helperId = field.helper
+                ? `${errorPrefix}-${field.name}-help`
+                : "";
               const describedBy = [errorId, helperId].filter(Boolean).join(" ");
               const sectionHeader = field.sectionStart ? (
                 <div className="flex items-center gap-3 pt-2 sm:col-span-2">
-                  <span className="text-xs font-semibold tracking-wide text-slate-400 uppercase">{field.sectionStart}</span>
-                  <span className="h-px flex-1 bg-[#e4e0d6]" aria-hidden="true" />
+                  <span className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
+                    {field.sectionStart}
+                  </span>
+                  <span
+                    className="h-px flex-1 bg-[#e4e0d6]"
+                    aria-hidden="true"
+                  />
                 </div>
               ) : null;
 
               if (field.type === "checkboxes") {
                 const saved = answers[field.name];
-                const savedSet = saved !== undefined ? new Set(saved.split(", ").filter(Boolean)) : null;
+                const savedSet =
+                  saved !== undefined
+                    ? new Set(saved.split(", ").filter(Boolean))
+                    : null;
                 return (
                   <fieldset key={field.name} className="sm:col-span-2">
-                    <legend className="mb-3 text-sm font-semibold text-[#142b45]">{field.label}</legend>
+                    <legend className="mb-3 text-sm font-semibold text-[#142b45]">
+                      {field.label}
+                    </legend>
                     <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
                       {field.options?.map((opt) => (
-                        <label key={opt} className="flex items-center gap-3 text-sm text-[#142b45]">
+                        <label
+                          key={opt}
+                          className="flex items-center gap-3 text-sm text-[#142b45]"
+                        >
                           <input
                             type="checkbox"
                             name={field.name}
                             value={opt}
-                            defaultChecked={savedSet ? savedSet.has(opt) : field.checkedByDefault?.includes(opt)}
+                            defaultChecked={
+                              savedSet
+                                ? savedSet.has(opt)
+                                : field.checkedByDefault?.includes(opt)
+                            }
                             className="size-5 shrink-0 rounded accent-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
                           />
                           {opt}
@@ -959,19 +1540,34 @@ export function NewProjectWizard() {
               return (
                 <Fragment key={field.name}>
                   {sectionHeader}
-                  <div className={`flex flex-col gap-2 ${field.half ? "sm:col-span-1" : "sm:col-span-2"}`}>
-                    <label htmlFor={field.name} className="text-sm font-semibold text-[#142b45]">
+                  <div
+                    className={`flex flex-col gap-2 ${field.half ? "sm:col-span-1" : "sm:col-span-2"}`}
+                  >
+                    <label
+                      htmlFor={field.name}
+                      className="text-sm font-semibold text-[#142b45]"
+                    >
                       {field.label}
-                      {field.required && <span className="ml-1 text-destructive">*</span>}
+                      {field.required && (
+                        <span className="ml-1 text-destructive">*</span>
+                      )}
                     </label>
-                    <FieldControl field={field} error={error} describedById={describedBy} defaultValue={answers[field.name]} />
+                    <FieldControl
+                      field={field}
+                      error={error}
+                      describedById={describedBy}
+                      defaultValue={answers[field.name]}
+                    />
                     {field.helper && !error && (
                       <p id={helperId} className="text-xs text-slate-500">
                         {field.helper}
                       </p>
                     )}
                     {error && (
-                      <p id={errorId} className="text-xs font-medium text-destructive">
+                      <p
+                        id={errorId}
+                        className="text-xs font-medium text-destructive"
+                      >
                         {error}
                       </p>
                     )}
@@ -985,7 +1581,10 @@ export function NewProjectWizard() {
         <hr className="my-7 border-[#e4e0d6]" />
 
         {submitError && (
-          <p role="alert" className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive">
+          <p
+            role="alert"
+            className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive"
+          >
             {submitError}
           </p>
         )}
@@ -1011,13 +1610,20 @@ export function NewProjectWizard() {
             >
               {submitting ? "Generating…" : "Generate checklist"}
               {submitting ? (
-                <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+                <Loader2
+                  className="size-4 animate-spin motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
               ) : (
                 <ArrowRight className="size-4" aria-hidden="true" />
               )}
             </Button>
           ) : (
-            <Button size="lg" className="h-11 rounded-full px-6" onClick={handleContinue}>
+            <Button
+              size="lg"
+              className="h-11 rounded-full px-6"
+              onClick={handleContinue}
+            >
               Save and continue
               <ArrowRight className="size-4" aria-hidden="true" />
             </Button>

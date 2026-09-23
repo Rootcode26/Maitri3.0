@@ -44,7 +44,8 @@ const knownSpecs: Record<string, Omit<DocSpec, "key" | "name" | "required">> = {
     formats: ["PDF", "JPG", "PNG"],
     maxSizeMb: 2,
     filesRequired: "1 complete file",
-    description: "Government-issued identity proof of the authorised signatory.",
+    description:
+      "Government-issued identity proof of the authorised signatory.",
     mustInclude: [
       "Full name and photograph",
       "Document number clearly visible",
@@ -330,9 +331,14 @@ function specFor(document: ApprovalDocument): DocSpec {
       "All pages included and in order",
       "Relevant to the selected approval",
     ],
-    quality: ["Upload a single legible PDF.", "Do not use password-protected files."],
+    quality: [
+      "Upload a single legible PDF.",
+      "Do not use password-protected files.",
+    ],
   };
-  const formats = document.formats?.length ? document.formats : (known?.formats ?? generic.formats);
+  const formats = document.formats?.length
+    ? document.formats
+    : (known?.formats ?? generic.formats);
   const filesRequired = document.filesRequired
     ? `${document.filesRequired} complete ${document.filesRequired === 1 ? "file" : "files"}`
     : (known?.filesRequired ?? "1 complete file");
@@ -342,9 +348,14 @@ function specFor(document: ApprovalDocument): DocSpec {
     formats,
     maxSizeMb: document.maxSizeMb ?? known?.maxSizeMb ?? generic.maxSizeMb,
     filesRequired,
-    description: document.description ?? known?.description ?? generic.description,
-    mustInclude: document.mustInclude?.length ? document.mustInclude : (known?.mustInclude ?? generic.mustInclude),
-    quality: document.quality?.length ? document.quality : (known?.quality ?? generic.quality),
+    description:
+      document.description ?? known?.description ?? generic.description,
+    mustInclude: document.mustInclude?.length
+      ? document.mustInclude
+      : (known?.mustInclude ?? generic.mustInclude),
+    quality: document.quality?.length
+      ? document.quality
+      : (known?.quality ?? generic.quality),
     required: document.required ?? true,
   };
 }
@@ -395,12 +406,14 @@ export function DocumentCollection({
     const map: Record<string, ProjectDocument> = {};
     for (const doc of uploaded) {
       const existing = map[doc.documentKey];
-      if (!existing || doc.version > existing.version) map[doc.documentKey] = doc;
+      if (!existing || doc.version > existing.version)
+        map[doc.documentKey] = doc;
     }
     return map;
   }, [uploaded]);
 
-  const [uploadedByKey, setUploadedByKey] = useState<Record<string, ProjectDocument>>(initialByKey);
+  const [uploadedByKey, setUploadedByKey] =
+    useState<Record<string, ProjectDocument>>(initialByKey);
   const [current, setCurrent] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busyKey, setBusyKey] = useState<string | null>(null);
@@ -423,7 +436,9 @@ export function DocumentCollection({
           Back to approvals
         </button>
         <div className="rounded-2xl bg-white p-8 ring-1 ring-[#e4e0d6]">
-          <h2 className="font-heading text-2xl font-semibold text-[#142b45]">{approvalTitle}</h2>
+          <h2 className="font-heading text-2xl font-semibold text-[#142b45]">
+            {approvalTitle}
+          </h2>
           <p className="mt-3 text-base text-slate-600">
             No documents are required for this approval right now.
           </p>
@@ -455,7 +470,12 @@ export function DocumentCollection({
     clearError(key);
     setBusyKey(key);
     try {
-      const document = await uploadProjectDocument(projectId, approvalKey, key, file);
+      const document = await uploadProjectDocument(
+        projectId,
+        approvalKey,
+        key,
+        file,
+      );
       setUploadedByKey((prev) => {
         const next = { ...prev, [key]: document };
         onUploadedChange?.(Object.values(next));
@@ -489,7 +509,9 @@ export function DocumentCollection({
     } catch (cause) {
       errorFor(
         key,
-        cause instanceof ProjectApiError ? cause.message : "Could not remove the file.",
+        cause instanceof ProjectApiError
+          ? cause.message
+          : "Could not remove the file.",
       );
     } finally {
       setBusyKey(null);
@@ -514,8 +536,12 @@ export function DocumentCollection({
       <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
         {/* Left rail */}
         <aside className="h-fit rounded-2xl bg-white p-6 ring-1 ring-[#e4e0d6]">
-          <h2 className="font-heading text-xl font-semibold text-[#142b45]">Required documents</h2>
-          <p className="mt-1 text-xs font-medium tracking-wide text-slate-400 uppercase">{approvalTitle}</p>
+          <h2 className="font-heading text-xl font-semibold text-[#142b45]">
+            Required documents
+          </h2>
+          <p className="mt-1 text-xs font-medium tracking-wide text-slate-400 uppercase">
+            {approvalTitle}
+          </p>
           <p className="mt-1 text-sm text-slate-500">
             {uploadedCount} of {total} files uploaded
           </p>
@@ -526,7 +552,10 @@ export function DocumentCollection({
             aria-valuemin={0}
             aria-valuemax={100}
           >
-            <div className="h-full rounded-full bg-primary transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${progress}%` }} />
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-500 motion-reduce:transition-none"
+              style={{ width: `${progress}%` }}
+            />
           </div>
 
           <ol className="mt-5 space-y-1">
@@ -540,7 +569,9 @@ export function DocumentCollection({
                     onClick={() => setCurrent(index)}
                     aria-current={isCurrent ? "true" : undefined}
                     className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-                      isCurrent ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted"
+                      isCurrent
+                        ? "bg-primary/10 ring-1 ring-primary/30"
+                        : "hover:bg-muted"
                     }`}
                   >
                     <span
@@ -552,11 +583,19 @@ export function DocumentCollection({
                             : "border-slate-300 text-slate-500"
                       }`}
                     >
-                      {done ? <Check className="size-4" aria-hidden="true" /> : index + 1}
+                      {done ? (
+                        <Check className="size-4" aria-hidden="true" />
+                      ) : (
+                        index + 1
+                      )}
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold text-[#142b45]">{docSpec.name}</span>
-                      <span className="block truncate text-xs text-slate-500">{shortFormat(docSpec)}</span>
+                      <span className="block truncate text-sm font-semibold text-[#142b45]">
+                        {docSpec.name}
+                      </span>
+                      <span className="block truncate text-xs text-slate-500">
+                        {shortFormat(docSpec)}
+                      </span>
                     </span>
                   </button>
                 </li>
@@ -565,9 +604,12 @@ export function DocumentCollection({
           </ol>
 
           <div className="mt-5 border-t border-[#e4e0d6] pt-4">
-            <p className="text-sm font-semibold text-[#142b45]">Prepare before submitting</p>
+            <p className="text-sm font-semibold text-[#142b45]">
+              Prepare before submitting
+            </p>
             <p className="mt-2 text-sm leading-relaxed text-slate-500">
-              All {total} documents are required for this demonstration bundle. Selecting a file does not submit an application.
+              All {total} documents are required for this demonstration bundle.
+              Selecting a file does not submit an application.
             </p>
           </div>
         </aside>
@@ -579,14 +621,21 @@ export function DocumentCollection({
               <p className="text-sm text-slate-500">
                 Document {current + 1} of {total}
               </p>
-              <h3 className="mt-1 font-heading text-3xl font-bold text-[#142b45]">{spec.name}</h3>
+              <h3 className="mt-1 font-heading text-3xl font-bold text-[#142b45]">
+                {spec.name}
+              </h3>
             </div>
             <span
               className={`inline-flex shrink-0 items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium ${
-                spec.required ? "bg-primary/10 text-primary" : "bg-slate-100 text-slate-600"
+                spec.required
+                  ? "bg-primary/10 text-primary"
+                  : "bg-slate-100 text-slate-600"
               }`}
             >
-              <span className={`size-2 rounded-full ${spec.required ? "bg-primary" : "bg-slate-500"}`} aria-hidden="true" />
+              <span
+                className={`size-2 rounded-full ${spec.required ? "bg-primary" : "bg-slate-500"}`}
+                aria-hidden="true"
+              />
               {spec.required ? "Required" : "Optional"}
             </span>
           </div>
@@ -597,15 +646,21 @@ export function DocumentCollection({
           <dl className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             <div>
               <dt className="text-sm text-slate-500">Accepted formats</dt>
-              <dd className="mt-1 font-semibold text-[#142b45]">{spec.formats.join(", ")}</dd>
+              <dd className="mt-1 font-semibold text-[#142b45]">
+                {spec.formats.join(", ")}
+              </dd>
             </div>
             <div>
               <dt className="text-sm text-slate-500">Maximum size</dt>
-              <dd className="mt-1 font-semibold text-[#142b45]">{spec.maxSizeMb} MB per file</dd>
+              <dd className="mt-1 font-semibold text-[#142b45]">
+                {spec.maxSizeMb} MB per file
+              </dd>
             </div>
             <div>
               <dt className="text-sm text-slate-500">Files required</dt>
-              <dd className="mt-1 font-semibold text-[#142b45]">{spec.filesRequired}</dd>
+              <dd className="mt-1 font-semibold text-[#142b45]">
+                {spec.filesRequired}
+              </dd>
             </div>
           </dl>
 
@@ -613,18 +668,25 @@ export function DocumentCollection({
 
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
             <div>
-              <h4 className="font-heading text-lg font-semibold text-[#142b45]">What your document must include</h4>
+              <h4 className="font-heading text-lg font-semibold text-[#142b45]">
+                What your document must include
+              </h4>
               <ul className="mt-3 space-y-2.5 text-slate-600">
                 {spec.mustInclude.map((item) => (
                   <li key={item} className="flex gap-2.5">
-                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />
+                    <span
+                      className="mt-2 size-1.5 shrink-0 rounded-full bg-slate-400"
+                      aria-hidden="true"
+                    />
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
             <div>
-              <h4 className="font-heading text-lg font-semibold text-[#142b45]">Quality and preparation</h4>
+              <h4 className="font-heading text-lg font-semibold text-[#142b45]">
+                Quality and preparation
+              </h4>
               {spec.quality.map((para) => (
                 <p key={para} className="mt-3 leading-relaxed text-slate-600">
                   {para}
@@ -635,7 +697,9 @@ export function DocumentCollection({
 
           <hr className="my-6 border-[#e4e0d6]" />
 
-          <h4 className="font-heading text-lg font-semibold text-[#142b45]">Select your document</h4>
+          <h4 className="font-heading text-lg font-semibold text-[#142b45]">
+            Select your document
+          </h4>
 
           <input
             ref={inputRef}
@@ -652,16 +716,28 @@ export function DocumentCollection({
 
           {busy ? (
             <div className="mt-4 flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-5 py-4">
-              <Loader2 className="size-5 shrink-0 animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" />
-              <span className="text-sm font-medium text-[#142b45]">Uploading…</span>
+              <Loader2
+                className="size-5 shrink-0 animate-spin text-primary motion-reduce:animate-none"
+                aria-hidden="true"
+              />
+              <span className="text-sm font-medium text-[#142b45]">
+                Uploading…
+              </span>
             </div>
           ) : currentUploaded ? (
             <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-emerald-300 bg-emerald-50 px-5 py-4">
               <span className="flex min-w-0 items-center gap-3">
-                <Check className="size-5 shrink-0 text-emerald-600" aria-hidden="true" />
+                <Check
+                  className="size-5 shrink-0 text-emerald-600"
+                  aria-hidden="true"
+                />
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium text-[#142b45]">{currentUploaded.fileName}</span>
-                  <span className="block text-xs text-slate-500">Uploaded · version {currentUploaded.version}</span>
+                  <span className="block truncate text-sm font-medium text-[#142b45]">
+                    {currentUploaded.fileName}
+                  </span>
+                  <span className="block text-xs text-slate-500">
+                    Uploaded · version {currentUploaded.version}
+                  </span>
                 </span>
               </span>
               <div className="flex shrink-0 items-center gap-3">
@@ -695,25 +771,43 @@ export function DocumentCollection({
                 void acceptFile(e.dataTransfer.files?.[0]);
               }}
               className={`mt-4 flex flex-col items-center gap-3 rounded-xl border-2 border-dashed px-6 py-12 text-center transition-colors ${
-                dragging ? "border-primary bg-primary/5" : currentError ? "border-destructive/50 bg-destructive/5" : "border-primary/40 bg-primary/5"
+                dragging
+                  ? "border-primary bg-primary/5"
+                  : currentError
+                    ? "border-destructive/50 bg-destructive/5"
+                    : "border-primary/40 bg-primary/5"
               }`}
             >
               <Upload className="size-7 text-primary" aria-hidden="true" />
-              <p className="text-lg font-semibold text-[#142b45]">Drag and drop your file here</p>
-              <p className="text-sm text-slate-500">or select a file from a folder on your device</p>
-              <Button size="lg" className="h-11 rounded-full px-6" onClick={() => inputRef.current?.click()}>
+              <p className="text-lg font-semibold text-[#142b45]">
+                Drag and drop your file here
+              </p>
+              <p className="text-sm text-slate-500">
+                or select a file from a folder on your device
+              </p>
+              <Button
+                size="lg"
+                className="h-11 rounded-full px-6"
+                onClick={() => inputRef.current?.click()}
+              >
                 Select from folder
               </Button>
               <p className="text-sm text-slate-500">
-                {spec.formats.join(", ")} only · Maximum {spec.maxSizeMb} MB · One file
+                {spec.formats.join(", ")} only · Maximum {spec.maxSizeMb} MB ·
+                One file
               </p>
             </div>
           )}
 
-          {currentError && <p className="mt-3 text-sm font-medium text-destructive">{currentError}</p>}
+          {currentError && (
+            <p className="mt-3 text-sm font-medium text-destructive">
+              {currentError}
+            </p>
+          )}
 
           <p className="mt-6 text-sm leading-relaxed text-slate-500">
-            Files are uploaded securely and their type and size are verified on the server. This does not submit your application.
+            Files are uploaded securely and their type and size are verified on
+            the server. This does not submit your application.
           </p>
 
           <hr className="my-6 border-[#e4e0d6]" />
@@ -723,11 +817,19 @@ export function DocumentCollection({
               {remaining} {remaining === 1 ? "document" : "documents"} remaining
             </p>
             {isLast ? (
-              <Button size="lg" className="h-11 rounded-full px-6" onClick={onBack}>
+              <Button
+                size="lg"
+                className="h-11 rounded-full px-6"
+                onClick={onBack}
+              >
                 Back to approvals
               </Button>
             ) : (
-              <Button size="lg" className="h-11 rounded-full px-6" onClick={() => setCurrent((c) => Math.min(c + 1, total - 1))}>
+              <Button
+                size="lg"
+                className="h-11 rounded-full px-6"
+                onClick={() => setCurrent((c) => Math.min(c + 1, total - 1))}
+              >
                 Next document
               </Button>
             )}

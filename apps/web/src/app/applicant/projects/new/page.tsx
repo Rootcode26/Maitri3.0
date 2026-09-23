@@ -3,7 +3,10 @@ import { NewProjectWizard } from "@/features/projects/new-project-wizard";
 
 export default function NewProjectPage() {
   return (
-    <DashboardShell activeHref="/applicant/projects/new" breadcrumb={["Applicant", "Projects", "New project"]}>
+    <DashboardShell
+      activeHref="/applicant/projects/new"
+      breadcrumb={["Applicant", "Projects", "New project"]}
+    >
       <div className="mx-auto w-full max-w-6xl px-6 py-8 sm:py-10">
         <header className="max-w-3xl">
           <p className="text-sm font-semibold text-primary">New project</p>

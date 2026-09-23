@@ -13,16 +13,27 @@ export function AuthShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-svh bg-background">
       <SiteHeader actionLabel="Change workspace" />
-      <main id="main-content" className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-10 sm:px-8 md:py-16 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-16 lg:px-10">
+      <main
+        id="main-content"
+        className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-10 sm:px-8 md:py-16 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:gap-16 lg:px-10"
+      >
         <section className="max-w-md" aria-labelledby="journey-heading">
-          <p className="mb-3 text-sm font-semibold text-primary">Applicant services</p>
-          <h1 id="journey-heading" className="max-w-sm text-3xl leading-tight font-semibold tracking-tight text-[#142b45] sm:text-4xl">
+          <p className="mb-3 text-sm font-semibold text-primary">
+            Applicant services
+          </p>
+          <h1
+            id="journey-heading"
+            className="max-w-sm text-3xl leading-tight font-semibold tracking-tight text-[#142b45] sm:text-4xl"
+          >
             Continue your industrial approval journey.
           </h1>
           <ul className="mt-7 space-y-4 text-sm text-slate-600 sm:text-base">
             {benefits.map((benefit) => (
               <li key={benefit} className="flex items-start gap-3">
-                <Check className="mt-0.5 size-5 shrink-0 text-emerald-600" aria-hidden="true" />
+                <Check
+                  className="mt-0.5 size-5 shrink-0 text-emerald-600"
+                  aria-hidden="true"
+                />
                 <span>{benefit}</span>
               </li>
             ))}
