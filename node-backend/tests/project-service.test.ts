@@ -133,11 +133,9 @@ describe('ProjectService', () => {
         ],
       }),
     );
-    const service = new ProjectService(
-      { submitProject } as unknown as ProjectRepository,
-      null,
-      { validateProject } as unknown as ProjectValidator,
-    );
+    const service = new ProjectService({ submitProject } as unknown as ProjectRepository, null, {
+      validateProject,
+    } as unknown as ProjectValidator);
 
     await expect(service.submitProject('applicant-1', 'p1')).rejects.toMatchObject({
       statusCode: 422,
@@ -173,11 +171,9 @@ describe('ProjectService', () => {
         ],
       }),
     );
-    const service = new ProjectService(
-      { submitProject } as unknown as ProjectRepository,
-      null,
-      { validateProject } as unknown as ProjectValidator,
-    );
+    const service = new ProjectService({ submitProject } as unknown as ProjectRepository, null, {
+      validateProject,
+    } as unknown as ProjectValidator);
 
     await expect(service.submitProject('applicant-1', 'p1')).resolves.toBe(project);
     expect(validateProject).toHaveBeenCalledWith('applicant-1', 'p1');
@@ -192,11 +188,9 @@ describe('ProjectService', () => {
         code: 'VALIDATION_UNAVAILABLE',
       }),
     );
-    const service = new ProjectService(
-      { submitProject } as unknown as ProjectRepository,
-      null,
-      { validateProject } as unknown as ProjectValidator,
-    );
+    const service = new ProjectService({ submitProject } as unknown as ProjectRepository, null, {
+      validateProject,
+    } as unknown as ProjectValidator);
 
     await expect(service.submitProject('applicant-1', 'p1')).rejects.toMatchObject({
       statusCode: 503,
