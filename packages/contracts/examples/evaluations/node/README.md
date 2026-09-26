@@ -65,9 +65,19 @@ Response envelope and new /validate route need teammate review.
 .venv/Scripts/python.exe -m scripts.export_node_contract_schemas
 
 ## Pending checklist
-Done: Node-aligned boundary models, source examples, proposed upload validation
-contract, JSON Schemas and contract tests. Original api-contract.md is unchanged.
-Pending: P1/Node review; machine-readable comparison requirements; actual required
-document checks; safe file access, PDF/XLSX extraction/OCR; matching and review;
-validation endpoint and trusted P1 integration; frontend correction/recheck flow.
-Risk and readiness scoring remain paused. No automatic official authenticity claims.
+
+See python-backend/PERSON1_PERSON2_HANDOFF.md for the maintained checklist.
+
+- Team agreement on response semantics, units and final submission policy.
+- Align fallback approvals, expose service failures and preserve response metadata.
+- Align evaluation and persisted project IDs.
+- Connect /validate and frontend correction/rechecking.
+- Real file upload/access and bounded parsers/extraction/OCR.
+- Configure/preserve comparison fields, cross-document and expiry policies.
+- Enforce current snapshots, reject stale results and gate final submission.
+- Live integration tests, deployment and hardening.
+- Risk/readiness scoring remain paused.
+
+Boundary models, schema/contract tests, required-file checking and matching/review
+logic, /evaluate, /validate and shared rules integration are implemented.
+Official authenticity verification remains the inspector's responsibility.

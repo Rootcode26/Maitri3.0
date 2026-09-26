@@ -53,9 +53,15 @@ JSON Schema captures field structure, not all cross-field Python validators.
 The Pydantic models enforce honest states, counts and version consistency.
 
 ## Pending checklist
-Done: P2 response models, example state snapshots, schema and contract tests.
-Pending: teammate approval of response states; P1 integration contract and combined
-response envelope; actual completeness validation; document requirements and
-verification checks; readiness/risk scoring policies; evaluation endpoint.
-Deferred: OCR, authorised registration verification, deployment/security hardening.
-Historical examples and parent discussion notes remain unchanged.
+
+This component response is a historical design draft, not the active endpoint.
+See python-backend/PERSON1_PERSON2_HANDOFF.md for the maintained checklist.
+
+- Teammate agreement on response semantics and submission handling.
+- Document comparison/expiry configuration and real extraction/OCR.
+- Node-to-/validate connection and frontend correction/rechecking.
+- Readiness/risk policies remain paused; deployment/security hardening remain pending.
+
+Response models, required-answer/file checks, FastAPI routes and shared rules
+integration are implemented, not pending. Official authenticity and final
+acceptance remain inspector responsibilities.

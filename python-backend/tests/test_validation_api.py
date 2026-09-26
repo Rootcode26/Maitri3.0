@@ -36,6 +36,11 @@ class ValidationAPITests(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.text)
         self.assertEqual(response.json()['documentChecks'][0]['status'], 'matched')
         self.assertEqual(response.json()['projectVersion'], 1)
+        assessment = response.json()['attentionAssessment']
+        self.assertEqual(assessment['score'], 10)
+        self.assertEqual(assessment['level'], 'standard')
+        self.assertEqual(assessment['policyVersion'], 'prototype-1')
+        self.assertEqual([factor['code'] for factor in assessment['factors']], ['BOILER_DECLARED'])
 
     def test_missing_provider_safe(self):
         self.assertEqual(self.post().status_code, 503)

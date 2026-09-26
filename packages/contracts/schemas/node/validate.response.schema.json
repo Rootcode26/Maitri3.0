@@ -1,5 +1,95 @@
 {
   "$defs": {
+    "AttentionAssessment": {
+      "additionalProperties": false,
+      "properties": {
+        "score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Score",
+          "type": "integer"
+        },
+        "level": {
+          "enum": [
+            "standard",
+            "elevated",
+            "high_attention"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "policyVersion": {
+          "const": "prototype-1",
+          "title": "Policyversion",
+          "type": "string"
+        },
+        "factors": {
+          "items": {
+            "$ref": "#/$defs/AttentionFactor"
+          },
+          "title": "Factors",
+          "type": "array"
+        },
+        "disclaimer": {
+          "const": "This prototype score only estimates the amount of manual review that may be needed. It does not determine eligibility or predict approval.",
+          "title": "Disclaimer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "score",
+        "level",
+        "policyVersion",
+        "factors",
+        "disclaimer"
+      ],
+      "title": "AttentionAssessment",
+      "type": "object"
+    },
+    "AttentionFactor": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "HAZARDOUS_CHEMICALS",
+            "HAZARDOUS_WASTE",
+            "BOILER_DECLARED",
+            "WET_PROCESSING",
+            "FURNACE_DECLARED",
+            "BLOCKING_CORRECTIONS",
+            "ITEMS_TO_DOUBLE_CHECK",
+            "MANUAL_REVIEW_ITEMS"
+          ],
+          "title": "Code",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "points": {
+          "minimum": 0,
+          "title": "Points",
+          "type": "integer"
+        },
+        "explanation": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Explanation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "label",
+        "points",
+        "explanation"
+      ],
+      "title": "AttentionFactor",
+      "type": "object"
+    },
     "ContractIssue": {
       "additionalProperties": false,
       "properties": {
@@ -219,6 +309,9 @@
       },
       "title": "Documentchecks",
       "type": "array"
+    },
+    "attentionAssessment": {
+      "$ref": "#/$defs/AttentionAssessment"
     }
   },
   "required": [
@@ -230,7 +323,8 @@
     "blockingIssues",
     "warnings",
     "reviewItems",
-    "documentChecks"
+    "documentChecks",
+    "attentionAssessment"
   ],
   "title": "ValidateResponse",
   "type": "object",

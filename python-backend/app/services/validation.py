@@ -1,4 +1,4 @@
-"""Deterministic questionnaire + trusted metadata checks. No OCR or risk scoring."""
+"""Deterministic questionnaire and trusted metadata checks. No OCR."""
 from collections import defaultdict
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -6,7 +6,7 @@ from difflib import SequenceMatcher
 from pathlib import PurePath
 import re
 
-from app.domain.api_contract_models import ContractIssue, DocumentCheck, ValidateResponse
+from app.domain.api_contract_models import ContractIssue, DocumentCheck, ValidationResult
 from app.services.rule_provider import RulesUnavailable
 from app.services.document_policy import DocumentValidationPolicy
 
@@ -260,7 +260,7 @@ def validate_application(request, evaluation, *, evaluated_at=None, policy=None)
     errors = [item for item in issues if item.severity == "error"]
     warnings = [item for item in issues if item.severity == "warning"]
     reviews = [item for item in issues if item.severity == "review"]
-    return ValidateResponse.model_validate({
+    return ValidationResult.model_validate({
         "rulesVersion": request.rules_version, "projectId": request.project_id,
         "projectVersion": request.project_version, "evaluatedAt": now,
         "validationStatus": "review_required" if reviews or any(item.code in {'VERIFIED_PREREQUISITE_MISSING', 'SUBMISSION_BLOCKED'} for item in errors) else "complete",

@@ -114,6 +114,7 @@ Thumbs.db
 Desktop.ini
 
 # Local tooling
+.tools/
 .cache/
 .eslintcache
 .stylelintcache

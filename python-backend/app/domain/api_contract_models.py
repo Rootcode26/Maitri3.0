@@ -203,7 +203,54 @@ class DocumentCheck(ContractModel):
     reason: NonEmpty
 
 
-class ValidateResponse(TimestampedResponse):
+AttentionFactorCode = Literal[
+    "HAZARDOUS_CHEMICALS",
+    "HAZARDOUS_WASTE",
+    "BOILER_DECLARED",
+    "WET_PROCESSING",
+    "FURNACE_DECLARED",
+    "BLOCKING_CORRECTIONS",
+    "ITEMS_TO_DOUBLE_CHECK",
+    "MANUAL_REVIEW_ITEMS",
+]
+ATTENTION_ASSESSMENT_DISCLAIMER = (
+    "This prototype score only estimates the amount of manual review that may be needed. "
+    "It does not determine eligibility or predict approval."
+)
+
+
+class AttentionFactor(ContractModel):
+    code: AttentionFactorCode
+    label: NonEmpty
+    points: Annotated[int, Field(ge=0)]
+    explanation: NonEmpty
+
+
+class AttentionAssessment(ContractModel):
+    score: Annotated[int, Field(ge=0, le=100)]
+    level: Literal["standard", "elevated", "high_attention"]
+    policy_version: Literal["prototype-1"]
+    factors: list[AttentionFactor]
+    disclaimer: Literal[ATTENTION_ASSESSMENT_DISCLAIMER]
+
+    @model_validator(mode="after")
+    def assessment_is_consistent(self):
+        codes = [factor.code for factor in self.factors]
+        if len(codes) != len(set(codes)):
+            raise ValueError("Attention factor codes must be unique")
+        if self.score != min(100, sum(factor.points for factor in self.factors)):
+            raise ValueError("Attention score must equal capped factor points")
+        expected_level = (
+            "standard" if self.score < 20
+            else "elevated" if self.score < 40
+            else "high_attention"
+        )
+        if self.level != expected_level:
+            raise ValueError("Attention level must agree with the score")
+        return self
+
+
+class ValidationResult(TimestampedResponse):
     project_version: PositiveCount
     validation_status: Literal["complete", "review_required", "not_evaluated"]
     blocking_issues: list[ContractIssue]
@@ -224,3 +271,7 @@ class ValidateResponse(TimestampedResponse):
         if self.validation_status == "not_evaluated" and self.document_checks:
             raise ValueError("Not-evaluated response cannot contain completed checks")
         return self
+
+
+class ValidateResponse(ValidationResult):
+    attention_assessment: AttentionAssessment
