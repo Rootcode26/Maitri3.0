@@ -2,10 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { AppError } from '../../errors/app-error.js';
 import { logger } from '../../config/logger.js';
-import type {
-  AttentionLevel,
-  ValidationResult,
-} from '../documents/document.validation-client.js';
+import type { AttentionLevel, ValidationResult } from '../documents/document.validation-client.js';
 import type { ProjectRepository } from './project.repository.js';
 import { RulesEngineError, type RulesEngineClient } from './project.rules-client.js';
 import { deriveApprovals, type RecommendedApproval } from './project.rules.js';
