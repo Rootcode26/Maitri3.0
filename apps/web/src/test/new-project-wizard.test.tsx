@@ -85,7 +85,15 @@ const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
           validation: {
             validationStatus: "review_required",
             blockingIssues: [],
-            warnings: [],
+            warnings: [
+              {
+                code: "DOCUMENT_VALUE_LOOKS_DIFFERENT",
+                severity: "warning",
+                approvalKey: "food-licence",
+                message: "The PAN in the document looks different.",
+                suggestedAction: "Double-check the uploaded file.",
+              },
+            ],
             reviewItems: [
               {
                 code: "APPROVAL_OFFICER_REVIEW",
@@ -572,8 +580,11 @@ describe("NewProjectWizard — generated checklist result", () => {
 
     await u.click(screen.getByRole("button", { name: /^check documents$/i }));
 
-    expect(await screen.findByText(/some items need attention/i)).toBeInTheDocument();
-    expect(screen.getByText(/officer review needed for food licence/i)).toBeInTheDocument();
+    // No blocking issues -> the backend "verified" state with a friendly summary
+    // of which officers review what, plus any optional double-check warnings.
+    expect(await screen.findByText(/verified by our system/i)).toBeInTheDocument();
+    expect(screen.getByText(/what happens after you submit/i)).toBeInTheDocument();
+    expect(screen.getByText(/the pan in the document looks different/i)).toBeInTheDocument();
     expect(
       fetchMock.mock.calls.some(
         (call) => String(call[0]).endsWith("/validate") && call[1]?.method === "POST",

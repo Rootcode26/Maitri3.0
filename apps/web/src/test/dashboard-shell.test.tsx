@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
@@ -5,6 +6,23 @@ import { describe, expect, it, vi } from "vitest";
 
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
+
+const replace = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace, push: vi.fn(), prefetch: vi.fn() }),
+}));
+vi.mock("@/lib/auth-api", () => ({
+  getCurrentSession: vi.fn(async () => ({
+    id: "u1",
+    name: "Test User",
+    phoneNumber: "+919000000000",
+    role: "applicant",
+    status: "active",
+    departmentId: null,
+    industry: "food",
+  })),
+  logoutSession: vi.fn(async () => undefined),
+}));
 
 vi.mock("next/link", () => ({
   default: ({
@@ -76,13 +94,18 @@ describe("DashboardSidebar", () => {
 
 describe("DashboardShell", () => {
   function renderShell() {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
     return render(
-      <DashboardShell
-        activeHref="/applicant/dashboard"
-        breadcrumb={["Home", "Applicant", "Dashboard"]}
-      >
-        <p>Body content</p>
-      </DashboardShell>,
+      <QueryClientProvider client={client}>
+        <DashboardShell
+          activeHref="/applicant/dashboard"
+          breadcrumb={["Home", "Applicant", "Dashboard"]}
+        >
+          <p>Body content</p>
+        </DashboardShell>
+      </QueryClientProvider>,
     );
   }
 
@@ -103,14 +126,15 @@ describe("DashboardShell", () => {
     expect(current).toHaveAttribute("aria-current", "page");
   });
 
-  it("renders the prototype tag, notification bell and avatar", () => {
+  it("renders the notification bell and the signed-in user with a sign-out action", async () => {
     renderShell();
-    expect(screen.getByText("SIH")).toBeInTheDocument();
-    expect(
-      screen.getByText(/digital public-service prototype/i),
-    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /notifications/i }),
+    ).toBeInTheDocument();
+    // The current user is loaded from the session and shown with a sign-out control.
+    expect(await screen.findByText("Test User")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /sign out/i }),
     ).toBeInTheDocument();
   });
 

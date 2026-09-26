@@ -93,16 +93,17 @@ uniqueness checks. Consumers must not assume schema-only validation is sufficien
 Examples are synthetic snapshots, not verified businesses or final policies.
 
 ## Remaining work / deferred decisions
-- Teammate review of enums, aliases, ranges, units and snapshot semantics.
-- Exact range boundaries; installed-capacity parsing and unit policy.
-- Document catalogue, upload limits and verification requirements.
-- Cross-field business consistency findings (boiler/process, furnace/capacity,
-  primary activity versus wet processing) in the completeness layer.
-- Revised response including unknown/incomplete/not-configured assessment states.
-- Regulatory rules and dependencies (Person 1).
-- Completeness/pre-validation service and tests (Person 2).
-- Readiness formula; risk factors, weights, thresholds and policy versioning.
-- FastAPI evaluation endpoint, internal authentication and integration.
-- OCR and authorised registration verification, deployment and hardening.
 
-No risk scoring, completeness assessment or response models are implemented here.
+This grouped request is a historical design draft, not the active Node request.
+See python-backend/PERSON1_PERSON2_HANDOFF.md for the maintained checklist.
+
+- Teammate agreement on enums, aliases, ranges, units and snapshot semantics.
+- Exact range boundaries and installed-capacity parsing/unit policy.
+- Review document catalogue/limits; configure comparison/expiry rules.
+- Readiness/risk formulas, weights, thresholds and policy versions remain paused.
+- Real document upload/access, extraction/OCR and frontend correction/rechecking.
+- Live Node/frontend integration verification, deployment and hardening.
+
+Normalization, rules/dependency evaluation, response models, required-answer/file
+checks, /evaluate, /validate and internal authentication are implemented and no
+longer pending. They do not establish official authenticity or legal requirements.
