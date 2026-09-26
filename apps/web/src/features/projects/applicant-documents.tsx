@@ -15,7 +15,7 @@ import { StatusBadge } from "@/features/projects/status-badge";
 import { useLanguage } from "@/components/providers/language-provider";
 
 export function ApplicantDocuments() {
-  const { t } = useLanguage();
+  const { t, text } = useLanguage();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +68,7 @@ export function ApplicantDocuments() {
     <div className="mx-auto w-full max-w-6xl px-4 py-7 sm:px-6 sm:py-9">
       <header>
         <p className="text-sm font-semibold text-primary">
-          Applicant workspace
+          {text("Applicant workspace")}
         </p>
         <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-[#142b45] sm:text-4xl">
           {t("documents.title")}
@@ -99,10 +99,10 @@ export function ApplicantDocuments() {
             className="h-11 w-full rounded-md border border-[#aeb7c4] bg-white px-3 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <option value="all">{t("documents.allStatuses")}</option>
-            <option value="pending">Pending</option>
-            <option value="accepted">Accepted</option>
-            <option value="correction_required">Correction required</option>
-            <option value="rejected">Rejected</option>
+            <option value="pending">{text("Pending")}</option>
+            <option value="accepted">{text("Accepted")}</option>
+            <option value="correction_required">{text("Correction required")}</option>
+            <option value="rejected">{text("Rejected")}</option>
           </select>
         </label>
       </div>
@@ -116,8 +116,7 @@ export function ApplicantDocuments() {
       ) : null}
       {pending ? (
         <div className="mt-8 flex items-center gap-3 border border-[#e4e0d6] p-8 text-slate-600">
-          <Loader2 className="size-5 animate-spin" aria-hidden="true" /> Loading
-          documents…
+          <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {text("Loading documents…")}
         </div>
       ) : failed ? (
         <div
@@ -155,7 +154,7 @@ export function ApplicantDocuments() {
                 >
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-[#142b45]">
-                      {document.documentName ?? document.fileName}
+                      {document.documentName ? text(document.documentName) : document.fileName}
                     </p>
                     <p className="mt-1 break-all text-xs text-slate-500">
                       {document.fileName} · v{document.version} ·{" "}
@@ -175,7 +174,7 @@ export function ApplicantDocuments() {
                       {projectNames.get(projectId) ?? t("documents.openApplication")}
                     </Link>
                     <p className="mt-1 text-xs text-slate-500">
-                      {document.departmentName}
+                      {document.departmentName ? text(document.departmentName) : "—"}
                     </p>
                   </div>
                   <StatusBadge status={document.review?.status ?? "pending"} />

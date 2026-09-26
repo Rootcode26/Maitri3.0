@@ -95,7 +95,7 @@ export function ApplicantApplicationDetail({
 }: {
   projectId: string;
 }) {
-  const { language, t } = useLanguage();
+  const { language, t, text } = useLanguage();
   const query = useQuery({
     queryKey: ["applicant-application", projectId],
     queryFn: () => getApplicantApplication(projectId),
@@ -171,8 +171,8 @@ export function ApplicantApplicationDetail({
             {application.enterpriseName}
           </h1>
           <p className="mt-2 text-slate-600">
-            {humanizeStatus(application.industry)} · {application.district} ·{" "}
-            {application.primaryActivity}
+            {text(humanizeStatus(application.industry))} · {text(application.district)} ·{" "}
+            {text(application.primaryActivity)}
           </p>
         </div>
         <StatusBadge
@@ -202,10 +202,10 @@ export function ApplicantApplicationDetail({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <CardTitle className="text-lg text-[#142b45]">
-                      {approval.title}
+                      {text(approval.title)}
                     </CardTitle>
                     <p className="mt-1 text-sm text-slate-500">
-                      {approval.department.name}
+                      {text(approval.department.name)}
                     </p>
                   </div>
                   <StatusBadge status={approval.reviewStatus ?? "pending"} />
@@ -256,7 +256,7 @@ export function ApplicantApplicationDetail({
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-semibold text-[#142b45]">
-                      {document.documentName ?? document.fileName}
+                      {document.documentName ? text(document.documentName) : document.fileName}
                     </p>
                     <p className="mt-1 break-all text-sm text-slate-600">
                       {document.fileName} · {t("application.version", { version: document.version })} ·{" "}

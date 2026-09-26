@@ -22,7 +22,7 @@ const statuses = [
 ] as const;
 
 export function ApplicantApplications() {
-  const { language, t } = useLanguage();
+  const { language, t, text } = useLanguage();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<(typeof statuses)[number]>("all");
   const query = useQuery({
@@ -46,26 +46,25 @@ export function ApplicantApplications() {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-primary">
-            Applicant workspace
+            {text("Applicant workspace")}
           </p>
           <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-[#142b45] sm:text-4xl">
-            Applications
+            {text("Applications")}
           </h1>
           <p className="mt-2 max-w-2xl text-slate-600">
-            Review every project, follow departmental progress and address
-            requests that need your attention.
+            {text("Review every project, follow departmental progress and address requests that need your attention.")}
           </p>
         </div>
         <Button
           render={<Link href="/applicant/projects/new" />}
           className="h-11 rounded-md px-5"
         >
-          Create new project
+          {text("Create new project")}
         </Button>
       </header>
       <div className="mt-7 grid gap-3 border-y border-[#e4e0d6] py-4 md:grid-cols-[1fr_15rem]">
         <label className="relative block">
-          <span className="sr-only">Search applications</span>
+          <span className="sr-only">{text("Search applications")}</span>
           <Search
             className="pointer-events-none absolute top-3 left-3 size-5 text-slate-400"
             aria-hidden="true"
@@ -74,11 +73,11 @@ export function ApplicantApplications() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="h-11 w-full rounded-md border border-[#aeb7c4] bg-white pr-3 pl-10 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            placeholder="Search by enterprise, district or industry"
+            placeholder={text("Search by enterprise, district or industry")}
           />
         </label>
         <label>
-          <span className="sr-only">Filter by application status</span>
+          <span className="sr-only">{text("Filter by application status")}</span>
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as typeof status)}
@@ -94,22 +93,21 @@ export function ApplicantApplications() {
       </div>
       {query.isPending ? (
         <div className="mt-8 flex items-center gap-3 border border-[#e4e0d6] p-8 text-slate-600">
-          <Loader2 className="size-5 animate-spin" aria-hidden="true" /> Loading
-          applications…
+          <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {text("Loading applications…")}
         </div>
       ) : query.isError ? (
         <div
           role="alert"
           className="mt-8 border border-destructive/30 bg-destructive/5 p-6 text-destructive"
         >
-          <p className="font-semibold">Applications could not be loaded.</p>
+          <p className="font-semibold">{text("Applications could not be loaded.")}</p>
           <Button
             type="button"
             variant="outline"
             className="mt-4 h-10"
             onClick={() => query.refetch()}
           >
-            Try again
+            {t("common.tryAgain")}
           </Button>
         </div>
       ) : projects.length ? (
@@ -128,19 +126,18 @@ export function ApplicantApplications() {
                     <StatusBadge status={project.status} />
                   </div>
                   <p className="mt-2 text-sm text-slate-600">
-                    {humanizeStatus(project.industry)} · {project.district} ·{" "}
-                    {project.primaryActivity}
+                    {text(humanizeStatus(project.industry))} · {text(project.district)} ·{" "}
+                    {text(project.primaryActivity)}
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    Created{" "}
-                    {formatDate(project.createdAt, language)}
+                    {t("common.created", { date: formatDate(project.createdAt, language) })}
                     {project.submittedAt
                       ? ` · ${t("common.submitted", { date: formatDate(project.submittedAt, language) })}`
                       : ""}
                   </p>
                 </div>
                 <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
-                  Open application{" "}
+                  {text("Open application")}{" "}
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </span>
               </Link>
@@ -155,13 +152,13 @@ export function ApplicantApplications() {
           />
           <h2 className="mt-3 text-lg font-semibold text-[#142b45]">
             {query.data?.length
-              ? "No matching applications"
-              : "No applications yet"}
+              ? text("No matching applications")
+              : text("No applications yet")}
           </h2>
           <p className="mt-2 text-sm text-slate-600">
             {query.data?.length
-              ? "Change the search or status filter."
-              : "Create your first project to begin the approval journey."}
+              ? text("Change the search or status filter.")
+              : text("Create your first project to begin the approval journey.")}
           </p>
         </div>
       )}

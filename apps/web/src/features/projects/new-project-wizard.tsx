@@ -568,7 +568,7 @@ function FieldControl({
   describedById: string;
   defaultValue?: string;
 }) {
-  const { t } = useLanguage();
+  const { t, text } = useLanguage();
   const base =
     "w-full rounded-lg border bg-white px-3.5 text-base text-[#142b45] transition-colors outline-none placeholder:text-slate-400 focus-visible:ring-3 focus-visible:ring-primary/40 focus-visible:border-primary aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-destructive/25";
   const invalid = Boolean(error);
@@ -585,7 +585,7 @@ function FieldControl({
         {...common}
         rows={4}
         defaultValue={defaultValue}
-        placeholder={field.placeholder}
+        placeholder={field.placeholder ? text(field.placeholder) : undefined}
         className={`${base} min-h-28 resize-y py-3 leading-relaxed`}
       />
     );
@@ -603,7 +603,7 @@ function FieldControl({
           </option>
           {field.options?.map((opt) => (
             <option key={opt} value={opt}>
-              {opt}
+              {text(opt)}
             </option>
           ))}
         </select>
@@ -619,7 +619,7 @@ function FieldControl({
       {...common}
       type={field.type}
       defaultValue={defaultValue}
-      placeholder={field.placeholder}
+      placeholder={field.placeholder ? text(field.placeholder) : undefined}
       className={`${base} h-12`}
     />
   );
@@ -640,6 +640,7 @@ function ApprovalCard({
   onChangeDepartment: (departmentKey: string) => void;
   onOpen: () => void;
 }) {
+  const { text } = useLanguage();
   const required = approval.status === "required";
   return (
     <article className="flex flex-col rounded-xl bg-white p-6 ring-1 ring-[#e4e0d6] transition-shadow hover:ring-2 hover:ring-primary/50 focus-within:ring-2 focus-within:ring-primary">
@@ -651,14 +652,14 @@ function ApprovalCard({
             className={`size-2 rounded-full ${required ? "bg-primary" : "bg-slate-500"}`}
             aria-hidden="true"
           />
-          {approval.status}
+          {text(required ? "Required" : "Recommended")}
         </span>
         <span className="text-4xl font-bold text-slate-200" aria-hidden="true">
           {String(index + 1).padStart(2, "0")}
         </span>
       </div>
       <h3 className="mt-4 font-heading text-xl font-semibold text-[#142b45]">
-        {approval.title}
+        {text(approval.title)}
       </h3>
       {departmentsLoading ? (
         <div className="mt-2">
@@ -670,41 +671,41 @@ function ApprovalCard({
             className="mt-1 h-9 w-full animate-pulse rounded-md bg-slate-100 motion-reduce:animate-none"
             aria-hidden="true"
           />
-          <span className="sr-only">Loading departments…</span>
+          <span className="sr-only">{text("Loading departments…")}</span>
         </div>
       ) : departments.length > 0 ? (
         <label className="mt-2 block">
           <span className="text-xs font-medium text-slate-500">
-            Send documents to
+            {text("Send documents to")}
           </span>
           <select
             value={approval.department.key}
             onChange={(event) => onChangeDepartment(event.target.value)}
-            aria-label={`Department for ${approval.title}`}
+            aria-label={text("Department for {{approval}}", { approval: text(approval.title) })}
             className="mt-1 w-full rounded-md border border-[#e4e0d6] bg-white px-2.5 py-2 text-sm text-[#142b45] outline-none focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/30"
           >
             {departments.map((department) => (
               <option key={department.key} value={department.key}>
-                {department.name}
+                {text(department.name)}
               </option>
             ))}
           </select>
         </label>
       ) : (
         <p className="mt-1 text-sm text-slate-500">
-          {approval.department.name}
+          {text(approval.department.name)}
         </p>
       )}
       {approval.reason ? (
-        <p className="mt-2 text-sm text-slate-500">{approval.reason}</p>
+        <p className="mt-2 text-sm text-slate-500">{text(approval.reason)}</p>
       ) : null}
       <hr className="my-4 border-[#e4e0d6]" />
       <div className="flex items-center justify-between gap-4 text-sm">
         <span className="text-slate-600">
-          {approval.documents.map((document) => document.name).join(", ")}
+          {approval.documents.map((document) => text(document.name)).join(", ")}
         </span>
         <span className="shrink-0 font-semibold text-[#142b45]">
-          {approval.processingDays} days
+          {text("{{count}} days", { count: approval.processingDays })}
         </span>
       </div>
       <button
@@ -712,10 +713,12 @@ function ApprovalCard({
         onClick={onOpen}
         className="mt-4 inline-flex items-center gap-1 self-start rounded-sm text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
-        View {approval.documents.length}{" "}
-        {approval.documents.length === 1
-          ? "document requirement"
-          : "document requirements"}
+        {text(
+          approval.documents.length === 1
+            ? "View {{count}} document requirement"
+            : "View {{count}} document requirements",
+          { count: approval.documents.length },
+        )}
         <ChevronRight className="size-4" aria-hidden="true" />
       </button>
     </article>
@@ -766,6 +769,7 @@ function IssueList({
   tone: "error" | "warning" | "review";
   onOpenApproval?: (approvalKey: string) => void;
 }) {
+  const { text } = useLanguage();
   if (issues.length === 0) return null;
   const toneClass = {
     error: "border-destructive/30 bg-destructive/5 text-destructive",
@@ -782,10 +786,10 @@ function IssueList({
             className="flex items-start justify-between gap-3 text-sm"
           >
             <span>
-              <span className="font-medium">{issue.message}</span>
+              <span className="font-medium">{text(issue.message)}</span>
               {issue.suggestedAction ? (
                 <span className="mt-0.5 block text-xs opacity-80">
-                  {issue.suggestedAction}
+                  {text(issue.suggestedAction)}
                 </span>
               ) : null}
             </span>
@@ -795,7 +799,7 @@ function IssueList({
                 onClick={() => onOpenApproval(issue.approvalKey!)}
                 className="shrink-0 rounded-sm text-xs font-semibold underline underline-offset-4 hover:opacity-80 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-current"
               >
-                Review documents
+                {text("Review documents")}
               </button>
             ) : null}
           </li>
@@ -814,6 +818,7 @@ function ValidationReport({
   approvals: ProjectApproval[];
   onOpenApproval?: (approvalKey: string) => void;
 }) {
+  const { text } = useLanguage();
   // "Verified by our backend" simply means nothing is blocking submission.
   // Warnings and officer-review items don't stop the applicant.
   const verified = result.blockingIssues.length === 0;
@@ -825,22 +830,23 @@ function ValidationReport({
           <TriangleAlert className="size-5 shrink-0" aria-hidden="true" />
           <div>
             <p className="text-sm font-semibold">
-              Not verified yet — a few things need your attention
+              {text("Not verified yet — a few things need your attention")}
             </p>
             <p className="mt-0.5 text-sm opacity-90">
-              Fix the items below, then run “Check documents” again. You can
-              submit once these are cleared.
+              {text(
+                "Fix the items below, then run “Check documents” again. You can submit once these are cleared.",
+              )}
             </p>
           </div>
         </div>
         <IssueList
-          title="Must be fixed before submitting"
+          title={text("Must be fixed before submitting")}
           issues={result.blockingIssues}
           tone="error"
           onOpenApproval={onOpenApproval}
         />
         <IssueList
-          title="Also worth double-checking"
+          title={text("Also worth double-checking")}
           issues={result.warnings}
           tone="warning"
           onOpenApproval={onOpenApproval}
@@ -854,17 +860,20 @@ function ValidationReport({
       <div className="flex items-start gap-3 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-emerald-900">
         <ShieldCheck className="size-5 shrink-0" aria-hidden="true" />
         <div>
-          <p className="text-sm font-semibold">Verified by our system</p>
+          <p className="text-sm font-semibold">
+            {text("Verified by our system")}
+          </p>
           <p className="mt-0.5 text-sm opacity-90">
-            Your documents passed all automated checks. Nothing else is needed
-            from you right now — you can submit.
+            {text(
+              "Your documents passed all automated checks. Nothing else is needed from you right now — you can submit.",
+            )}
           </p>
         </div>
       </div>
 
       {result.warnings.length > 0 && (
         <IssueList
-          title="Optional — you may want to double-check these"
+          title={text("Optional — you may want to double-check these")}
           issues={result.warnings}
           tone="warning"
           onOpenApproval={onOpenApproval}
@@ -873,11 +882,12 @@ function ValidationReport({
 
       <div className="mt-4 rounded-lg border border-[#e4e0d6] bg-white px-4 py-4">
         <p className="text-sm font-semibold text-[#142b45]">
-          What happens after you submit
+          {text("What happens after you submit")}
         </p>
         <p className="mt-1 text-sm text-slate-600">
-          Each department&rsquo;s officer will review the documents assigned to
-          them:
+          {text(
+            "Each department’s officer will review the documents assigned to them:",
+          )}
         </p>
         <ul className="mt-3 space-y-3">
           {approvals.map((approval) => {
@@ -896,10 +906,10 @@ function ValidationReport({
                     aria-hidden="true"
                   />
                   <span className="text-sm font-semibold text-[#142b45]">
-                    {approval.department?.name ?? "Assigned department"}
+                    {approval.department?.name ?? text("Assigned department")}
                   </span>
                   <span className="text-xs text-slate-500">
-                    · for {approval.title}
+                    · {text("for")} {text(approval.title)}
                   </span>
                 </div>
                 <ul className="mt-2 space-y-1 pl-6">
@@ -922,9 +932,9 @@ function ValidationReport({
         </ul>
         <p className="mt-3 flex items-start gap-2 text-xs text-slate-500">
           <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-          Our system confirms your files are present and readable. An officer
-          always verifies the actual contents — this review step is normal and
-          needs nothing further from you.
+          {text(
+            "Our system confirms your files are present and readable. An officer always verifies the actual contents — this review step is normal and needs nothing further from you.",
+          )}
         </p>
       </div>
     </div>
@@ -932,7 +942,7 @@ function ValidationReport({
 }
 
 function ChecklistResult({ project }: { project: Project }) {
-  const { t } = useLanguage();
+  const { t, text } = useLanguage();
   const [savedProject, setSavedProject] = useState(project);
   const [approvals, setApprovals] = useState<ProjectApproval[]>(
     project.approvals,
@@ -996,7 +1006,7 @@ function ChecklistResult({ project }: { project: Project }) {
       setValidationError(
         cause instanceof ProjectApiError
           ? cause.message
-          : "Could not validate the documents.",
+          : text("Could not validate the documents."),
       );
     } finally {
       setValidating(false);
@@ -1018,7 +1028,7 @@ function ChecklistResult({ project }: { project: Project }) {
       setSubmissionError(
         cause instanceof ProjectApiError
           ? cause.message
-          : "Could not submit the application.",
+          : text("Could not submit the application."),
       );
     } finally {
       setSubmittingApplication(false);
@@ -1053,14 +1063,14 @@ function ChecklistResult({ project }: { project: Project }) {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-slate-500">
-            Checklist generated
+            {text("Checklist generated")}
           </p>
           <h2 className="mt-1 font-heading text-4xl font-bold tracking-tight text-[#142b45] sm:text-5xl">
-            {approvals.length} approvals recommended
+            {text("{{count}} approvals recommended", { count: approvals.length })}
           </h2>
           <p className="mt-2 text-base text-slate-600">
-            {project.enterpriseName} · {project.primaryActivity} ·{" "}
-            {project.district} district
+            {project.enterpriseName} · {text(project.primaryActivity)} ·{" "}
+            {text("{{district}} district", { district: text(project.district) })}
           </p>
         </div>
       </header>
@@ -1097,8 +1107,7 @@ function ChecklistResult({ project }: { project: Project }) {
               {t("wizard.checkDocuments")}
             </h3>
             <p className="mt-1 text-sm text-slate-500">
-              Run a pre-submission check on the documents you have uploaded so
-              far.
+              {text("Run a pre-submission check on the documents you have uploaded so far.")}
             </p>
           </div>
           <Button
@@ -1181,7 +1190,7 @@ function ChecklistResult({ project }: { project: Project }) {
             </Button>
           ) : (
             <span className="border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800">
-              Submitted
+              {text("Submitted")}
             </span>
           )}
         </div>
@@ -1205,7 +1214,7 @@ function ChecklistResult({ project }: { project: Project }) {
 }
 
 export function NewProjectWizard() {
-  const { t } = useLanguage();
+  const { t, text } = useLanguage();
   const [current, setCurrent] = useState(0);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -1274,7 +1283,7 @@ export function NewProjectWizard() {
       const value = (
         form?.elements.namedItem(field.name) as HTMLInputElement | null
       )?.value?.trim();
-      if (!value) next[field.name] = `${field.label} is required.`;
+      if (!value) next[field.name] = t("wizard.requiredError", { field: text(field.label) });
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -1343,11 +1352,11 @@ export function NewProjectWizard() {
     if (missing.length > 0) {
       setErrors(
         Object.fromEntries(
-          missing.map((field) => [field.name, `${field.label} is required.`]),
+          missing.map((field) => [field.name, t("wizard.requiredError", { field: text(field.label) })]),
         ),
       );
       setSubmitError(
-        `Please complete: ${missing.map((field) => field.label).join(", ")}.`,
+        t("wizard.completeFields", { fields: missing.map((field) => text(field.label)).join(", ") }),
       );
       setWatched({});
       setCurrent(Math.min(...missing.map((field) => field.stepIndex)));
@@ -1373,7 +1382,7 @@ export function NewProjectWizard() {
       setSubmitError(
         cause instanceof ProjectApiError
           ? cause.message
-          : "Could not save the project. Please try again.",
+          : text("Could not save the project. Please try again."),
       );
     } finally {
       setSubmitting(false);
@@ -1445,7 +1454,7 @@ export function NewProjectWizard() {
                   <span
                     className={`text-sm font-medium ${isCurrent ? "text-white" : isDone ? "text-amber-400" : "text-slate-200"}`}
                   >
-                    {s.label}
+                    {text(s.label)}
                   </span>
                 </button>
               </li>
@@ -1462,12 +1471,12 @@ export function NewProjectWizard() {
               {t("wizard.stepOf", { current: current + 1, total: totalSteps })}
             </p>
             <h2 className="mt-1 font-heading text-2xl font-semibold text-[#142b45] sm:text-3xl">
-              {isChecklist ? t("wizard.checklist") : step.title}
+              {isChecklist ? t("wizard.checklist") : text(step.title)}
             </h2>
             <p className="mt-1.5 text-sm text-slate-500">
               {isChecklist
                 ? t("wizard.confirmClearances")
-                : step.description}
+                : text(step.description)}
             </p>
           </div>
           <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary/10 px-3.5 py-1.5 text-sm font-medium text-primary">
@@ -1478,8 +1487,8 @@ export function NewProjectWizard() {
             {isChecklist
               ? t("wizard.review")
               : step.id === "operations" && selectedIndustry
-                ? selectedIndustry
-                : (step.badge ?? t("wizard.inProgress"))}
+                ? text(selectedIndustry)
+                : (step.badge ? text(step.badge) : t("wizard.inProgress"))}
           </span>
         </div>
 
@@ -1498,9 +1507,9 @@ export function NewProjectWizard() {
             <dl className="mt-6 grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
               {summary.map((item) => (
                 <div key={item.label}>
-                  <dt className="text-sm text-slate-500">{item.label}</dt>
+                  <dt className="text-sm text-slate-500">{text(item.label)}</dt>
                   <dd className="mt-1 font-semibold text-[#142b45]">
-                    {item.value}
+                    {item.value === "—" ? item.value : text(item.value)}
                   </dd>
                 </div>
               ))}
@@ -1524,7 +1533,7 @@ export function NewProjectWizard() {
               const sectionHeader = field.sectionStart ? (
                 <div className="flex items-center gap-3 pt-2 sm:col-span-2">
                   <span className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
-                    {field.sectionStart}
+                    {text(field.sectionStart)}
                   </span>
                   <span
                     className="h-px flex-1 bg-[#e4e0d6]"
@@ -1542,7 +1551,7 @@ export function NewProjectWizard() {
                 return (
                   <fieldset key={field.name} className="sm:col-span-2">
                     <legend className="mb-3 text-sm font-semibold text-[#142b45]">
-                      {field.label}
+                      {text(field.label)}
                     </legend>
                     <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
                       {field.options?.map((opt) => (
@@ -1561,7 +1570,7 @@ export function NewProjectWizard() {
                             }
                             className="size-5 shrink-0 rounded accent-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
                           />
-                          {opt}
+                          {text(opt)}
                         </label>
                       ))}
                     </div>
@@ -1579,7 +1588,7 @@ export function NewProjectWizard() {
                       htmlFor={field.name}
                       className="text-sm font-semibold text-[#142b45]"
                     >
-                      {field.label}
+                      {text(field.label)}
                       {field.required && (
                         <span className="ml-1 text-destructive">*</span>
                       )}
@@ -1592,7 +1601,7 @@ export function NewProjectWizard() {
                     />
                     {field.helper && !error && (
                       <p id={helperId} className="text-xs text-slate-500">
-                        {field.helper}
+                        {text(field.helper)}
                       </p>
                     )}
                     {error && (
@@ -1656,7 +1665,7 @@ export function NewProjectWizard() {
               className="h-11 rounded-full px-6"
               onClick={handleContinue}
             >
-              Save and continue
+              {text("Save and continue")}
               <ArrowRight className="size-4" aria-hidden="true" />
             </Button>
           )}

@@ -213,7 +213,7 @@ function DocumentReviewCard({
   document: InspectorDocument;
   reviewEnabled: boolean;
 }) {
-  const { t } = useLanguage();
+  const { t, text } = useLanguage();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<
     "accepted" | "correction_required" | "rejected"
@@ -260,7 +260,7 @@ function DocumentReviewCard({
             {document.fileName}
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            {document.documentKey} · version {document.version} ·{" "}
+            {text(document.documentKey)} · {t("application.version", { version: document.version })} ·{" "}
             {(document.sizeBytes / 1_000_000).toFixed(2)} MB
           </p>
           <p className="mt-1 text-xs font-medium text-slate-600">
@@ -329,7 +329,7 @@ function ReviewContent({
   projectId: string;
   application: InspectorApplication;
 }) {
-  const { t } = useLanguage();
+  const { t, text } = useLanguage();
   const queryClient = useQueryClient();
   const [decisionNotes, setDecisionNotes] = useState<Record<string, string>>(
     {},
@@ -399,9 +399,9 @@ function ReviewContent({
           {[
             [t("inspector.applicant"), application.applicant.name],
             [t("inspector.mobile"), application.applicant.phoneNumber],
-            [t("inspector.industry"), humanize(application.industry)],
-            [t("inspector.district"), application.district],
-            [t("inspector.activity"), application.primaryActivity],
+            [t("inspector.industry"), text(humanize(application.industry))],
+            [t("inspector.district"), text(application.district)],
+            [t("inspector.activity"), text(application.primaryActivity)],
             [t("inspector.projectStatus"), translateStatus(t, application.projectStatus)],
           ].map(([label, value]) => (
             <div key={label}>
@@ -425,10 +425,12 @@ function ReviewContent({
             {questionnaire.map(([key, value]) => (
               <div key={key}>
                 <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                  {humanize(key.replace(/([a-z])([A-Z])/g, "$1 $2"))}
+                  {text(humanize(key.replace(/([a-z])([A-Z])/g, "$1 $2")))}
                 </dt>
                 <dd className="mt-1 break-words text-sm font-medium text-[#142b45]">
-                  {Array.isArray(value) ? value.join(", ") : String(value)}
+                  {Array.isArray(value)
+                    ? value.map((item) => text(String(item))).join(", ")
+                    : text(String(value))}
                 </dd>
               </div>
             ))}
@@ -462,7 +464,7 @@ function ReviewContent({
                     {translateStatus(t, approval.reviewStatus)}
                   </p>
                   <CardTitle className="mt-2 text-2xl text-[#142b45]">
-                    {approval.title}
+                    {text(approval.title)}
                   </CardTitle>
                 </div>
                 {approval.reviewStatus === "pending" ? (

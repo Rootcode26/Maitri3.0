@@ -81,7 +81,7 @@ const content = {
 } as const satisfies Record<RegistrationMode, object>;
 
 export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
-  const { t } = useLanguage();
+  const { t, text } = useLanguage();
   const page = content[mode];
   const FormIcon = page.formIcon;
   const stepKeys = mode === "applicant"
@@ -110,7 +110,7 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
             className="inline-flex min-h-11 items-center gap-2 rounded-sm text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            Back to Workspaces
+            {text("Back to Workspaces")}
           </Link>
           <p className="mt-7 text-sm font-semibold text-primary">
             {t(mode === "applicant" ? "registration.applicantEyebrow" : "registration.inspectorEyebrow")}

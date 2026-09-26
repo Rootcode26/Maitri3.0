@@ -103,7 +103,7 @@ export function DashboardSidebar({
           {onClose ? (
             <button
               type="button"
-              aria-label="Close navigation"
+              aria-label={t("dashboard.closeNavigation")}
               onClick={onClose}
               className="grid size-10 shrink-0 place-items-center rounded-md border border-[#e4e0d6] text-slate-600 hover:bg-white focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary lg:hidden"
             >
