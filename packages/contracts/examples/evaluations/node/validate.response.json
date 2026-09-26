@@ -38,5 +38,31 @@
       "status": "review_required",
       "reason": "Different PAN values detected; the expected document identity and extraction accuracy must be reviewed."
     }
-  ]
+  ],
+  "attentionAssessment": {
+    "score": 17,
+    "level": "standard",
+    "policyVersion": "prototype-1",
+    "factors": [
+      {
+        "code": "BOILER_DECLARED",
+        "label": "Boiler declared",
+        "points": 10,
+        "explanation": "The declared boiler may need additional manual review."
+      },
+      {
+        "code": "BLOCKING_CORRECTIONS",
+        "label": "Blocking corrections",
+        "points": 5,
+        "explanation": "1 blocking correction was found during validation."
+      },
+      {
+        "code": "MANUAL_REVIEW_ITEMS",
+        "label": "Manual review items",
+        "points": 2,
+        "explanation": "1 manual review item was found during validation."
+      }
+    ],
+    "disclaimer": "This prototype score only estimates the amount of manual review that may be needed. It does not determine eligibility or predict approval."
+  }
 }

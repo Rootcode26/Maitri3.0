@@ -9,6 +9,7 @@ from app.services.rule_provider import RulesUnavailable, evaluate_for_validation
 from app.services.validation import validate_application
 from app.services.document_processing import prepare_validation_documents
 from app.services.document_advisories import build_document_advisories
+from app.services.attention import calculate_attention_assessment
 
 router = APIRouter()
 
@@ -32,7 +33,11 @@ def validate(payload: ValidateRequest, request: Request) -> ValidateResponse:
         advisories = build_document_advisories(request.app, payload)
         if advisories:
             result = result.model_copy(update={'warnings': [*result.warnings, *advisories]})
-        return result
+        assessment = calculate_attention_assessment(processed.project, result)
+        return ValidateResponse.model_validate({
+            **result.model_dump(by_alias=True),
+            'attentionAssessment': assessment.model_dump(by_alias=True),
+        })
     except RulesUnavailable:
         raise HTTPException(503, detail={
             "code": "RULES_UNAVAILABLE",

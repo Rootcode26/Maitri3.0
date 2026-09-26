@@ -7,5 +7,12 @@
   "blockingIssues": [],
   "warnings": [],
   "reviewItems": [],
-  "documentChecks": []
+  "documentChecks": [],
+  "attentionAssessment": {
+    "score": 0,
+    "level": "standard",
+    "policyVersion": "prototype-1",
+    "factors": [],
+    "disclaimer": "This prototype score only estimates the amount of manual review that may be needed. It does not determine eligibility or predict approval."
+  }
 }
