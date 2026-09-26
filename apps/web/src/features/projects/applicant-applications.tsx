@@ -7,7 +7,9 @@ import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { listProjects } from "@/features/projects/project-api";
-import { humanizeStatus, StatusBadge } from "@/features/projects/status-badge";
+import { humanizeStatus, StatusBadge, translateStatus } from "@/features/projects/status-badge";
+import { useLanguage } from "@/components/providers/language-provider";
+import { formatDate } from "@/i18n/format";
 
 const statuses = [
   "all",
@@ -20,6 +22,7 @@ const statuses = [
 ] as const;
 
 export function ApplicantApplications() {
+  const { language, t } = useLanguage();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<(typeof statuses)[number]>("all");
   const query = useQuery({
@@ -83,7 +86,7 @@ export function ApplicantApplications() {
           >
             {statuses.map((item) => (
               <option key={item} value={item}>
-                {item === "all" ? "All statuses" : humanizeStatus(item)}
+                {item === "all" ? t("status.all") : translateStatus(t, item)}
               </option>
             ))}
           </select>
@@ -130,9 +133,9 @@ export function ApplicantApplications() {
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
                     Created{" "}
-                    {new Date(project.createdAt).toLocaleDateString("en-IN")}
+                    {formatDate(project.createdAt, language)}
                     {project.submittedAt
-                      ? ` · Submitted ${new Date(project.submittedAt).toLocaleDateString("en-IN")}`
+                      ? ` · ${t("common.submitted", { date: formatDate(project.submittedAt, language) })}`
                       : ""}
                   </p>
                 </div>

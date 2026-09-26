@@ -85,6 +85,7 @@
 
 body {
   min-width: 320px;
+  font-family: var(--font-geist-sans), "Noto Sans Devanagari", "Nirmala UI", sans-serif;
 }
 
 ::selection {

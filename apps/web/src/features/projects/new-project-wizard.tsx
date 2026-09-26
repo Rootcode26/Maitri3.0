@@ -21,6 +21,7 @@ import {
 } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/language-provider";
 import { DocumentCollection } from "@/features/projects/document-collection";
 import {
   createProject,
@@ -567,6 +568,7 @@ function FieldControl({
   describedById: string;
   defaultValue?: string;
 }) {
+  const { t } = useLanguage();
   const base =
     "w-full rounded-lg border bg-white px-3.5 text-base text-[#142b45] transition-colors outline-none placeholder:text-slate-400 focus-visible:ring-3 focus-visible:ring-primary/40 focus-visible:border-primary aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-destructive/25";
   const invalid = Boolean(error);
@@ -597,7 +599,7 @@ function FieldControl({
           className={`${base} h-12 appearance-none pr-10`}
         >
           <option value="" disabled>
-            Select an option
+            {t("wizard.selectOption")}
           </option>
           {field.options?.map((opt) => (
             <option key={opt} value={opt}>
@@ -930,6 +932,7 @@ function ValidationReport({
 }
 
 function ChecklistResult({ project }: { project: Project }) {
+  const { t } = useLanguage();
   const [savedProject, setSavedProject] = useState(project);
   const [approvals, setApprovals] = useState<ProjectApproval[]>(
     project.approvals,
@@ -1065,7 +1068,7 @@ function ChecklistResult({ project }: { project: Project }) {
       <hr className="my-6 border-[#e4e0d6]" />
 
       <section
-        aria-label="Recommended approvals"
+        aria-label={t("wizard.checklist")}
         className="grid gap-5 sm:grid-cols-2"
       >
         {approvals.map((approval, index) => (
@@ -1084,16 +1087,14 @@ function ChecklistResult({ project }: { project: Project }) {
       </section>
 
       <aside className="mt-6 border-l-4 border-amber-500 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-900">
-        <strong>Why these approvals?</strong> This checklist is generated from
-        the project&rsquo;s activity, location, workforce, utilities and process
-        profile.
+        <strong>{t("wizard.whyApprovals")}</strong> {t("wizard.approvalRationale")}
       </aside>
 
       <section className="mt-6 rounded-2xl bg-white p-6 ring-1 ring-[#e4e0d6] sm:p-7">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="font-heading text-xl font-semibold text-[#142b45]">
-              Check your documents
+              {t("wizard.checkDocuments")}
             </h3>
             <p className="mt-1 text-sm text-slate-500">
               Run a pre-submission check on the documents you have uploaded so
@@ -1108,10 +1109,10 @@ function ChecklistResult({ project }: { project: Project }) {
             aria-busy={validating}
           >
             {validating
-              ? "Checking…"
+              ? t("common.loading")
               : validation
-                ? "Re-check documents"
-                : "Check documents"}
+                ? t("wizard.checkDocuments")
+                : t("wizard.checkDocuments")}
             {validating ? (
               <Loader2
                 className="size-4 animate-spin motion-reduce:animate-none"
@@ -1151,13 +1152,13 @@ function ChecklistResult({ project }: { project: Project }) {
           <div>
             <h3 className="font-heading text-xl font-semibold text-[#142b45]">
               {savedProject.status === "draft"
-                ? "Submit for departmental review"
-                : "Application submitted"}
+                ? t("wizard.submitForReview")
+                : t("wizard.applicationSubmitted")}
             </h3>
             <p className="mt-1 max-w-2xl text-sm text-slate-600">
               {savedProject.status === "draft"
-                ? "Run “Check documents” first. You can submit once there are no blocking issues — warnings and items flagged for officer review don’t stop submission."
-                : "Your assigned departments can now review the application and its documents."}
+                ? t("wizard.documentsReady")
+                : t("wizard.departmentsCanReview")}
             </p>
           </div>
           {savedProject.status === "draft" ? (
@@ -1168,7 +1169,7 @@ function ChecklistResult({ project }: { project: Project }) {
               disabled={submittingApplication || !canSubmit}
               aria-busy={submittingApplication}
             >
-              {submittingApplication ? "Submitting…" : "Submit application"}
+              {submittingApplication ? t("wizard.submitting") : t("wizard.submitApplication")}
               {submittingApplication ? (
                 <Loader2
                   className="size-4 animate-spin motion-reduce:animate-none"
@@ -1204,6 +1205,7 @@ function ChecklistResult({ project }: { project: Project }) {
 }
 
 export function NewProjectWizard() {
+  const { t } = useLanguage();
   const [current, setCurrent] = useState(0);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -1388,7 +1390,7 @@ export function NewProjectWizard() {
       <div className="bg-[#142b45] px-6 py-7 text-white sm:px-8">
         <div className="mb-7">
           <div className="flex items-center justify-between text-xs font-medium text-slate-300">
-            <span>Progress</span>
+            <span>{t("wizard.progress")}</span>
             <span>{progress}%</span>
           </div>
           <div
@@ -1457,14 +1459,14 @@ export function NewProjectWizard() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-slate-500">
-              Step {current + 1} of {totalSteps}
+              {t("wizard.stepOf", { current: current + 1, total: totalSteps })}
             </p>
             <h2 className="mt-1 font-heading text-2xl font-semibold text-[#142b45] sm:text-3xl">
-              {isChecklist ? "Approval checklist" : step.title}
+              {isChecklist ? t("wizard.checklist") : step.title}
             </h2>
             <p className="mt-1.5 text-sm text-slate-500">
               {isChecklist
-                ? "Confirm the clearances generated from your answers."
+                ? t("wizard.confirmClearances")
                 : step.description}
             </p>
           </div>
@@ -1474,10 +1476,10 @@ export function NewProjectWizard() {
               aria-hidden="true"
             />
             {isChecklist
-              ? "Review"
+              ? t("wizard.review")
               : step.id === "operations" && selectedIndustry
                 ? selectedIndustry
-                : (step.badge ?? "In progress")}
+                : (step.badge ?? t("wizard.inProgress"))}
           </span>
         </div>
 
@@ -1488,11 +1490,10 @@ export function NewProjectWizard() {
         ) : isChecklist ? (
           <div className="rounded-2xl border border-[#e4e0d6] bg-[#faf9f6] px-6 py-7 sm:px-8">
             <h3 className="font-heading text-xl font-semibold text-[#142b45]">
-              Ready to generate
+              {t("wizard.readyToGenerate")}
             </h3>
             <p className="mt-3 max-w-2xl leading-relaxed text-slate-600">
-              Your project profile is complete. UdyogSetu will apply the
-              demonstration rules and prepare the approval checklist.
+              {t("wizard.projectComplete")}
             </p>
             <dl className="mt-6 grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
               {summary.map((item) => (
@@ -1629,7 +1630,7 @@ export function NewProjectWizard() {
             onClick={() => goTo(Math.max(current - 1, 0))}
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            Back
+            {t("wizard.back")}
           </Button>
           {isChecklist ? (
             <Button
@@ -1639,7 +1640,7 @@ export function NewProjectWizard() {
               disabled={submitting}
               aria-busy={submitting}
             >
-              {submitting ? "Generating…" : "Generate checklist"}
+              {submitting ? t("wizard.generating") : t("wizard.generateChecklist")}
               {submitting ? (
                 <Loader2
                   className="size-4 animate-spin motion-reduce:animate-none"

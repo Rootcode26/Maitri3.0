@@ -1,9 +1,13 @@
+"use client";
+
 import { Building2, UserRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { PortalBrand } from "@/components/layout/site-header";
+import { LanguageSelector } from "@/components/layout/language-selector";
 import { LoginForm } from "@/features/auth/login-form";
+import { useLanguage } from "@/components/providers/language-provider";
 
 export type LoginMode = "applicant" | "inspector";
 
@@ -47,6 +51,7 @@ function Brand({ tone = "light" }: { tone?: "dark" | "light" }) {
 }
 
 export function LoginExperience({ mode }: { mode: LoginMode }) {
+  const { t } = useLanguage();
   const content = workspaceContent[mode];
   const Icon = content.icon;
 
@@ -128,11 +133,12 @@ export function LoginExperience({ mode }: { mode: LoginMode }) {
           <div className="lg:hidden">
             <Brand tone="dark" />
           </div>
+          <LanguageSelector />
           <Link
             href="/"
             className="inline-flex min-h-11 items-center rounded-sm px-2 text-base font-semibold text-[#315f9f] underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-[#315f9f]"
           >
-            Portal Home
+            {t("auth.portalHome")}
           </Link>
         </header>
         <div className="flex flex-1 items-start px-5 pt-4 pb-6 sm:px-8 sm:pt-5 sm:pb-8 lg:px-12 xl:px-20">

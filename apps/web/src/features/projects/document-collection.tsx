@@ -4,6 +4,7 @@ import { ArrowLeft, Check, Loader2, Upload, X } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/language-provider";
 import {
   deleteProjectDocument,
   ProjectApiError,
@@ -399,6 +400,7 @@ export function DocumentCollection({
   onBack: () => void;
   onUploadedChange?: (documents: ProjectDocument[]) => void;
 }) {
+  const { t } = useLanguage();
   const specs = useMemo(() => documents.map(specFor), [documents]);
   const total = specs.length;
 
@@ -530,14 +532,14 @@ export function DocumentCollection({
         className="mb-5 inline-flex items-center gap-1.5 rounded-sm text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
-        Back to approvals
+        {t("documents.backApprovals")}
       </button>
 
       <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
         {/* Left rail */}
         <aside className="h-fit rounded-2xl bg-white p-6 ring-1 ring-[#e4e0d6]">
           <h2 className="font-heading text-xl font-semibold text-[#142b45]">
-            Required documents
+            {t("documents.required")}
           </h2>
           <p className="mt-1 text-xs font-medium tracking-wide text-slate-400 uppercase">
             {approvalTitle}
@@ -636,7 +638,7 @@ export function DocumentCollection({
                 className={`size-2 rounded-full ${spec.required ? "bg-primary" : "bg-slate-500"}`}
                 aria-hidden="true"
               />
-              {spec.required ? "Required" : "Optional"}
+              {spec.required ? t("documents.required") : t("documents.optional")}
             </span>
           </div>
           <p className="mt-3 text-base text-slate-600">{spec.description}</p>
@@ -645,19 +647,19 @@ export function DocumentCollection({
 
           <dl className="grid grid-cols-1 gap-6 sm:grid-cols-3">
             <div>
-              <dt className="text-sm text-slate-500">Accepted formats</dt>
+              <dt className="text-sm text-slate-500">{t("documents.acceptedFormats")}</dt>
               <dd className="mt-1 font-semibold text-[#142b45]">
                 {spec.formats.join(", ")}
               </dd>
             </div>
             <div>
-              <dt className="text-sm text-slate-500">Maximum size</dt>
+              <dt className="text-sm text-slate-500">{t("documents.maximumSize")}</dt>
               <dd className="mt-1 font-semibold text-[#142b45]">
-                {spec.maxSizeMb} MB per file
+                {spec.maxSizeMb} {t("documents.perFile")}
               </dd>
             </div>
             <div>
-              <dt className="text-sm text-slate-500">Files required</dt>
+              <dt className="text-sm text-slate-500">{t("documents.filesRequired")}</dt>
               <dd className="mt-1 font-semibold text-[#142b45]">
                 {spec.filesRequired}
               </dd>
@@ -669,7 +671,7 @@ export function DocumentCollection({
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
             <div>
               <h4 className="font-heading text-lg font-semibold text-[#142b45]">
-                What your document must include
+                {t("documents.mustInclude")}
               </h4>
               <ul className="mt-3 space-y-2.5 text-slate-600">
                 {spec.mustInclude.map((item) => (
@@ -685,7 +687,7 @@ export function DocumentCollection({
             </div>
             <div>
               <h4 className="font-heading text-lg font-semibold text-[#142b45]">
-                Quality and preparation
+                {t("documents.quality")}
               </h4>
               {spec.quality.map((para) => (
                 <p key={para} className="mt-3 leading-relaxed text-slate-600">
@@ -698,7 +700,7 @@ export function DocumentCollection({
           <hr className="my-6 border-[#e4e0d6]" />
 
           <h4 className="font-heading text-lg font-semibold text-[#142b45]">
-            Select your document
+            {t("documents.selectDocument")}
           </h4>
 
           <input
@@ -721,7 +723,7 @@ export function DocumentCollection({
                 aria-hidden="true"
               />
               <span className="text-sm font-medium text-[#142b45]">
-                Uploading…
+                {t("documents.uploading")}
               </span>
             </div>
           ) : currentUploaded ? (
@@ -736,7 +738,7 @@ export function DocumentCollection({
                     {currentUploaded.fileName}
                   </span>
                   <span className="block text-xs text-slate-500">
-                    Uploaded · version {currentUploaded.version}
+                    {t("documents.uploadedVersion", { version: currentUploaded.version })}
                   </span>
                 </span>
               </span>
@@ -746,7 +748,7 @@ export function DocumentCollection({
                   onClick={() => inputRef.current?.click()}
                   className="rounded-sm text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
-                  Replace
+                  {t("documents.replace")}
                 </button>
                 <button
                   type="button"
@@ -754,7 +756,7 @@ export function DocumentCollection({
                   className="inline-flex items-center gap-1 rounded-sm text-sm font-medium text-slate-600 hover:text-destructive focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
                   <X className="size-4" aria-hidden="true" />
-                  Remove
+                  {t("documents.remove")}
                 </button>
               </div>
             </div>
@@ -780,21 +782,20 @@ export function DocumentCollection({
             >
               <Upload className="size-7 text-primary" aria-hidden="true" />
               <p className="text-lg font-semibold text-[#142b45]">
-                Drag and drop your file here
+                {t("documents.dropHere")}
               </p>
               <p className="text-sm text-slate-500">
-                or select a file from a folder on your device
+                {t("documents.orSelect")}
               </p>
               <Button
                 size="lg"
                 className="h-11 rounded-full px-6"
                 onClick={() => inputRef.current?.click()}
               >
-                Select from folder
+                {t("documents.selectFolder")}
               </Button>
               <p className="text-sm text-slate-500">
-                {spec.formats.join(", ")} only · Maximum {spec.maxSizeMb} MB ·
-                One file
+                {t("documents.fileLimit", { formats: spec.formats.join(", "), size: spec.maxSizeMb })}
               </p>
             </div>
           )}
@@ -806,15 +807,14 @@ export function DocumentCollection({
           )}
 
           <p className="mt-6 text-sm leading-relaxed text-slate-500">
-            Files are uploaded securely and their type and size are verified on
-            the server. This does not submit your application.
+            {t("documents.secureUpload")}
           </p>
 
           <hr className="my-6 border-[#e4e0d6]" />
 
           <div className="flex items-center justify-between gap-4">
             <p className="text-sm text-slate-500">
-              {remaining} {remaining === 1 ? "document" : "documents"} remaining
+              {t("documents.remaining", { count: remaining })}
             </p>
             {isLast ? (
               <Button
@@ -822,7 +822,7 @@ export function DocumentCollection({
                 className="h-11 rounded-full px-6"
                 onClick={onBack}
               >
-                Back to approvals
+                {t("documents.backApproval")}
               </Button>
             ) : (
               <Button
@@ -830,7 +830,7 @@ export function DocumentCollection({
                 className="h-11 rounded-full px-6"
                 onClick={() => setCurrent((c) => Math.min(c + 1, total - 1))}
               >
-                Next document
+                {t("documents.next")}
               </Button>
             )}
           </div>

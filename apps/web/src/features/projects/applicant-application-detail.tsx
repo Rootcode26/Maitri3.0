@@ -14,6 +14,8 @@ import {
   type ProjectDocument,
 } from "@/features/projects/project-api";
 import { humanizeStatus, StatusBadge } from "@/features/projects/status-badge";
+import { useLanguage } from "@/components/providers/language-provider";
+import { formatDate } from "@/i18n/format";
 
 function CorrectDocument({
   projectId,
@@ -22,6 +24,7 @@ function CorrectDocument({
   projectId: string;
   document: ProjectDocument;
 }) {
+  const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const [message, setMessage] = useState<string | null>(null);
@@ -34,7 +37,7 @@ function CorrectDocument({
         file,
       ),
     onSuccess: async () => {
-      setMessage("Corrected version submitted for review.");
+      setMessage(t("application.correctedSubmitted"));
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["applicant-application", projectId],
@@ -47,17 +50,17 @@ function CorrectDocument({
       setMessage(
         cause instanceof Error
           ? cause.message
-          : "Could not upload the corrected file.",
+          : t("application.uploadError"),
       ),
   });
   return (
     <div className="mt-3 border border-amber-300 bg-amber-50 p-4">
       <p className="text-sm font-semibold text-amber-950">
-        Correction requested
+        {t("application.correctionRequested")}
       </p>
       <p className="mt-1 text-sm text-amber-900">
         {document.review?.comment ??
-          "Replace this document with a corrected version."}
+          t("application.replaceDocument")}
       </p>
       <input
         ref={inputRef}
@@ -76,7 +79,7 @@ function CorrectDocument({
         onClick={() => inputRef.current?.click()}
       >
         <FileUp aria-hidden="true" />{" "}
-        {upload.isPending ? "Uploading…" : "Upload corrected version"}
+        {upload.isPending ? t("application.uploading") : t("application.uploadCorrected")}
       </Button>
       {message ? (
         <p role="status" className="mt-2 text-sm font-medium text-slate-700">
@@ -92,6 +95,7 @@ export function ApplicantApplicationDetail({
 }: {
   projectId: string;
 }) {
+  const { language, t } = useLanguage();
   const query = useQuery({
     queryKey: ["applicant-application", projectId],
     queryFn: () => getApplicantApplication(projectId),
@@ -115,7 +119,7 @@ export function ApplicantApplicationDetail({
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (cause) {
       setDownloadError(
-        cause instanceof Error ? cause.message : "Could not open the document.",
+        cause instanceof Error ? cause.message : t("application.documentOpenError"),
       );
     }
   }
@@ -123,8 +127,7 @@ export function ApplicantApplicationDetail({
   if (query.isPending)
     return (
       <div className="m-6 flex items-center gap-3 border border-[#e4e0d6] p-8 text-slate-600">
-        <Loader2 className="size-5 animate-spin" aria-hidden="true" /> Loading
-        application…
+        <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("application.loading")}
       </div>
     );
   if (query.isError)
@@ -133,12 +136,12 @@ export function ApplicantApplicationDetail({
         role="alert"
         className="m-6 border border-destructive/30 bg-destructive/5 p-6 text-destructive"
       >
-        <p className="font-semibold">This application could not be loaded.</p>
+        <p className="font-semibold">{t("application.loadError")}</p>
         <Link
           href="/applicant/applications"
           className="mt-3 inline-block font-semibold underline"
         >
-          Return to applications
+          {t("application.returnApplications")}
         </Link>
       </div>
     );
@@ -157,12 +160,12 @@ export function ApplicantApplicationDetail({
         href="/applicant/applications"
         className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm font-semibold text-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
-        <ArrowLeft className="size-4" aria-hidden="true" /> Back to applications
+        <ArrowLeft className="size-4" aria-hidden="true" /> {t("application.backApplications")}
       </Link>
       <header className="mt-5 flex flex-wrap items-start justify-between gap-4 border-b border-[#e4e0d6] pb-6">
         <div>
           <p className="text-sm font-semibold text-primary">
-            Application details
+            {t("application.details")}
           </p>
           <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-[#142b45] sm:text-4xl">
             {application.enterpriseName}
@@ -180,18 +183,17 @@ export function ApplicantApplicationDetail({
       {application.status === "correction_required" ? (
         <div className="mt-6 border-l-4 border-amber-500 bg-amber-50 px-5 py-4">
           <h2 className="font-semibold text-amber-950">
-            Corrections are required
+            {t("application.correctionsRequired")}
           </h2>
           <p className="mt-1 text-sm text-amber-900">
-            Replace each document marked for correction. The affected
-            departmental review will automatically return to the inspector.
+            {t("application.correctionInstructions")}
           </p>
         </div>
       ) : null}
 
       <section className="mt-7">
         <h2 className="text-2xl font-bold text-[#142b45]">
-          Department progress
+          {t("application.departmentProgress")}
         </h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           {application.approvals.map((approval) => (
@@ -211,7 +213,7 @@ export function ApplicantApplicationDetail({
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-slate-600">
-                  Expected processing time: {approval.processingDays} days
+                  {t("application.processingTime", { days: approval.processingDays })}
                 </p>
                 {approval.decisionNote ? (
                   <p className="mt-3 border-l-4 border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700">
@@ -227,16 +229,16 @@ export function ApplicantApplicationDetail({
       <section className="mt-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-[#142b45]">Documents</h2>
+          <h2 className="text-2xl font-bold text-[#142b45]">{t("application.documents")}</h2>
             <p className="mt-1 text-sm text-slate-600">
-              Latest version of every submitted document.
+              {t("application.latestDocuments")}
             </p>
           </div>
           <Link
             href="/applicant/documents"
             className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
           >
-            View all versions
+            {t("application.viewVersions")}
           </Link>
         </div>
         {downloadError ? (
@@ -257,7 +259,7 @@ export function ApplicantApplicationDetail({
                       {document.documentName ?? document.fileName}
                     </p>
                     <p className="mt-1 break-all text-sm text-slate-600">
-                      {document.fileName} · Version {document.version} ·{" "}
+                      {document.fileName} · {t("application.version", { version: document.version })} ·{" "}
                       {(document.sizeBytes / 1_000_000).toFixed(2)} MB
                     </p>
                     <div className="mt-2">
@@ -272,7 +274,7 @@ export function ApplicantApplicationDetail({
                     className="h-10 rounded-md"
                     onClick={() => download(document)}
                   >
-                    <Download aria-hidden="true" /> Open
+                    <Download aria-hidden="true" /> {t("application.open")}
                   </Button>
                 </div>
                 {application.status === "correction_required" &&
@@ -289,7 +291,7 @@ export function ApplicantApplicationDetail({
             ))
           ) : (
             <p className="border border-dashed border-[#aeb7c4] p-6 text-sm text-slate-600">
-              No documents have been uploaded.
+              {t("application.noDocuments")}
             </p>
           )}
         </div>
@@ -299,7 +301,7 @@ export function ApplicantApplicationDetail({
         <Card className="rounded-md border-[#d8d3c8]">
           <CardHeader>
             <CardTitle className="text-xl text-[#142b45]">
-              Questionnaire summary
+              {t("application.questionnaire")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -320,7 +322,7 @@ export function ApplicantApplicationDetail({
         <Card className="rounded-md border-[#d8d3c8]">
           <CardHeader>
             <CardTitle className="text-xl text-[#142b45]">
-              Status timeline
+              {t("application.timeline")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -343,14 +345,14 @@ export function ApplicantApplicationDetail({
                       {event.note ?? `Updated by ${event.actorName}`}
                     </p>
                     <time className="mt-1 block text-xs text-slate-500">
-                      {new Date(event.createdAt).toLocaleString("en-IN")}
+                      {formatDate(event.createdAt, language)}
                     </time>
                   </li>
                 ))}
               </ol>
             ) : (
               <p className="text-sm text-slate-600">
-                No status changes have been recorded yet.
+                {t("application.noTimeline")}
               </p>
             )}
           </CardContent>

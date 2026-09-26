@@ -22,11 +22,13 @@ import {
 } from "@/features/auth/auth-options";
 import { FieldError, FormStatus } from "@/features/auth/form-message";
 import { authRequest, getAuthErrorMessage } from "@/lib/auth-api";
+import { useLanguage } from "@/components/providers/language-provider";
 
 const nativeSelectClass =
   "h-11 w-full rounded-md border border-input bg-white px-3 text-base text-[#18263d] outline-none focus-visible:border-[#315f9f] focus-visible:ring-3 focus-visible:ring-[#315f9f]/25 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
 
 export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
+  const { t } = useLanguage();
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const {
@@ -82,7 +84,7 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
       <FormStatus message={serverError} />
       {inspector && (
         <div className="space-y-1.5">
-          <Label htmlFor="department">Department</Label>
+          <Label htmlFor="department">{t("auth.department")}</Label>
           <Controller
             name="department"
             control={control}
@@ -99,7 +101,7 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
                 }
               >
                 <option value="" disabled>
-                  Select your department
+                  {t("auth.selectDepartment")}
                 </option>
                 {allInspectorDepartments.map((department) => (
                   <option key={department.value} value={department.value}>
@@ -110,8 +112,7 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
             )}
           />
           <p id="department-hint" className="text-xs text-muted-foreground">
-            Select the government department associated with this inspector
-            account.
+            {t("auth.departmentHint")}
           </p>
           <FieldError
             id="department-error"
@@ -121,7 +122,7 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
       )}
       {!inspector && (
         <div className="space-y-1.5">
-          <Label htmlFor="register-industry">Industry</Label>
+          <Label htmlFor="register-industry">{t("auth.industry")}</Label>
           <Controller
             name="industry"
             control={control}
@@ -146,19 +147,19 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
             )}
           />
           <p className="text-xs text-muted-foreground">
-            Select the industry for your approval application.
+            {t("auth.industryHint")}
           </p>
           <FieldError id="industry-error" message={errors.industry?.message} />
         </div>
       )}
       <div className="space-y-1.5">
-        <Label htmlFor="name">Full name</Label>
+        <Label htmlFor="name">{t("auth.fullName")}</Label>
         <Input
           id="name"
           autoComplete="name"
           maxLength={150}
           className="h-11 bg-white"
-          placeholder="Enter your full name"
+          placeholder={t("auth.fullNamePlaceholder")}
           aria-invalid={Boolean(errors.name)}
           aria-describedby={errors.name ? "name-error" : undefined}
           {...register("name")}
@@ -166,7 +167,7 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
         <FieldError id="name-error" message={errors.name?.message} />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="phone">Mobile number</Label>
+        <Label htmlFor="phone">{t("auth.mobileNumber")}</Label>
         <div className="flex">
           <span
             className="flex h-11 items-center rounded-l-md border border-r-0 border-input bg-slate-50 px-3 text-sm text-slate-600"
@@ -190,7 +191,7 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
         <FieldError id="register-phone-error" message={errors.phone?.message} />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="new-password">Create password</Label>
+        <Label htmlFor="new-password">{t("auth.createPassword")}</Label>
         <Input
           id="new-password"
           type="password"
@@ -204,7 +205,7 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
           {...register("password")}
         />
         <p id="password-hint" className="text-xs text-muted-foreground">
-          Use at least 8 characters. Password managers and paste are supported.
+          {t("auth.passwordHint")}
         </p>
         <FieldError
           id="register-password-error"
@@ -219,20 +220,20 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
         aria-busy={isSubmitting}
       >
         {isSubmitting
-          ? "Creating account…"
+          ? t("auth.creatingAccount")
           : inspector
-            ? "Register inspector account"
-            : "Create account and verify mobile"}{" "}
+            ? t("auth.registerInspector")
+            : t("auth.createAndVerify")}{" "}
         <ArrowRight aria-hidden="true" />
       </Button>
       <Separator />
       <p className="text-center text-sm text-slate-600">
-        Already registered?{" "}
+        {t("auth.alreadyRegistered")}{" "}
         <Link
           href={inspector ? "/inspector/login" : "/auth/login"}
           className="font-semibold text-primary underline-offset-4 hover:underline"
         >
-          Sign in
+          {t("auth.signIn")}
         </Link>
       </p>
     </form>

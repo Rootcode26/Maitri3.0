@@ -19,6 +19,7 @@ import {
 } from "@/features/auth/auth-form-schemas";
 import { FieldError, FormStatus } from "@/features/auth/form-message";
 import { sessionQueryKey } from "@/features/auth/session-panel";
+import { useLanguage } from "@/components/providers/language-provider";
 import {
   authRequest,
   getAuthErrorMessage,
@@ -27,10 +28,6 @@ import {
 } from "@/lib/auth-api";
 
 type LoginMode = "applicant" | "inspector";
-const submitLabels: Record<LoginMode, string> = {
-  applicant: "Sign In to Applicant Workspace",
-  inspector: "Sign In to Inspector Workspace",
-};
 const expectedRoles: Record<LoginMode, UserRole> = {
   applicant: "applicant",
   inspector: "inspector",
@@ -41,6 +38,7 @@ const postLoginRoutes: Record<LoginMode, string> = {
 };
 
 export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
+  const { t } = useLanguage();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
@@ -80,7 +78,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
     <form onSubmit={onSubmit} noValidate className="space-y-3">
       <FormStatus message={serverError} />
       <div className="space-y-1.5">
-        <Label htmlFor="phone">Registered mobile number</Label>
+        <Label htmlFor="phone">{t("auth.mobile")}</Label>
         <div className="flex">
           <span
             className="flex h-12 items-center rounded-l-md border border-r-0 border-[#aeb7c4] bg-slate-50 px-3 text-sm text-slate-600"
@@ -103,18 +101,18 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
           />
         </div>
         <p id="phone-hint" className="text-xs text-muted-foreground">
-          10-digit Indian mobile number, starting with 6, 7, 8 or 9.
+          {t("auth.mobileHint")}
         </p>
         <FieldError id="phone-error" message={errors.phone?.message} />
       </div>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-4">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t("auth.password")}</Label>
           <Link
             href={`/auth/forgot-password?mode=${mode}`}
             className="text-sm font-medium text-primary underline-offset-4 hover:underline"
           >
-            Forgot password?
+            {t("auth.forgotPassword")}
           </Link>
         </div>
         <div className="relative">
@@ -122,7 +120,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
             id="password"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
-            placeholder="Enter your password…"
+            placeholder={t("auth.passwordPlaceholder")}
             className="h-12 border-[#aeb7c4] bg-white pr-11 text-base focus-visible:border-[#315f9f] focus-visible:ring-[#315f9f]/25"
             aria-invalid={Boolean(errors.password)}
             aria-describedby={errors.password ? "password-error" : undefined}
@@ -132,7 +130,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
             type="button"
             onClick={() => setShowPassword((value) => !value)}
             className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-slate-500 hover:text-slate-800 focus-visible:outline-3 focus-visible:outline-primary"
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
           >
             {showPassword ? (
               <EyeOff className="size-4" aria-hidden="true" />
@@ -159,7 +157,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
           htmlFor="remember"
           className="cursor-pointer font-normal text-slate-600"
         >
-          Remember this device for 30 days
+          {t("auth.rememberDevice")}
         </Label>
       </div>
       <Button
@@ -169,19 +167,19 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
         disabled={isSubmitting}
         aria-busy={isSubmitting}
       >
-        <span>{isSubmitting ? "Signing in…" : submitLabels[mode]}</span>
+        <span>{isSubmitting ? t("auth.signingIn") : t(mode === "applicant" ? "auth.signInApplicant" : "auth.signInInspector")}</span>
         <ArrowRight aria-hidden="true" />
       </Button>
       {mode === "applicant" && (
         <>
           <Separator />
           <p className="text-center text-sm text-slate-600">
-            New applicant?{" "}
+            {t("auth.newApplicant")}{" "}
             <Link
               href="/auth/register"
               className="font-semibold text-[#315f9f] underline-offset-4 hover:underline"
             >
-              Create an Account
+              {t("auth.createApplicant")}
             </Link>
           </p>
         </>
@@ -190,12 +188,12 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
         <>
           <Separator />
           <p className="text-center text-sm text-slate-600">
-            New inspector?{" "}
+            {t("auth.newInspector")}{" "}
             <Link
               href="/inspector/register"
               className="font-semibold text-[#315f9f] underline-offset-4 hover:underline"
             >
-              Create an Inspector Account
+              {t("auth.createInspector")}
             </Link>
           </p>
         </>

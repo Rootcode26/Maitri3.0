@@ -1,4 +1,18 @@
 import { cn } from "cn";
+import { useLanguage } from "@/components/providers/language-provider";
+import type { TranslationKey } from "@/i18n/language/en";
+
+export const statusTranslationKeys: Record<string, TranslationKey> = {
+  draft: "status.draft", submitted: "status.submitted", under_review: "status.under_review",
+  correction_required: "status.correction_required", approved: "status.approved", rejected: "status.rejected",
+  pending: "status.pending", resolved: "status.resolved", open: "status.open", accepted: "status.accepted",
+  responded: "status.responded", verified: "status.verified", expired: "status.expired",
+  awaiting_verification: "status.awaiting_verification",
+};
+
+export function translateStatus(t: (key: TranslationKey) => string, status: string) {
+  return statusTranslationKeys[status] ? t(statusTranslationKeys[status]) : humanizeStatus(status);
+}
 
 export function humanizeStatus(value: string) {
   return value
@@ -13,6 +27,7 @@ export function StatusBadge({
   status: string;
   className?: string;
 }) {
+  const { t } = useLanguage();
   const tone =
     status === "approved" || status === "accepted" || status === "resolved"
       ? "border-emerald-300 bg-emerald-50 text-emerald-800"
@@ -31,7 +46,7 @@ export function StatusBadge({
         className,
       )}
     >
-      {humanizeStatus(status)}
+      {translateStatus(t, status)}
     </span>
   );
 }
