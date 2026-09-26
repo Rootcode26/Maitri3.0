@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ArrowLeft,
   Building2,
@@ -11,6 +13,7 @@ import Link from "next/link";
 
 import { SiteHeader } from "@/components/layout/site-header";
 import { RegisterForm } from "@/features/auth/register-form";
+import { useLanguage } from "@/components/providers/language-provider";
 
 type RegistrationMode = "applicant" | "inspector";
 
@@ -78,8 +81,15 @@ const content = {
 } as const satisfies Record<RegistrationMode, object>;
 
 export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
+  const { t, text } = useLanguage();
   const page = content[mode];
   const FormIcon = page.formIcon;
+  const stepKeys = mode === "applicant"
+    ? ["registration.createAccount", "registration.verifyMobile", "registration.startProject"] as const
+    : ["registration.createAccount", "registration.verifyMobile", "registration.openWorkspace"] as const;
+  const descriptionKeys = mode === "applicant"
+    ? ["registration.addApplicantDetails", "registration.confirmNumber", "registration.startProjectDescription"] as const
+    : ["registration.addInspectorDetails", "registration.confirmNumber", "registration.openWorkspaceDescription"] as const;
 
   return (
     <div className="min-h-dvh bg-background text-[#142b45]">
@@ -87,9 +97,9 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
         href="#registration-form"
         className="sr-only z-50 bg-white p-3 text-[#142b45] focus:fixed focus:top-4 focus:left-4 focus:not-sr-only"
       >
-        Skip to registration form
+        {t("registration.skip")}
       </a>
-      <SiteHeader actionLabel="Change workspace" />
+      <SiteHeader actionLabel={t("header.changeWorkspace")} />
       <main className="mx-auto grid w-full max-w-7xl gap-8 px-5 py-8 sm:px-8 sm:py-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(30rem,1.1fr)] lg:items-start lg:gap-14 lg:px-10 lg:py-16">
         <section
           className="lg:sticky lg:top-10"
@@ -100,24 +110,24 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
             className="inline-flex min-h-11 items-center gap-2 rounded-sm text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            Back to Workspaces
+            {text("Back to Workspaces")}
           </Link>
           <p className="mt-7 text-sm font-semibold text-primary">
-            {page.eyebrow}
+            {t(mode === "applicant" ? "registration.applicantEyebrow" : "registration.inspectorEyebrow")}
           </p>
           <h1
             id="registration-heading"
             className="mt-3 max-w-xl text-pretty text-4xl leading-[1.08] font-semibold tracking-[-0.035em] text-[#142b45] sm:text-5xl"
           >
-            {page.title}
+            {t(mode === "applicant" ? "registration.applicantTitle" : "registration.inspectorTitle")}
           </h1>
           <p className="mt-5 max-w-xl text-pretty text-base leading-7 text-slate-600 sm:text-lg">
-            {page.description}
+            {t(mode === "applicant" ? "registration.applicantDescription" : "registration.inspectorDescription")}
           </p>
 
           <ol
             className="mt-9 max-w-xl space-y-1"
-            aria-label="Registration process"
+            aria-label={t("registration.process")}
           >
             {page.steps.map((step, index) => {
               const Icon = step.icon;
@@ -137,10 +147,10 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
                   </span>
                   <div className="pt-1">
                     <h2 className="font-semibold text-[#142b45]">
-                      {index + 1}. {step.title}
+                      {index + 1}. {t(stepKeys[index])}
                     </h2>
                     <p className="mt-1 text-sm leading-6 text-slate-600">
-                      {step.description}
+                      {t(descriptionKeys[index])}
                     </p>
                   </div>
                 </li>
@@ -161,16 +171,16 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
               </span>
               <div>
                 <p className="text-sm font-semibold text-primary">
-                  {page.formEyebrow}
+                  {t(mode === "applicant" ? "registration.newApplicant" : "registration.newInspector")}
                 </p>
                 <h2
                   id="form-heading"
                   className="mt-1 text-2xl font-semibold tracking-tight text-[#142b45] sm:text-3xl"
                 >
-                  {page.formTitle}
+                  {t("registration.accountDetails")}
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {page.formDescription}
+                  {t("registration.requiredAndVerify")}
                 </p>
               </div>
             </div>

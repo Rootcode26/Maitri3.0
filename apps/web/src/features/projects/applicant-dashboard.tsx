@@ -20,6 +20,9 @@ import {
   type ProjectSummary,
 } from "@/features/projects/project-api";
 import { StatusBadge } from "@/features/projects/status-badge";
+import { useLanguage } from "@/components/providers/language-provider";
+import { formatDate } from "@/i18n/format";
+import type { TranslationKey } from "@/i18n/language/en";
 
 function humanize(value: string) {
   return value
@@ -34,6 +37,7 @@ function ClarificationCard({
   project: ProjectSummary;
   clarification: ApplicantClarification;
 }) {
+  const { language, t } = useLanguage();
   const queryClient = useQueryClient();
   const [response, setResponse] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +55,7 @@ function ClarificationCard({
     },
     onError: (cause) =>
       setError(
-        cause instanceof Error ? cause.message : "Could not send response.",
+        cause instanceof Error ? cause.message : t("applicant.sendError"),
       ),
   });
 
@@ -67,12 +71,12 @@ function ClarificationCard({
           </h3>
           <p className="mt-2 text-sm text-slate-700">{clarification.message}</p>
           <p className="mt-2 text-xs text-slate-500">
-            Requested by {clarification.inspectorName}
+            {t("applicant.requestedBy", { name: clarification.inspectorName })}
             {clarification.documentName
-              ? ` · regarding ${clarification.documentName}`
+              ? ` · ${clarification.documentName}`
               : ""}
             {clarification.dueAt
-              ? ` · due ${new Date(clarification.dueAt).toLocaleDateString("en-IN")}`
+              ? t("applicant.due", { date: formatDate(clarification.dueAt, language) })
               : ""}
           </p>
         </div>
@@ -85,20 +89,20 @@ function ClarificationCard({
           key={item.id}
           className="mt-3 border-l-4 border-primary/40 bg-slate-50 px-4 py-3 text-sm text-slate-700"
         >
-          <p className="font-semibold text-[#142b45]">Your response</p>
+          <p className="font-semibold text-[#142b45]">{t("applicant.yourResponse")}</p>
           <p className="mt-1">{item.message}</p>
         </div>
       ))}
       {clarification.status !== "resolved" ? (
         <div className="mt-4">
           <label className="text-sm font-semibold text-[#142b45]">
-            Response
+            {t("applicant.response")}
             <textarea
               className="mt-2 min-h-24 w-full rounded-md border border-[#aeb7c4] bg-white p-3 font-normal"
               maxLength={2000}
               value={response}
               onChange={(event) => setResponse(event.target.value)}
-              placeholder="Provide the requested information or explain the correction made."
+              placeholder={t("applicant.responsePlaceholder")}
             />
           </label>
           <Button
@@ -107,7 +111,7 @@ function ClarificationCard({
             disabled={send.isPending || response.trim().length < 2}
             onClick={() => send.mutate()}
           >
-            {send.isPending ? "Sending…" : "Send response"}
+            {send.isPending ? t("applicant.sending") : t("applicant.sendResponse")}
           </Button>
           {error ? (
             <p
@@ -124,6 +128,7 @@ function ClarificationCard({
 }
 
 export function ApplicantDashboard() {
+  const { t } = useLanguage();
   const projects = useQuery({
     queryKey: ["applicant-projects"],
     queryFn: listProjects,
@@ -154,7 +159,7 @@ export function ApplicantDashboard() {
   if (projects.isPending)
     return (
       <div className="flex items-center gap-3 p-8 text-slate-600">
-        <Loader2 className="size-5 animate-spin" /> Loading workspace…
+        <Loader2 className="size-5 animate-spin" /> {t("applicant.loading")}
       </div>
     );
   if (projects.isError)
@@ -163,34 +168,34 @@ export function ApplicantDashboard() {
         role="alert"
         className="m-8 border border-destructive/30 bg-destructive/5 p-6 text-destructive"
       >
-        Could not load your applicant workspace.
+        {t("applicant.loadError")}
       </div>
     );
 
   const stats = [
     {
-      label: "Projects",
+      label: "applicant.projects",
       value: String(projects.data.length),
-      note: "Across all stages",
+      note: "applicant.allStages",
     },
     {
-      label: "Approvals in progress",
+      label: "applicant.approvalsInProgress",
       value: String(active),
-      note: "Currently being processed",
+      note: "applicant.processing",
     },
     {
-      label: "Action needed",
+      label: "applicant.actionNeeded",
       value: String(actionNeeded),
       note: actionNeeded
-        ? "Clarifications need a response"
-        : "Nothing needs attention",
+        ? "applicant.clarificationNeeded"
+        : "applicant.noAttention",
     },
     {
-      label: "Approved projects",
+      label: "applicant.approvedProjects",
       value: String(
         projects.data.filter((project) => project.status === "approved").length,
       ),
-      note: "Completed review",
+      note: "applicant.completedReview",
     },
   ];
 
@@ -199,10 +204,10 @@ export function ApplicantDashboard() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-4xl font-bold tracking-tight text-[#142b45] sm:text-5xl">
-            Welcome back
+            {t("applicant.welcome")}
           </h1>
           <p className="mt-2 text-slate-600">
-            Track projects and respond to departmental clarification requests.
+            {t("applicant.dashboardDescription")}
           </p>
         </div>
         <Button
@@ -210,7 +215,7 @@ export function ApplicantDashboard() {
           size="lg"
           className="h-11 rounded-md px-6"
         >
-          Create new project
+          {t("applicant.createProject")}
         </Button>
       </div>
       <section className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -220,9 +225,9 @@ export function ApplicantDashboard() {
             className="rounded-md border-l-4 border-amber-500 bg-white"
           >
             <CardContent className="space-y-2 px-5 py-5">
-              <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+              <p className="text-sm font-medium text-slate-500">{t(stat.label as TranslationKey)}</p>
               <p className="text-4xl font-bold text-[#142b45]">{stat.value}</p>
-              <p className="text-sm text-slate-500">{stat.note}</p>
+              <p className="text-sm text-slate-500">{t(stat.note as TranslationKey)}</p>
             </CardContent>
           </Card>
         ))}
@@ -231,7 +236,7 @@ export function ApplicantDashboard() {
         <section className="mt-7">
           <div className="flex items-center gap-3">
             <AlertCircle className="size-5 text-amber-700" />
-            <h2 className="text-2xl font-bold text-[#142b45]">Action needed</h2>
+            <h2 className="text-2xl font-bold text-[#142b45]">{t("applicant.actionNeeded")}</h2>
           </div>
           <div className="mt-4 space-y-4">
             {clarifications
@@ -251,7 +256,7 @@ export function ApplicantDashboard() {
       <Card className="mt-7 rounded-md bg-white">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl text-[#142b45]">
-            <MessageSquareText className="size-5" /> Current applications
+            <MessageSquareText className="size-5" /> {t("applicant.currentApplications")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -277,7 +282,7 @@ export function ApplicantDashboard() {
             </div>
           ) : (
             <p className="text-sm text-slate-500">
-              You have no applications yet. Start by creating a new project.
+              {t("applicant.noApplications")}
             </p>
           )}
         </CardContent>

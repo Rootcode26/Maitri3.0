@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Fragment, type ReactNode, useEffect, useState } from "react";
 
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
+import { LanguageSelector } from "@/components/layout/language-selector";
+import { useLanguage } from "@/components/providers/language-provider";
 import { Button } from "@/components/ui/button";
 import { getCurrentSession, logoutSession } from "@/lib/auth-api";
 
@@ -19,6 +21,7 @@ function initialsOf(name: string): string {
 }
 
 function UserMenu({ workspace }: { workspace: Workspace }) {
+  const { text } = useLanguage();
   const router = useRouter();
   const queryClient = useQueryClient();
   const loginHref = workspace === "inspector" ? "/inspector/login" : "/auth/login";
@@ -39,9 +42,9 @@ function UserMenu({ workspace }: { workspace: Workspace }) {
   const user = session.data ?? null;
   const roleLabel =
     user?.role === "inspector"
-      ? "Inspector"
+      ? text("Inspector")
       : user?.role === "applicant"
-        ? "Applicant"
+        ? text("Applicant")
         : "";
 
   return (
@@ -71,7 +74,7 @@ function UserMenu({ workspace }: { workspace: Workspace }) {
           >
             <LogOut aria-hidden="true" />
             <span className="hidden sm:inline">
-              {logout.isPending ? "Signing out…" : "Sign out"}
+              {logout.isPending ? text("Signing out…") : text("Sign out")}
             </span>
           </Button>
         </>
@@ -86,7 +89,6 @@ function UserMenu({ workspace }: { workspace: Workspace }) {
     </div>
   );
 }
-
 export function DashboardTopbar({
   breadcrumb,
   navigationOpen,
@@ -98,12 +100,13 @@ export function DashboardTopbar({
   onToggleNavigation: () => void;
   workspace: Workspace;
 }) {
+  const { t } = useLanguage();
   return (
     <header className="flex min-h-16 items-center justify-between gap-6 border-b border-[#e4e0d6] bg-[#f7f6f2] px-6 py-3">
       <div className="flex items-center gap-4">
         <button
           type="button"
-          aria-label="Toggle navigation"
+          aria-label={t("dashboard.toggleNavigation")}
           aria-expanded={navigationOpen}
           aria-controls="mobile-workspace-navigation"
           onClick={onToggleNavigation}
@@ -111,7 +114,7 @@ export function DashboardTopbar({
         >
           <Menu className="size-5" aria-hidden="true" />
         </button>
-        <nav aria-label="Breadcrumb">
+        <nav aria-label={t("dashboard.breadcrumb")}>
           <ol className="flex items-center gap-2 text-sm text-slate-500">
             {breadcrumb.map((crumb, i) => {
               const last = i === breadcrumb.length - 1;
@@ -123,7 +126,19 @@ export function DashboardTopbar({
                     }
                     aria-current={last ? "page" : undefined}
                   >
-                    {crumb}
+                    {t(({
+                      Home: "breadcrumb.home",
+                      Applicant: "breadcrumb.applicant",
+                      Inspector: "breadcrumb.inspector",
+                      Dashboard: "breadcrumb.dashboard",
+                      Applications: "breadcrumb.applications",
+                      Documents: "breadcrumb.documents",
+                      Projects: "breadcrumb.projects",
+                      "New project": "breadcrumb.newProject",
+                      "Review queue": "breadcrumb.reviewQueue",
+                      Application: "breadcrumb.application",
+                      Details: "breadcrumb.details",
+                    } as const)[crumb as "Home"] ?? "nav.workspace")}
                   </li>
                   {!last && (
                     <ChevronRight
@@ -139,9 +154,10 @@ export function DashboardTopbar({
       </div>
 
       <div className="flex items-center gap-4">
+        <LanguageSelector />
         <button
           type="button"
-          aria-label="Notifications"
+          aria-label={t("dashboard.notifications")}
           className="hidden size-10 place-items-center rounded-full border border-[#e4e0d6] text-slate-600 transition-colors hover:bg-white focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary sm:grid"
         >
           <Bell className="size-5" aria-hidden="true" />
@@ -163,6 +179,7 @@ export function DashboardShell({
   workspace?: "applicant" | "inspector";
   children: ReactNode;
 }) {
+  const { t } = useLanguage();
   const [navigationOpen, setNavigationOpen] = useState(false);
   useEffect(() => {
     if (!navigationOpen) return;
@@ -183,7 +200,7 @@ export function DashboardShell({
         <>
           <button
             type="button"
-            aria-label="Dismiss navigation backdrop"
+            aria-label={t("dashboard.dismissNavigation")}
             className="fixed inset-0 z-40 bg-slate-950/35 lg:hidden"
             onClick={() => setNavigationOpen(false)}
           />

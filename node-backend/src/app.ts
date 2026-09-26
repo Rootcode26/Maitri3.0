@@ -26,6 +26,7 @@ import { InspectorRepository } from './modules/inspector/inspector.repository.js
 import { InspectorService } from './modules/inspector/inspector.service.js';
 import { createMalwareScanner } from './integrations/clamav/scanner.js';
 import { createObjectStorage } from './integrations/s3/storage.js';
+import { localizationMiddleware } from './i18n/index.js';
 import { env } from './config/env.js';
 import { notFoundHandler } from './middleware/not-found.js';
 import { HealthRepository } from './repositories/health.repository.js';
@@ -85,6 +86,7 @@ export const createApp = ({
   app.use(pinoHttp({ logger }));
   app.use(helmet());
   app.use(cookieParser());
+  app.use(localizationMiddleware);
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 

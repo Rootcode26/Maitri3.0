@@ -12,6 +12,9 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/providers/language-provider";
+import { formatDate } from "@/i18n/format";
+import { translateStatus } from "@/features/projects/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   decideInspectorApproval,
@@ -38,6 +41,7 @@ function ClarificationPanel({
   clarifications: InspectorApplication["clarifications"];
   enabled: boolean;
 }) {
+  const { language, t } = useLanguage();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
   const [documentId, setDocumentId] = useState("");
@@ -85,7 +89,7 @@ function ClarificationPanel({
     <section className="border-t border-[#e4e0d6] pt-5">
       <h3 className="flex items-center gap-2 font-semibold text-[#142b45]">
         <MessageSquareText className="size-4" aria-hidden="true" />{" "}
-        Clarifications
+        {t("inspector.requestClarification")}
       </h3>
       {clarifications.length ? (
         <div className="mt-3 space-y-3">
@@ -100,10 +104,10 @@ function ClarificationPanel({
                     {clarification.message}
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    {humanize(clarification.status)} ·{" "}
-                    {new Date(clarification.createdAt).toLocaleString("en-IN")}
+                    {translateStatus(t, clarification.status)} ·{" "}
+                    {formatDate(clarification.createdAt, language)}
                     {clarification.dueAt
-                      ? ` · due ${new Date(clarification.dueAt).toLocaleDateString("en-IN")}`
+                      ? t("inspector.dateDue", { date: formatDate(clarification.dueAt, language) })
                       : ""}
                   </p>
                 </div>
@@ -115,7 +119,7 @@ function ClarificationPanel({
                     disabled={resolve.isPending}
                     onClick={() => resolve.mutate(clarification.id)}
                   >
-                    Mark resolved
+                    {t("status.resolved")}
                   </Button>
                 ) : null}
               </div>
@@ -135,30 +139,30 @@ function ClarificationPanel({
         </div>
       ) : (
         <p className="mt-2 text-sm text-slate-500">
-          No clarification requests yet.
+          {t("documents.empty")}
         </p>
       )}
 
       {enabled ? (
         <div className="mt-4 grid gap-3 border border-[#d8d3c8] bg-[#faf9f6] p-4 sm:grid-cols-2">
           <label className="sm:col-span-2 text-sm font-medium text-[#142b45]">
-            Question for the applicant
+            {t("inspector.applicant")}
             <textarea
               className="mt-1 min-h-24 w-full rounded-md border border-[#aeb7c4] bg-white p-3"
               value={message}
               maxLength={2000}
               onChange={(event) => setMessage(event.target.value)}
-              placeholder="Explain what information or correction is needed."
+              placeholder={t("inspector.clarificationPlaceholder")}
             />
           </label>
           <label className="text-sm font-medium text-[#142b45]">
-            Related document (optional)
+            {t("documents.document")} {t("inspector.optional")}
             <select
               className="mt-1 h-10 w-full rounded-md border border-[#aeb7c4] bg-white px-3"
               value={documentId}
               onChange={(event) => setDocumentId(event.target.value)}
             >
-              <option value="">General clarification</option>
+              <option value="">{t("inspector.generalClarification")}</option>
               {documents.map((document) => (
                 <option key={document.id} value={document.id}>
                   {document.fileName}
@@ -167,7 +171,7 @@ function ClarificationPanel({
             </select>
           </label>
           <label className="text-sm font-medium text-[#142b45]">
-            Response due date (optional)
+            {t("inspector.dateDue", { date: "" })}
             <input
               type="date"
               className="mt-1 h-10 w-full rounded-md border border-[#aeb7c4] bg-white px-3"
@@ -181,7 +185,7 @@ function ClarificationPanel({
             disabled={create.isPending || message.trim().length < 10}
             onClick={() => create.mutate()}
           >
-            {create.isPending ? "Sending…" : "Request clarification"}
+            {create.isPending ? t("inspector.sending") : t("inspector.requestClarification")}
           </Button>
         </div>
       ) : null}
@@ -209,6 +213,7 @@ function DocumentReviewCard({
   document: InspectorDocument;
   reviewEnabled: boolean;
 }) {
+  const { t, text } = useLanguage();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<
     "accepted" | "correction_required" | "rejected"
@@ -224,14 +229,14 @@ function DocumentReviewCard({
         comment || undefined,
       ),
     onSuccess: async () => {
-      setMessage("Document review saved.");
+      setMessage(t("inspector.reviewSaved"));
       await queryClient.invalidateQueries({
         queryKey: ["inspector-application", projectId],
       });
     },
     onError: (error) =>
       setMessage(
-        error instanceof Error ? error.message : "Could not save review.",
+        error instanceof Error ? error.message : t("inspector.saveReviewError"),
       ),
   });
 
@@ -242,7 +247,7 @@ function DocumentReviewCard({
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (error) {
       setMessage(
-        error instanceof Error ? error.message : "Could not open the document.",
+        error instanceof Error ? error.message : t("inspector.openDocumentError"),
       );
     }
   }
@@ -255,11 +260,11 @@ function DocumentReviewCard({
             {document.fileName}
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            {document.documentKey} · version {document.version} ·{" "}
+            {text(document.documentKey)} · {t("application.version", { version: document.version })} ·{" "}
             {(document.sizeBytes / 1_000_000).toFixed(2)} MB
           </p>
           <p className="mt-1 text-xs font-medium text-slate-600">
-            Current review: {humanize(document.review.status)}
+            {t("inspector.currentReview", { status: translateStatus(t, document.review.status) })}
           </p>
         </div>
         <Button
@@ -268,25 +273,25 @@ function DocumentReviewCard({
           className="h-9 rounded-md"
           onClick={download}
         >
-          <Download aria-hidden="true" /> Open file
+          <Download aria-hidden="true" /> {t("inspector.openFile")}
         </Button>
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-[13rem_1fr_auto] sm:items-end">
         <label className="text-sm font-medium text-[#142b45]">
-          Review result
+          {t("inspector.reviewResult")}
           <select
             className="mt-1 block h-10 w-full rounded-md border border-[#aeb7c4] bg-white px-3"
             value={status}
             onChange={(event) => setStatus(event.target.value as typeof status)}
             disabled={!reviewEnabled || review.isPending}
           >
-            <option value="accepted">Accept</option>
-            <option value="correction_required">Correction required</option>
-            <option value="rejected">Reject</option>
+            <option value="accepted">{t("inspector.accept")}</option>
+            <option value="correction_required">{t("status.correction_required")}</option>
+            <option value="rejected">{t("inspector.reject")}</option>
           </select>
         </label>
         <label className="text-sm font-medium text-[#142b45]">
-          Comment {status !== "accepted" ? "(required)" : "(optional)"}
+          {t("inspector.comment")} {status !== "accepted" ? t("inspector.required") : t("inspector.optional")}
           <input
             className="mt-1 block h-10 w-full rounded-md border border-[#aeb7c4] bg-white px-3"
             value={comment}
@@ -305,7 +310,7 @@ function DocumentReviewCard({
             (status !== "accepted" && !comment.trim())
           }
         >
-          {review.isPending ? "Saving…" : "Save review"}
+          {review.isPending ? t("inspector.saving") : t("inspector.saveReview")}
         </Button>
       </div>
       {message ? (
@@ -324,6 +329,7 @@ function ReviewContent({
   projectId: string;
   application: InspectorApplication;
 }) {
+  const { t, text } = useLanguage();
   const queryClient = useQueryClient();
   const [decisionNotes, setDecisionNotes] = useState<Record<string, string>>(
     {},
@@ -354,7 +360,7 @@ function ReviewContent({
       queryClient.setQueryData(["inspector-application", projectId], updated),
     onError: (error) =>
       setActionError(
-        error instanceof Error ? error.message : "Could not start review.",
+        error instanceof Error ? error.message : t("inspector.actionError"),
       ),
   });
   const decide = useMutation({
@@ -377,7 +383,7 @@ function ReviewContent({
     },
     onError: (error) =>
       setActionError(
-        error instanceof Error ? error.message : "Could not record decision.",
+        error instanceof Error ? error.message : t("inspector.actionError"),
       ),
   });
 
@@ -386,17 +392,17 @@ function ReviewContent({
       <Card className="rounded-md border-[#d8d3c8]">
         <CardHeader>
           <CardTitle className="text-xl text-[#142b45]">
-            Applicant and project
+            {t("inspector.applicantProject")}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["Applicant", application.applicant.name],
-            ["Mobile", application.applicant.phoneNumber],
-            ["Industry", humanize(application.industry)],
-            ["District", application.district],
-            ["Primary activity", application.primaryActivity],
-            ["Project status", humanize(application.projectStatus)],
+            [t("inspector.applicant"), application.applicant.name],
+            [t("inspector.mobile"), application.applicant.phoneNumber],
+            [t("inspector.industry"), text(humanize(application.industry))],
+            [t("inspector.district"), text(application.district)],
+            [t("inspector.activity"), text(application.primaryActivity)],
+            [t("inspector.projectStatus"), translateStatus(t, application.projectStatus)],
           ].map(([label, value]) => (
             <div key={label}>
               <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
@@ -411,7 +417,7 @@ function ReviewContent({
       <Card className="rounded-md border-[#d8d3c8]">
         <CardHeader>
           <CardTitle className="text-xl text-[#142b45]">
-            Questionnaire answers
+            {t("inspector.questionnaire")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -419,10 +425,12 @@ function ReviewContent({
             {questionnaire.map(([key, value]) => (
               <div key={key}>
                 <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                  {humanize(key.replace(/([a-z])([A-Z])/g, "$1 $2"))}
+                  {text(humanize(key.replace(/([a-z])([A-Z])/g, "$1 $2")))}
                 </dt>
                 <dd className="mt-1 break-words text-sm font-medium text-[#142b45]">
-                  {Array.isArray(value) ? value.join(", ") : String(value)}
+                  {Array.isArray(value)
+                    ? value.map((item) => text(String(item))).join(", ")
+                    : text(String(value))}
                 </dd>
               </div>
             ))}
@@ -453,10 +461,10 @@ function ReviewContent({
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold tracking-wide text-primary uppercase">
-                    {humanize(approval.reviewStatus)}
+                    {translateStatus(t, approval.reviewStatus)}
                   </p>
                   <CardTitle className="mt-2 text-2xl text-[#142b45]">
-                    {approval.title}
+                    {text(approval.title)}
                   </CardTitle>
                 </div>
                 {approval.reviewStatus === "pending" ? (
@@ -466,14 +474,14 @@ function ReviewContent({
                     onClick={() => start.mutate(approval.id)}
                     disabled={start.isPending}
                   >
-                    {start.isPending ? "Starting…" : "Start review"}
+                    {start.isPending ? t("inspector.starting") : t("inspector.startReview")}
                   </Button>
                 ) : null}
               </div>
             </CardHeader>
             <CardContent className="space-y-4 p-6">
               <div>
-                <h3 className="font-semibold text-[#142b45]">Documents</h3>
+                <h3 className="font-semibold text-[#142b45]">{t("inspector.documents")}</h3>
                 <div className="mt-3 space-y-3">
                   {documents.length ? (
                     documents.map((document) => (
@@ -486,7 +494,7 @@ function ReviewContent({
                     ))
                   ) : (
                     <p className="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-                      No documents were uploaded for this departmental approval.
+                      {t("inspector.noDocuments")}
                     </p>
                   )}
                 </div>
@@ -505,7 +513,7 @@ function ReviewContent({
               {reviewEnabled ? (
                 <div className="border-t border-[#e4e0d6] pt-5">
                   <label className="block text-sm font-semibold text-[#142b45]">
-                    Decision note
+                    {t("inspector.decisionNote")}
                     <textarea
                       className="mt-2 min-h-24 w-full rounded-md border border-[#aeb7c4] bg-white p-3 font-normal"
                       maxLength={2000}
@@ -516,7 +524,7 @@ function ReviewContent({
                           [approval.id]: event.target.value,
                         }))
                       }
-                      placeholder="Required when requesting correction or rejecting."
+                      placeholder={t("inspector.decisionNoteHint")}
                     />
                   </label>
                   <div className="mt-4 flex flex-wrap gap-3">
@@ -531,7 +539,7 @@ function ReviewContent({
                       }
                       disabled={decide.isPending}
                     >
-                      <FileCheck2 aria-hidden="true" /> Approve
+                      <FileCheck2 aria-hidden="true" /> {t("inspector.approve")}
                     </Button>
                     <Button
                       type="button"
@@ -545,7 +553,7 @@ function ReviewContent({
                       }
                       disabled={decide.isPending || !note.trim()}
                     >
-                      Request correction
+                      {t("inspector.requestCorrection")}
                     </Button>
                     <Button
                       type="button"
@@ -559,7 +567,7 @@ function ReviewContent({
                       }
                       disabled={decide.isPending || !note.trim()}
                     >
-                      Reject
+                      {t("inspector.reject")}
                     </Button>
                   </div>
                 </div>
@@ -577,6 +585,7 @@ function ReviewContent({
 }
 
 export function InspectorApplicationView({ projectId }: { projectId: string }) {
+  const { language, t } = useLanguage();
   const query = useQuery({
     queryKey: ["inspector-application", projectId],
     queryFn: () => getInspectorApplication(projectId),
@@ -588,33 +597,31 @@ export function InspectorApplicationView({ projectId }: { projectId: string }) {
         href="/inspector/dashboard"
         className="inline-flex h-10 items-center gap-2 rounded-md border border-[#d8d3c8] bg-white px-4 text-sm font-semibold text-[#142b45] shadow-sm hover:bg-slate-50 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
-        <ArrowLeft aria-hidden="true" /> Back to queue
+        <ArrowLeft aria-hidden="true" /> {t("inspector.backQueue")}
       </Link>
       {query.isPending ? (
         <div className="mt-8 flex items-center gap-3 border border-[#e4e0d6] p-8 text-slate-600">
-          <Loader2 className="size-5 animate-spin" aria-hidden="true" /> Loading
-          application…
+          <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loadingApplication")}
         </div>
       ) : query.isError ? (
         <div
           role="alert"
           className="mt-8 border border-destructive/30 bg-destructive/5 p-6 text-destructive"
         >
-          <p className="font-semibold">Could not load this application.</p>
-          <p className="mt-1 text-sm">It may not belong to your department.</p>
+          <p className="font-semibold">{t("inspector.applicationLoadError")}</p>
+          <p className="mt-1 text-sm">{t("inspector.departmentOnly")}</p>
         </div>
       ) : (
         <>
           <header className="my-8">
             <p className="text-sm font-semibold text-primary">
-              Department application review
+              {t("inspector.applicationReview")}
             </p>
             <h1 className="mt-1 font-heading text-4xl font-bold tracking-tight text-[#142b45]">
               {query.data.enterpriseName}
             </h1>
             <p className="mt-2 text-slate-600">
-              Submitted{" "}
-              {new Date(query.data.submittedAt).toLocaleString("en-IN")}
+              {t("common.submitted", { date: formatDate(query.data.submittedAt, language) })}
             </p>
           </header>
           <ReviewContent projectId={projectId} application={query.data} />
