@@ -12,8 +12,10 @@ import {
   listProjects,
 } from "@/features/projects/project-api";
 import { StatusBadge } from "@/features/projects/status-badge";
+import { useLanguage } from "@/components/providers/language-provider";
 
 export function ApplicantDocuments() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export function ApplicantDocuments() {
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Could not open the document.",
+        cause instanceof Error ? cause.message : t("documents.openError"),
       );
     }
   }
@@ -69,16 +71,15 @@ export function ApplicantDocuments() {
           Applicant workspace
         </p>
         <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-[#142b45] sm:text-4xl">
-          Documents
+          {t("documents.title")}
         </h1>
         <p className="mt-2 max-w-2xl text-slate-600">
-          Find every uploaded file, its version history and the latest
-          departmental review result.
+          {t("documents.description")}
         </p>
       </header>
       <div className="mt-7 grid gap-3 border-y border-[#e4e0d6] py-4 md:grid-cols-[1fr_15rem]">
         <label className="relative">
-          <span className="sr-only">Search documents</span>
+          <span className="sr-only">{t("documents.search")}</span>
           <Search
             className="pointer-events-none absolute top-3 left-3 size-5 text-slate-400"
             aria-hidden="true"
@@ -87,17 +88,17 @@ export function ApplicantDocuments() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="h-11 w-full rounded-md border border-[#aeb7c4] pr-3 pl-10 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            placeholder="Search file, project or department"
+            placeholder={t("documents.searchPlaceholder")}
           />
         </label>
         <label>
-          <span className="sr-only">Filter by review status</span>
+          <span className="sr-only">{t("documents.filter")}</span>
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value)}
             className="h-11 w-full rounded-md border border-[#aeb7c4] bg-white px-3 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            <option value="all">All review statuses</option>
+            <option value="all">{t("documents.allStatuses")}</option>
             <option value="pending">Pending</option>
             <option value="accepted">Accepted</option>
             <option value="correction_required">Correction required</option>
@@ -123,7 +124,7 @@ export function ApplicantDocuments() {
           role="alert"
           className="mt-8 border border-destructive/30 bg-destructive/5 p-6 text-destructive"
         >
-          <p className="font-semibold">Documents could not be loaded.</p>
+          <p className="font-semibold">{t("documents.loadError")}</p>
           <Button
             type="button"
             variant="outline"
@@ -133,16 +134,16 @@ export function ApplicantDocuments() {
               projects.refetch();
             }}
           >
-            Try again
+            {t("common.tryAgain")}
           </Button>
         </div>
       ) : filtered.length ? (
         <div className="mt-6 overflow-hidden border border-[#d8d3c8]">
           <div className="hidden grid-cols-[1.4fr_1fr_0.7fr_auto] gap-4 bg-[#f7f6f2] px-5 py-3 text-xs font-semibold tracking-wide text-slate-500 uppercase md:grid">
-            <span>Document</span>
-            <span>Application</span>
-            <span>Review</span>
-            <span>Action</span>
+            <span>{t("documents.document")}</span>
+            <span>{t("documents.application")}</span>
+            <span>{t("documents.review")}</span>
+            <span>{t("documents.action")}</span>
           </div>
           <ul className="divide-y divide-[#e4e0d6]">
             {filtered.map((document) => {
@@ -171,7 +172,7 @@ export function ApplicantDocuments() {
                       href={`/applicant/applications/${projectId}`}
                       className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
                     >
-                      {projectNames.get(projectId) ?? "Open application"}
+                      {projectNames.get(projectId) ?? t("documents.openApplication")}
                     </Link>
                     <p className="mt-1 text-xs text-slate-500">
                       {document.departmentName}
@@ -184,7 +185,7 @@ export function ApplicantDocuments() {
                     className="h-10 rounded-md justify-self-start"
                     onClick={() => download(projectId, document.id)}
                   >
-                    <Download aria-hidden="true" /> Open
+                    <Download aria-hidden="true" /> {t("common.open")}
                   </Button>
                 </li>
               );
@@ -198,10 +199,10 @@ export function ApplicantDocuments() {
             aria-hidden="true"
           />
           <h2 className="mt-3 text-lg font-semibold text-[#142b45]">
-            No matching documents
+            {t("documents.empty")}
           </h2>
           <p className="mt-2 text-sm text-slate-600">
-            Uploaded documents and their review results will appear here.
+            {t("documents.emptyHint")}
           </p>
         </div>
       )}

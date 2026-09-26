@@ -11,6 +11,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "cn";
+import { useLanguage } from "@/components/providers/language-provider";
+import type { TranslationKey } from "@/i18n/language/en";
 
 type NavItem = {
   label: string;
@@ -70,8 +72,9 @@ export function DashboardSidebar({
   id?: string;
   onClose?: () => void;
 }) {
-  const navItems =
-    workspace === "inspector" ? inspectorNavItems : applicantNavItems;
+  const { t } = useLanguage();
+  const translationKeys: TranslationKey[] = workspace === "inspector" ? ["nav.reviewQueue"] : ["nav.dashboard", "nav.newProject", "nav.applications", "nav.documents", "nav.notifications", "nav.verifyCertificate"];
+  const navItems = (workspace === "inspector" ? inspectorNavItems : applicantNavItems).map((item, index) => ({ ...item, label: t(translationKeys[index]!) }));
   return (
     <aside
       id={id}
@@ -109,14 +112,14 @@ export function DashboardSidebar({
           ) : null}
         </div>
         <span className="text-sm text-slate-500">
-          {workspace === "inspector" ? "Inspector portal" : "Applicant portal"}
+          {workspace === "inspector" ? t("nav.inspectorPortal") : t("nav.applicantPortal")}
         </span>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-4 py-6" aria-label="Workspace">
+      <nav className="flex-1 overflow-y-auto px-4 py-6" aria-label={t("nav.workspace")}>
         <p className="px-2 pb-3 text-xs font-semibold tracking-wide text-slate-400 uppercase">
-          Workspace
+          {t("nav.workspace")}
         </p>
         <ul className="space-y-1">
           {navItems.map((item) => {
@@ -132,7 +135,7 @@ export function DashboardSidebar({
                     <Icon className="size-5 shrink-0" aria-hidden="true" />
                     <span className="flex-1">{item.label}</span>
                     <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-400">
-                      Soon
+                      {t("nav.soon")}
                     </span>
                   </span>
                 </li>
@@ -166,12 +169,12 @@ export function DashboardSidebar({
         </span>
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold text-[#142b45]">
-            Your account
+            {t("nav.yourAccount")}
           </span>
           <span className="block truncate text-xs text-slate-500">
             {workspace === "inspector"
-              ? "Inspector account"
-              : "Applicant account"}
+              ? t("nav.inspectorAccount")
+              : t("nav.applicantAccount")}
           </span>
         </span>
       </div>

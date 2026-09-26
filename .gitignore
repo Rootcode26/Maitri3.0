@@ -38,6 +38,7 @@ vite.config.*.timestamp-*
 
 # Python environments, caches, and build artifacts
 .venv/
+.local-packages/
 venv/
 env/
 ENV/
