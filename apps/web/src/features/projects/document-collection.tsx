@@ -361,10 +361,6 @@ function specFor(document: ApprovalDocument): DocSpec {
   };
 }
 
-function shortFormat(spec: DocSpec) {
-  return `${spec.formats.join(", ")} · Up to ${spec.maxSizeMb} MB`;
-}
-
 function acceptedExtensions(formats: string[]): string[] {
   return formats.flatMap((format) => {
     const f = format.toLowerCase();
@@ -400,7 +396,7 @@ export function DocumentCollection({
   onBack: () => void;
   onUploadedChange?: (documents: ProjectDocument[]) => void;
 }) {
-  const { t } = useLanguage();
+  const { t, text } = useLanguage();
   const specs = useMemo(() => documents.map(specFor), [documents]);
   const total = specs.length;
 
@@ -435,14 +431,14 @@ export function DocumentCollection({
           className="mb-5 inline-flex items-center gap-1.5 rounded-sm text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />
-          Back to approvals
+          {t("documents.backApprovals")}
         </button>
         <div className="rounded-2xl bg-white p-8 ring-1 ring-[#e4e0d6]">
           <h2 className="font-heading text-2xl font-semibold text-[#142b45]">
-            {approvalTitle}
+            {text(approvalTitle)}
           </h2>
           <p className="mt-3 text-base text-slate-600">
-            No documents are required for this approval right now.
+            {text("No documents are required for this approval right now.")}
           </p>
         </div>
       </div>
@@ -488,7 +484,7 @@ export function DocumentCollection({
         key,
         cause instanceof ProjectApiError
           ? cause.message
-          : "Could not upload the file. Please try again.",
+          : text("Could not upload the file. Please try again."),
       );
     } finally {
       setBusyKey(null);
@@ -515,7 +511,7 @@ export function DocumentCollection({
         key,
         cause instanceof ProjectApiError
           ? cause.message
-          : "Could not remove the file.",
+          : text("Could not remove the file."),
       );
     } finally {
       setBusyKey(null);
@@ -544,10 +540,10 @@ export function DocumentCollection({
             {t("documents.requiredDocuments")}
           </h2>
           <p className="mt-1 text-xs font-medium tracking-wide text-slate-400 uppercase">
-            {approvalTitle}
+            {text(approvalTitle)}
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            {uploadedCount} of {total} files uploaded
+            {text("{{uploaded}} of {{total}} files uploaded", { uploaded: uploadedCount, total })}
           </p>
           <div
             className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100"
@@ -595,10 +591,10 @@ export function DocumentCollection({
                     </span>
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-semibold text-[#142b45]">
-                        {docSpec.name}
+                        {text(docSpec.name)}
                       </span>
                       <span className="block truncate text-xs text-slate-500">
-                        {shortFormat(docSpec)}
+                        {text("{{formats}} · Up to {{size}} MB", { formats: docSpec.formats.join(", "), size: docSpec.maxSizeMb })}
                       </span>
                     </span>
                   </button>
@@ -609,11 +605,10 @@ export function DocumentCollection({
 
           <div className="mt-5 border-t border-[#e4e0d6] pt-4">
             <p className="text-sm font-semibold text-[#142b45]">
-              Prepare before submitting
+              {text("Prepare before submitting")}
             </p>
             <p className="mt-2 text-sm leading-relaxed text-slate-500">
-              All {total} documents are required for this demonstration bundle.
-              Selecting a file does not submit an application.
+              {text("All {{total}} documents are required for this demonstration bundle. Selecting a file does not submit an application.", { total })}
             </p>
           </div>
         </aside>
@@ -623,10 +618,10 @@ export function DocumentCollection({
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-slate-500">
-                Document {current + 1} of {total}
+                {text("Document {{current}} of {{total}}", { current: current + 1, total })}
               </p>
               <h3 className="mt-1 font-heading text-3xl font-bold text-[#142b45]">
-                {spec.name}
+                {text(spec.name)}
               </h3>
             </div>
             <span
@@ -643,7 +638,11 @@ export function DocumentCollection({
               {spec.required ? t("documents.required") : t("documents.optional")}
             </span>
           </div>
-          <p className="mt-3 text-base text-slate-600">{spec.description}</p>
+          <p className="mt-3 text-base text-slate-600">
+            {spec.description === `Supporting document: ${spec.name}.`
+              ? text("Supporting document: {{document}}.", { document: text(spec.name) })
+              : text(spec.description)}
+          </p>
 
           <hr className="my-6 border-[#e4e0d6]" />
 
@@ -663,7 +662,7 @@ export function DocumentCollection({
             <div>
               <dt className="text-sm text-slate-500">{t("documents.filesRequired")}</dt>
               <dd className="mt-1 font-semibold text-[#142b45]">
-                {spec.filesRequired}
+                {text(spec.filesRequired)}
               </dd>
             </div>
           </dl>
@@ -682,7 +681,7 @@ export function DocumentCollection({
                       className="mt-2 size-1.5 shrink-0 rounded-full bg-slate-400"
                       aria-hidden="true"
                     />
-                    {item}
+                    {text(item)}
                   </li>
                 ))}
               </ul>
@@ -693,7 +692,7 @@ export function DocumentCollection({
               </h4>
               {spec.quality.map((para) => (
                 <p key={para} className="mt-3 leading-relaxed text-slate-600">
-                  {para}
+                  {text(para)}
                 </p>
               ))}
             </div>

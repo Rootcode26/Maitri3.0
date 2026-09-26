@@ -25,7 +25,7 @@ const filters: { label: string; value?: ReviewStatus }[] = [
 ];
 
 export function InspectorDashboard() {
-  const { language, t } = useLanguage();
+  const { language, t, text } = useLanguage();
   const [filter, setFilter] = useState<ReviewStatus | undefined>();
   const query = useQuery({
     queryKey: ["inspector-applications", filter],
@@ -93,7 +93,7 @@ export function InspectorDashboard() {
                       {translateStatus(t, application.reviewStatus)}
                     </span>
                     <span className="text-xs font-medium text-slate-500 capitalize">
-                      {application.industry} · {application.district}
+                      {text(application.industry)} · {text(application.district)}
                     </span>
                   </div>
                   <h2 className="mt-3 text-xl font-semibold text-[#142b45]">
