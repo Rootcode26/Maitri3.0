@@ -1,13 +1,27 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { logger } from '../src/config/logger.js';
+import { AppError } from '../src/errors/app-error.js';
 import type { ProjectRepository } from '../src/modules/projects/project.repository.js';
 import {
   RulesEngineError,
   type RulesEngineClient,
 } from '../src/modules/projects/project.rules-client.js';
 import { createProjectSchema } from '../src/modules/projects/project.schemas.js';
-import { ProjectService } from '../src/modules/projects/project.service.js';
+import { ProjectService, type ProjectValidator } from '../src/modules/projects/project.service.js';
+import type { ValidationResult } from '../src/modules/documents/document.validation-client.js';
+
+const validationResult = (overrides: Partial<ValidationResult> = {}): ValidationResult => ({
+  rulesVersion: '2026.09',
+  projectId: 'p1',
+  projectVersion: 1,
+  validationStatus: 'complete',
+  blockingIssues: [],
+  warnings: [],
+  reviewItems: [],
+  documentChecks: [],
+  ...overrides,
+});
 
 const input = createProjectSchema.parse({
   enterpriseName: 'Sahyadri Foods Pvt. Ltd.',
@@ -102,6 +116,93 @@ describe('ProjectService', () => {
       statusCode: 404,
       code: 'PROJECT_NOT_FOUND',
     });
+  });
+
+  it('blocks submission when validation reports blocking issues and never transitions the project', async () => {
+    const submitProject = vi.fn();
+    const validateProject = vi.fn().mockResolvedValue(
+      validationResult({
+        validationStatus: 'review_required',
+        blockingIssues: [
+          {
+            code: 'REQUIRED_DOCUMENT_MISSING',
+            severity: 'error',
+            message: 'A required document is missing.',
+            suggestedAction: 'Upload it and re-check.',
+          },
+        ],
+      }),
+    );
+    const service = new ProjectService(
+      { submitProject } as unknown as ProjectRepository,
+      null,
+      { validateProject } as unknown as ProjectValidator,
+    );
+
+    await expect(service.submitProject('applicant-1', 'p1')).rejects.toMatchObject({
+      statusCode: 422,
+      code: 'SUBMISSION_HAS_BLOCKING_ISSUES',
+    });
+    expect(validateProject).toHaveBeenCalledWith('applicant-1', 'p1');
+    expect(submitProject).not.toHaveBeenCalled();
+  });
+
+  it('allows submission when validation reports only warnings and review items', async () => {
+    const project = { id: 'p1', status: 'submitted' };
+    const submitProject = vi
+      .fn()
+      .mockResolvedValue({ project, missingDocuments: [], conflict: false });
+    const validateProject = vi.fn().mockResolvedValue(
+      validationResult({
+        validationStatus: 'review_required',
+        warnings: [
+          {
+            code: 'DOCUMENT_VALUE_LOOKS_DIFFERENT',
+            severity: 'warning',
+            message: 'The document value looks different.',
+            suggestedAction: 'Double-check it.',
+          },
+        ],
+        reviewItems: [
+          {
+            code: 'DOCUMENT_CONTENT_REVIEW_NEEDED',
+            severity: 'review',
+            message: 'An officer should review this.',
+            suggestedAction: 'Pending officer review.',
+          },
+        ],
+      }),
+    );
+    const service = new ProjectService(
+      { submitProject } as unknown as ProjectRepository,
+      null,
+      { validateProject } as unknown as ProjectValidator,
+    );
+
+    await expect(service.submitProject('applicant-1', 'p1')).resolves.toBe(project);
+    expect(validateProject).toHaveBeenCalledWith('applicant-1', 'p1');
+    expect(submitProject).toHaveBeenCalledWith('applicant-1', 'p1');
+  });
+
+  it('fails submission closed when the configured validator is unavailable', async () => {
+    const submitProject = vi.fn();
+    const validateProject = vi.fn().mockRejectedValue(
+      new AppError('The validation service is unavailable', {
+        statusCode: 503,
+        code: 'VALIDATION_UNAVAILABLE',
+      }),
+    );
+    const service = new ProjectService(
+      { submitProject } as unknown as ProjectRepository,
+      null,
+      { validateProject } as unknown as ProjectValidator,
+    );
+
+    await expect(service.submitProject('applicant-1', 'p1')).rejects.toMatchObject({
+      statusCode: 503,
+      code: 'VALIDATION_UNAVAILABLE',
+    });
+    expect(submitProject).not.toHaveBeenCalled();
   });
 
   it('derives approvals with the built-in rules when no engine is configured', async () => {
