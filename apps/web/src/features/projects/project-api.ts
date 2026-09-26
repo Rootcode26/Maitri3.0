@@ -148,7 +148,10 @@ export async function submitProject(projectId: string): Promise<Project> {
   const body = (await response.json().catch(() => ({}))) as {
     message?: string;
     code?: string;
-    details?: { missingDocuments?: string[] };
+    details?: {
+      missingDocuments?: string[];
+      blockingIssues?: { code: string; message: string }[];
+    };
     data?: { project: Project };
   };
   if (!response.ok || !body.data) {
@@ -158,6 +161,13 @@ export async function submitProject(projectId: string): Promise<Project> {
         missing.length
           ? `Upload these required documents first: ${missing.join(", ")}.`
           : "Upload all required documents before submitting.",
+        response.status,
+        body.code,
+      );
+    }
+    if (body.code === "SUBMISSION_HAS_BLOCKING_ISSUES") {
+      throw new ProjectApiError(
+        "Some checks must be resolved before submitting. Run “Check documents” to see what needs fixing.",
         response.status,
         body.code,
       );
