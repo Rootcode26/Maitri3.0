@@ -478,11 +478,11 @@ export function DocumentCollection({
         key,
         file,
       );
-      setUploadedByKey((prev) => {
-        const next = { ...prev, [key]: document };
-        onUploadedChange?.(Object.values(next));
-        return next;
-      });
+      setUploadedByKey((previous) => ({ ...previous, [key]: document }));
+      onUploadedChange?.([
+        ...Object.values(uploadedByKey).filter((uploaded) => uploaded.documentKey !== key),
+        document,
+      ]);
     } catch (cause) {
       errorFor(
         key,
@@ -502,12 +502,14 @@ export function DocumentCollection({
     setBusyKey(key);
     try {
       await deleteProjectDocument(projectId, document.id);
-      setUploadedByKey((prev) => {
-        const next = { ...prev };
+      setUploadedByKey((previous) => {
+        const next = { ...previous };
         delete next[key];
-        onUploadedChange?.(Object.values(next));
         return next;
       });
+      onUploadedChange?.(
+        Object.values(uploadedByKey).filter((uploaded) => uploaded.documentKey !== key),
+      );
     } catch (cause) {
       errorFor(
         key,
@@ -539,7 +541,7 @@ export function DocumentCollection({
         {/* Left rail */}
         <aside className="h-fit rounded-2xl bg-white p-6 ring-1 ring-[#e4e0d6]">
           <h2 className="font-heading text-xl font-semibold text-[#142b45]">
-            {t("documents.required")}
+            {t("documents.requiredDocuments")}
           </h2>
           <p className="mt-1 text-xs font-medium tracking-wide text-slate-400 uppercase">
             {approvalTitle}
@@ -814,7 +816,7 @@ export function DocumentCollection({
 
           <div className="flex items-center justify-between gap-4">
             <p className="text-sm text-slate-500">
-              {t("documents.remaining", { count: remaining })}
+              {remaining === 1 ? t("documents.remainingOne") : t("documents.remainingMany", { count: remaining })}
             </p>
             {isLast ? (
               <Button
