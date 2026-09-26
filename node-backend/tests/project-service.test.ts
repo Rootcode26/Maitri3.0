@@ -74,7 +74,8 @@ describe('ProjectService', () => {
     const service = new ProjectService({ submitProject } as unknown as ProjectRepository);
 
     await expect(service.submitProject('applicant-1', 'p1')).resolves.toBe(project);
-    expect(submitProject).toHaveBeenCalledWith('applicant-1', 'p1');
+    // No validator configured -> no attention captured.
+    expect(submitProject).toHaveBeenCalledWith('applicant-1', 'p1', null);
   });
 
   it('rejects submission when required documents are missing', async () => {
@@ -169,6 +170,7 @@ describe('ProjectService', () => {
             suggestedAction: 'Pending officer review.',
           },
         ],
+        attentionAssessment: { score: 45, level: 'high_attention' },
       }),
     );
     const service = new ProjectService({ submitProject } as unknown as ProjectRepository, null, {
@@ -177,7 +179,11 @@ describe('ProjectService', () => {
 
     await expect(service.submitProject('applicant-1', 'p1')).resolves.toBe(project);
     expect(validateProject).toHaveBeenCalledWith('applicant-1', 'p1');
-    expect(submitProject).toHaveBeenCalledWith('applicant-1', 'p1');
+    // The attention estimate is captured and persisted with the submission.
+    expect(submitProject).toHaveBeenCalledWith('applicant-1', 'p1', {
+      score: 45,
+      level: 'high_attention',
+    });
   });
 
   it('fails submission closed when the configured validator is unavailable', async () => {

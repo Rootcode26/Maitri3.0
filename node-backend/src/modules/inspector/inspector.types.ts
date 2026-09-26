@@ -33,6 +33,8 @@ export interface ClarificationRequest {
   responses: ClarificationResponse[];
 }
 
+export type AttentionLevel = 'standard' | 'elevated' | 'high_attention';
+
 export interface InspectorApplicationSummary {
   projectId: string;
   approvalId: string;
@@ -45,6 +47,8 @@ export interface InspectorApplicationSummary {
   projectStatus: ProjectStatus;
   reviewStatus: ApprovalReviewStatus;
   submittedAt: string;
+  attentionScore: number | null;
+  attentionLevel: AttentionLevel | null;
 }
 
 export interface InspectorDocument extends Omit<ProjectDocumentRecord, 'storageKey'> {

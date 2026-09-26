@@ -1,6 +1,8 @@
 export type ReviewStatus =
   "pending" | "under_review" | "correction_required" | "approved" | "rejected";
 
+export type AttentionLevel = "standard" | "elevated" | "high_attention";
+
 export interface InspectorApplicationSummary {
   projectId: string;
   approvalId: string;
@@ -13,6 +15,8 @@ export interface InspectorApplicationSummary {
   projectStatus: string;
   reviewStatus: ReviewStatus;
   submittedAt: string;
+  attentionScore: number | null;
+  attentionLevel: AttentionLevel | null;
 }
 
 export interface InspectorDocument {

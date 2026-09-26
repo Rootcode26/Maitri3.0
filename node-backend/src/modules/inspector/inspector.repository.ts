@@ -52,6 +52,8 @@ interface QueueRow {
   project_status: ProjectStatus;
   review_status: ApprovalReviewStatus;
   submitted_at: Date;
+  attention_score: number | null;
+  attention_level: string | null;
 }
 
 interface DetailRow {
@@ -115,6 +117,13 @@ const mapQueueRow = (row: QueueRow): InspectorApplicationSummary => ({
   projectStatus: row.project_status,
   reviewStatus: row.review_status,
   submittedAt: row.submitted_at.toISOString(),
+  attentionScore: row.attention_score,
+  attentionLevel:
+    row.attention_level === 'standard' ||
+    row.attention_level === 'elevated' ||
+    row.attention_level === 'high_attention'
+      ? row.attention_level
+      : null,
 });
 
 const mapApproval = (row: ApprovalRow): InspectorApproval => ({
@@ -205,7 +214,8 @@ export class InspectorRepository {
       `SELECT p.id AS project_id, pa.id AS approval_id, pa.approval_key,
               pa.title AS approval_title, p.enterprise_name, u.name AS applicant_name,
               p.industry, p.district, p.status AS project_status, pa.review_status,
-              COALESCE(p.submitted_at, p.created_at) AS submitted_at
+              COALESCE(p.submitted_at, p.created_at) AS submitted_at,
+              p.attention_score, p.attention_level
        FROM project_approvals pa
        JOIN projects p ON p.id = pa.project_id
        JOIN users u ON u.id = p.applicant_id

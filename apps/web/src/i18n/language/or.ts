@@ -48,6 +48,7 @@ const or = {
   "dashboard.notifications": "ବିଜ୍ଞପ୍ତିଗୁଡ଼ିକ",
   "dashboard.breadcrumb": "ବ୍ରେଡକ୍ରମ୍",
   "dashboard.dismissNavigation": "ନେଭିଗେସନ୍ ପୃଷ୍ଠଭୂମି ବନ୍ଦ କରନ୍ତୁ",
+  "attention.standard": "ସାଧାରଣ", "attention.elevated": "ମଧ୍ୟମ", "attention.high_attention": "ଉଚ୍ଚ ଧ୍ୟାନ", "attention.tooltip": "ଆନୁମାନିକ ମାନୁଆଲ ସମୀକ୍ଷା ପ୍ରୟାସ। ଏହା ଯୋଗ୍ୟତା କିମ୍ବା ଅନୁମୋଦନ ନିର୍ଣ୍ଣୟ କରେ ନାହିଁ।",
 } as const;
 
 export default or;

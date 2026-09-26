@@ -106,6 +106,8 @@ describe("inspector workflow", () => {
                 projectStatus: "submitted",
                 reviewStatus: "pending",
                 submittedAt: "2026-09-21T10:00:00.000Z",
+                attentionScore: 62,
+                attentionLevel: "elevated",
               },
             ],
             pagination: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
@@ -116,6 +118,9 @@ describe("inspector workflow", () => {
     renderWithQuery(<InspectorDashboard />);
     expect(await screen.findByText("Sahyadri Steel Works")).toBeInTheDocument();
     expect(screen.getByText("Factory registration")).toBeInTheDocument();
+    // The attention estimate is shown as a triage badge on the queue card.
+    expect(screen.getByText("Elevated")).toBeInTheDocument();
+    expect(screen.getByText(/62/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /open review/i })).toHaveAttribute(
       "href",
       `/inspector/applications/${projectId}`,

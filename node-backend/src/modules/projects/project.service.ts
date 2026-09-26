@@ -2,7 +2,10 @@ import { randomUUID } from 'node:crypto';
 
 import { AppError } from '../../errors/app-error.js';
 import { logger } from '../../config/logger.js';
-import type { ValidationResult } from '../documents/document.validation-client.js';
+import type {
+  AttentionLevel,
+  ValidationResult,
+} from '../documents/document.validation-client.js';
 import type { ProjectRepository } from './project.repository.js';
 import { RulesEngineError, type RulesEngineClient } from './project.rules-client.js';
 import { deriveApprovals, type RecommendedApproval } from './project.rules.js';
@@ -21,6 +24,12 @@ import type {
  */
 export interface ProjectValidator {
   validateProject(applicantId: string, projectId: string): Promise<ValidationResult>;
+}
+
+/** The attention estimate persisted with a submission for inspector triage. */
+export interface AttentionSummary {
+  score: number;
+  level: AttentionLevel;
 }
 
 export class ProjectService {
@@ -99,6 +108,7 @@ export class ProjectService {
     // review items are exactly what the inspector is meant to judge. When a
     // validator is configured but unreachable, validateProject throws (502/503),
     // so submission fails closed rather than slipping past the check.
+    let attention: AttentionSummary | null = null;
     if (this.validator) {
       const validation = await this.validator.validateProject(applicantId, projectId);
       if (validation.blockingIssues.length > 0) {
@@ -112,9 +122,14 @@ export class ProjectService {
           details: { blockingIssues: validation.blockingIssues },
         });
       }
+      // Capture the review-effort estimate so the inspector queue can triage by it.
+      const assessment = validation.attentionAssessment;
+      if (assessment) {
+        attention = { score: assessment.score, level: assessment.level };
+      }
     }
 
-    const result = await this.repository.submitProject(applicantId, projectId);
+    const result = await this.repository.submitProject(applicantId, projectId, attention);
     if (result.missingDocuments.length > 0) {
       throw new AppError('Upload all required documents before submitting', {
         statusCode: 422,

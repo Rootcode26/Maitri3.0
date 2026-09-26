@@ -37,6 +37,18 @@ const documentCheckSchema = z
   })
   .loose();
 
+export const attentionLevels = ['standard', 'elevated', 'high_attention'] as const;
+
+// The rules service's prototype "attention assessment": an estimate of how much
+// manual review an application is likely to need. Kept optional/nullable so the
+// client still works against a rules service that predates the feature.
+const attentionAssessmentSchema = z
+  .object({
+    score: z.number(),
+    level: z.enum(attentionLevels),
+  })
+  .loose();
+
 const validateResponseSchema = z
   .object({
     rulesVersion: z.string(),
@@ -47,9 +59,11 @@ const validateResponseSchema = z
     warnings: z.array(issueSchema),
     reviewItems: z.array(issueSchema),
     documentChecks: z.array(documentCheckSchema),
+    attentionAssessment: attentionAssessmentSchema.nullish(),
   })
   .loose();
 
+export type AttentionLevel = (typeof attentionLevels)[number];
 export type ValidationResult = z.infer<typeof validateResponseSchema>;
 
 export interface UploadedDocumentPayload {

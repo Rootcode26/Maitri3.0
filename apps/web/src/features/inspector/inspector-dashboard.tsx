@@ -9,10 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   listInspectorApplications,
+  type AttentionLevel,
   type ReviewStatus,
 } from "@/features/inspector/inspector-api";
 import { useLanguage } from "@/components/providers/language-provider";
 import { formatDate } from "@/i18n/format";
+import type { TranslationKey } from "@/i18n/language/en";
 import { translateStatus } from "@/features/projects/status-badge";
 
 const filters: { label: string; value?: ReviewStatus }[] = [
@@ -24,6 +26,47 @@ const filters: { label: string; value?: ReviewStatus }[] = [
   { label: "status.rejected", value: "rejected" },
 ];
 
+// Prototype review-effort estimate (does not affect eligibility or approval).
+const attentionStyle: Record<
+  AttentionLevel,
+  { className: string; labelKey: TranslationKey }
+> = {
+  standard: {
+    className: "border-emerald-300 bg-emerald-50 text-emerald-800",
+    labelKey: "attention.standard",
+  },
+  elevated: {
+    className: "border-amber-300 bg-amber-50 text-amber-900",
+    labelKey: "attention.elevated",
+  },
+  high_attention: {
+    className: "border-red-300 bg-red-50 text-red-800",
+    labelKey: "attention.high_attention",
+  },
+};
+
+function AttentionBadge({
+  level,
+  score,
+  t,
+}: {
+  level: AttentionLevel;
+  score: number | null;
+  t: (key: TranslationKey) => string;
+}) {
+  const style = attentionStyle[level];
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold ${style.className}`}
+      title={t("attention.tooltip")}
+    >
+      {t(style.labelKey)}
+      {score !== null ? (
+        <span className="font-normal opacity-80">· {score}</span>
+      ) : null}
+    </span>
+  );
+}
 export function InspectorDashboard() {
   const { language, t, text } = useLanguage();
   const [filter, setFilter] = useState<ReviewStatus | undefined>();
@@ -92,6 +135,13 @@ export function InspectorDashboard() {
                     <span className="border border-[#d8d3c8] bg-[#faf9f6] px-2 py-1 text-xs font-semibold text-slate-700">
                       {translateStatus(t, application.reviewStatus)}
                     </span>
+                    {application.attentionLevel ? (
+                      <AttentionBadge
+                        level={application.attentionLevel}
+                        score={application.attentionScore}
+                        t={t}
+                      />
+                    ) : null}
                     <span className="text-xs font-medium text-slate-500 capitalize">
                       {text(application.industry)} · {text(application.district)}
                     </span>
