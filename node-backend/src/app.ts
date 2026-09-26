@@ -51,22 +51,29 @@ export const createApp = ({
     new AuthService(new AuthRepository(), new OtpService(otpProvider)),
   );
   const projectRepository = new ProjectRepository();
-  const projectController = new ProjectController(
-    new ProjectService(projectRepository, createRulesEngineClient(env)),
-  );
   const objectStorage = createObjectStorage(env);
-  const documentController = new DocumentController(
-    new DocumentService(
+  const validationClient = createValidationClient(env);
+  const documentService = new DocumentService(
+    projectRepository,
+    new DocumentRepository(),
+    objectStorage,
+    createMalwareScanner(env),
+    validationClient,
+    {
+      defaultMaxSizeMb: env.UPLOAD_MAX_SIZE_MB,
+      rulesVersion: env.RULES_VERSION,
+      includeDocumentBytes: env.VALIDATION_INCLUDE_DOCUMENT_BYTES,
+    },
+  );
+  const documentController = new DocumentController(documentService);
+  // The document service doubles as the submission validator, but only when the
+  // validation engine is actually configured; otherwise submission keeps its
+  // required-documents check without a hard validation gate.
+  const projectController = new ProjectController(
+    new ProjectService(
       projectRepository,
-      new DocumentRepository(),
-      objectStorage,
-      createMalwareScanner(env),
-      createValidationClient(env),
-      {
-        defaultMaxSizeMb: env.UPLOAD_MAX_SIZE_MB,
-        rulesVersion: env.RULES_VERSION,
-        includeDocumentBytes: env.VALIDATION_INCLUDE_DOCUMENT_BYTES,
-      },
+      createRulesEngineClient(env),
+      validationClient ? documentService : null,
     ),
   );
   const inspectorController = new InspectorController(

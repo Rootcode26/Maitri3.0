@@ -3,6 +3,7 @@
 import {
   ArrowLeft,
   ArrowRight,
+  Building2,
   Check,
   ChevronRight,
   Info,
@@ -752,25 +753,6 @@ function ChecklistSkeleton() {
   );
 }
 
-const documentCheckStyles: Record<
-  string,
-  { className: string; label: string }
-> = {
-  matched: { className: "bg-emerald-100 text-emerald-800", label: "Matched" },
-  mismatched: {
-    className: "bg-destructive/10 text-destructive",
-    label: "Mismatch",
-  },
-  unavailable: {
-    className: "bg-slate-100 text-slate-600",
-    label: "Unavailable",
-  },
-  review_required: {
-    className: "bg-amber-100 text-amber-800",
-    label: "Review",
-  },
-};
-
 function IssueList({
   title,
   issues,
@@ -823,90 +805,126 @@ function IssueList({
 
 function ValidationReport({
   result,
+  approvals,
   onOpenApproval,
 }: {
   result: ValidationResult;
+  approvals: ProjectApproval[];
   onOpenApproval?: (approvalKey: string) => void;
 }) {
-  const banner = {
-    complete: {
-      icon: ShieldCheck,
-      className: "border-emerald-300 bg-emerald-50 text-emerald-900",
-      label: "All checks passed",
-    },
-    review_required: {
-      icon: TriangleAlert,
-      className: "border-amber-300 bg-amber-50 text-amber-900",
-      label: "Some items need attention",
-    },
-    not_evaluated: {
-      icon: Info,
-      className: "border-slate-200 bg-slate-50 text-slate-700",
-      label: "Not evaluated yet",
-    },
-  }[result.validationStatus];
-  const Icon = banner.icon;
+  // "Verified by our backend" simply means nothing is blocking submission.
+  // Warnings and officer-review items don't stop the applicant.
+  const verified = result.blockingIssues.length === 0;
+
+  if (!verified) {
+    return (
+      <div className="mt-5">
+        <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-destructive">
+          <TriangleAlert className="size-5 shrink-0" aria-hidden="true" />
+          <div>
+            <p className="text-sm font-semibold">
+              Not verified yet — a few things need your attention
+            </p>
+            <p className="mt-0.5 text-sm opacity-90">
+              Fix the items below, then run “Check documents” again. You can
+              submit once these are cleared.
+            </p>
+          </div>
+        </div>
+        <IssueList
+          title="Must be fixed before submitting"
+          issues={result.blockingIssues}
+          tone="error"
+          onOpenApproval={onOpenApproval}
+        />
+        <IssueList
+          title="Also worth double-checking"
+          issues={result.warnings}
+          tone="warning"
+          onOpenApproval={onOpenApproval}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="mt-5">
-      <div
-        className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${banner.className}`}
-      >
-        <Icon className="size-5 shrink-0" aria-hidden="true" />
-        <span className="text-sm font-semibold">{banner.label}</span>
-      </div>
-      <IssueList
-        title="Must be resolved before submitting"
-        issues={result.blockingIssues}
-        tone="error"
-        onOpenApproval={onOpenApproval}
-      />
-      <IssueList
-        title="Please double-check these"
-        issues={result.warnings}
-        tone="warning"
-        onOpenApproval={onOpenApproval}
-      />
-      <IssueList
-        title="Needs review by an officer"
-        issues={result.reviewItems}
-        tone="review"
-        onOpenApproval={onOpenApproval}
-      />
-      {result.documentChecks.length > 0 && (
-        <div className="mt-4">
-          <p className="text-sm font-semibold text-[#142b45]">
-            Document checks
+      <div className="flex items-start gap-3 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-emerald-900">
+        <ShieldCheck className="size-5 shrink-0" aria-hidden="true" />
+        <div>
+          <p className="text-sm font-semibold">Verified by our system</p>
+          <p className="mt-0.5 text-sm opacity-90">
+            Your documents passed all automated checks. Nothing else is needed
+            from you right now — you can submit.
           </p>
-          <ul className="mt-2 divide-y divide-[#e4e0d6] rounded-lg ring-1 ring-[#e4e0d6]">
-            {result.documentChecks.map((check, index) => {
-              const style =
-                documentCheckStyles[check.status] ??
-                documentCheckStyles.review_required!;
-              return (
-                <li
-                  key={`${check.documentId}-${check.field ?? index}`}
-                  className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate font-medium text-[#142b45]">
-                      {check.documentKey}
-                    </span>
-                    <span className="block truncate text-xs text-slate-500">
-                      {check.reason}
-                    </span>
-                  </span>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${style.className}`}
-                  >
-                    {style.label}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
         </div>
+      </div>
+
+      {result.warnings.length > 0 && (
+        <IssueList
+          title="Optional — you may want to double-check these"
+          issues={result.warnings}
+          tone="warning"
+          onOpenApproval={onOpenApproval}
+        />
       )}
+
+      <div className="mt-4 rounded-lg border border-[#e4e0d6] bg-white px-4 py-4">
+        <p className="text-sm font-semibold text-[#142b45]">
+          What happens after you submit
+        </p>
+        <p className="mt-1 text-sm text-slate-600">
+          Each department&rsquo;s officer will review the documents assigned to
+          them:
+        </p>
+        <ul className="mt-3 space-y-3">
+          {approvals.map((approval) => {
+            const required = approval.documents.filter(
+              (doc) => doc.required !== false,
+            );
+            const docs = required.length ? required : approval.documents;
+            return (
+              <li
+                key={approval.approvalKey}
+                className="rounded-md bg-[#faf9f6] px-3 py-3 ring-1 ring-[#eee9dd]"
+              >
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <Building2
+                    className="size-4 shrink-0 text-[#142b45]"
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm font-semibold text-[#142b45]">
+                    {approval.department?.name ?? "Assigned department"}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    · for {approval.title}
+                  </span>
+                </div>
+                <ul className="mt-2 space-y-1 pl-6">
+                  {docs.map((doc) => (
+                    <li
+                      key={doc.key}
+                      className="flex items-center gap-2 text-sm text-slate-700"
+                    >
+                      <Check
+                        className="size-3.5 shrink-0 text-emerald-600"
+                        aria-hidden="true"
+                      />
+                      {doc.name}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="mt-3 flex items-start gap-2 text-xs text-slate-500">
+          <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+          Our system confirms your files are present and readable. An officer
+          always verifies the actual contents — this review step is normal and
+          needs nothing further from you.
+        </p>
+      </div>
     </div>
   );
 }
@@ -981,6 +999,12 @@ function ChecklistResult({ project }: { project: Project }) {
       setValidating(false);
     }
   }
+
+  // The applicant may submit only after a check that surfaced no blocking
+  // issues. Warnings and officer-review items are allowed through — the server
+  // enforces the same rule, this just mirrors it so the button reflects intent.
+  const hasBlockingIssues = (validation?.blockingIssues.length ?? 0) > 0;
+  const canSubmit = validation !== null && !hasBlockingIssues;
 
   async function submitApplication() {
     setSubmittingApplication(true);
@@ -1111,6 +1135,7 @@ function ChecklistResult({ project }: { project: Project }) {
         {validation && !validationError && (
           <ValidationReport
             result={validation}
+            approvals={approvals}
             onOpenApproval={(approvalKey) => {
               const approval = approvals.find(
                 (a) => a.approvalKey === approvalKey,
@@ -1131,7 +1156,7 @@ function ChecklistResult({ project }: { project: Project }) {
             </h3>
             <p className="mt-1 max-w-2xl text-sm text-slate-600">
               {savedProject.status === "draft"
-                ? "Submission checks that every required file is present. Automated Python validation is not required."
+                ? "Run “Check documents” first. You can submit once there are no blocking issues — warnings and items flagged for officer review don’t stop submission."
                 : "Your assigned departments can now review the application and its documents."}
             </p>
           </div>
@@ -1140,7 +1165,7 @@ function ChecklistResult({ project }: { project: Project }) {
               size="lg"
               className="h-11 rounded-md px-6"
               onClick={submitApplication}
-              disabled={submittingApplication}
+              disabled={submittingApplication || !canSubmit}
               aria-busy={submittingApplication}
             >
               {submittingApplication ? "Submitting…" : "Submit application"}
@@ -1165,6 +1190,12 @@ function ChecklistResult({ project }: { project: Project }) {
             className="mt-4 border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive"
           >
             {submissionError}
+          </p>
+        ) : savedProject.status === "draft" && !canSubmit ? (
+          <p className="mt-4 text-sm text-slate-600">
+            {validation === null
+              ? "Run “Check documents” above before submitting."
+              : "Resolve the blocking issues above, then re-check to enable submission."}
           </p>
         ) : null}
       </section>

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { AppError } from '../../errors/app-error.js';
 import { logger } from '../../config/logger.js';
+import type { ValidationResult } from '../documents/document.validation-client.js';
 import type { ProjectRepository } from './project.repository.js';
 import { RulesEngineError, type RulesEngineClient } from './project.rules-client.js';
 import { deriveApprovals, type RecommendedApproval } from './project.rules.js';
@@ -14,10 +15,19 @@ import type {
   ProjectSummary,
 } from './project.types.js';
 
+/**
+ * The subset of the document service that the submission gate depends on:
+ * running a fresh validation pass for a project the applicant owns.
+ */
+export interface ProjectValidator {
+  validateProject(applicantId: string, projectId: string): Promise<ValidationResult>;
+}
+
 export class ProjectService {
   constructor(
     private readonly repository: ProjectRepository,
     private readonly rulesEngine: RulesEngineClient | null = null,
+    private readonly validator: ProjectValidator | null = null,
   ) {}
 
   async createProject(applicantId: string, input: CreateProjectInput): Promise<ProjectRecord> {
@@ -84,6 +94,26 @@ export class ProjectService {
   }
 
   async submitProject(applicantId: string, projectId: string): Promise<ProjectRecord> {
+    // Gate submission on a fresh validation: nothing with an unresolved blocking
+    // issue may enter the inspector queue. Warnings and review items do not block —
+    // review items are exactly what the inspector is meant to judge. When a
+    // validator is configured but unreachable, validateProject throws (502/503),
+    // so submission fails closed rather than slipping past the check.
+    if (this.validator) {
+      const validation = await this.validator.validateProject(applicantId, projectId);
+      if (validation.blockingIssues.length > 0) {
+        logger.warn(
+          { projectId, blockingIssues: validation.blockingIssues.length },
+          'Submission blocked: validation reported unresolved blocking issues',
+        );
+        throw new AppError('Resolve the blocking issues before submitting', {
+          statusCode: 422,
+          code: 'SUBMISSION_HAS_BLOCKING_ISSUES',
+          details: { blockingIssues: validation.blockingIssues },
+        });
+      }
+    }
+
     const result = await this.repository.submitProject(applicantId, projectId);
     if (result.missingDocuments.length > 0) {
       throw new AppError('Upload all required documents before submitting', {
