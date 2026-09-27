@@ -37,6 +37,39 @@ const postLoginRoutes: Record<LoginMode, string> = {
   inspector: "/inspector/dashboard",
 };
 
+const inspectorWorkspaceRoutes = [
+  "/inspector/dashboard",
+  "/inspector/applications",
+  "/inspector/inspections",
+  "/inspector/clarifications",
+  "/inspector/decisions",
+  "/inspector/reports",
+] as const;
+
+export function getPostLoginRoute(
+  mode: LoginMode,
+  requestedPath: string | null,
+): string {
+  if (
+    !requestedPath ||
+    !requestedPath.startsWith("/") ||
+    requestedPath.startsWith("//") ||
+    requestedPath.includes("\\")
+  ) {
+    return postLoginRoutes[mode];
+  }
+
+  const pathname = requestedPath.split(/[?#]/, 1)[0] ?? "";
+  const allowed =
+    mode === "applicant"
+      ? pathname === "/applicant" || pathname.startsWith("/applicant/")
+      : inspectorWorkspaceRoutes.some(
+          (route) => pathname === route || pathname.startsWith(`${route}/`),
+        );
+
+  return allowed ? requestedPath : postLoginRoutes[mode];
+}
+
 export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
   const { t } = useLanguage();
   const router = useRouter();
@@ -67,7 +100,10 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
         },
       );
       queryClient.setQueryData(sessionQueryKey, response.data.user);
-      router.push(postLoginRoutes[mode]);
+      const requestedPath = new URLSearchParams(window.location.search).get(
+        "next",
+      );
+      router.push(getPostLoginRoute(mode, requestedPath));
       router.refresh();
     } catch (cause) {
       setServerError(getAuthErrorMessage(cause, "login"));

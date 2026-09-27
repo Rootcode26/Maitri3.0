@@ -167,9 +167,18 @@ describe("inspector workflow", () => {
     expect((fetchMock.mock.calls[1]?.[1] as RequestInit).method).toBe("POST");
   });
 
-  it("protects inspector application routes in the proxy matcher configuration", async () => {
+  it("protects every inspector workspace route", async () => {
     const { config } = await import("@/proxy");
-    expect(config.matcher).toContain("/inspector/applications/:path*");
+    expect(config.matcher).toEqual(
+      expect.arrayContaining([
+        "/inspector/dashboard/:path*",
+        "/inspector/applications/:path*",
+        "/inspector/inspections/:path*",
+        "/inspector/clarifications/:path*",
+        "/inspector/decisions/:path*",
+        "/inspector/reports/:path*",
+      ]),
+    );
   });
 
   it("lets an inspector request a clarification after starting review", async () => {

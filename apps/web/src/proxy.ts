@@ -68,5 +68,9 @@ export const config = {
     "/applicant/:path*",
     "/inspector/dashboard/:path*",
     "/inspector/applications/:path*",
+    "/inspector/inspections/:path*",
+    "/inspector/clarifications/:path*",
+    "/inspector/decisions/:path*",
+    "/inspector/reports/:path*",
   ],
 };
