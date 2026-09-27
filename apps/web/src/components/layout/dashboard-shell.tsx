@@ -100,7 +100,7 @@ export function DashboardTopbar({
   onToggleNavigation: () => void;
   workspace: Workspace;
 }) {
-  const { t } = useLanguage();
+  const { t, text } = useLanguage();
   return (
     <header className="flex min-h-16 items-center justify-between gap-6 border-b border-[#e4e0d6] bg-[#f7f6f2] px-6 py-3">
       <div className="flex items-center gap-4">
@@ -118,6 +118,19 @@ export function DashboardTopbar({
           <ol className="flex items-center gap-2 text-sm text-slate-500">
             {breadcrumb.map((crumb, i) => {
               const last = i === breadcrumb.length - 1;
+              const breadcrumbKey = ({
+                Home: "breadcrumb.home",
+                Applicant: "breadcrumb.applicant",
+                Inspector: "breadcrumb.inspector",
+                Dashboard: "breadcrumb.dashboard",
+                Applications: "breadcrumb.applications",
+                Documents: "breadcrumb.documents",
+                Projects: "breadcrumb.projects",
+                "New project": "breadcrumb.newProject",
+                "Review queue": "breadcrumb.reviewQueue",
+                Application: "breadcrumb.application",
+                Details: "breadcrumb.details",
+              } as const)[crumb as "Home"];
               return (
                 <Fragment key={crumb}>
                   <li
@@ -126,19 +139,7 @@ export function DashboardTopbar({
                     }
                     aria-current={last ? "page" : undefined}
                   >
-                    {t(({
-                      Home: "breadcrumb.home",
-                      Applicant: "breadcrumb.applicant",
-                      Inspector: "breadcrumb.inspector",
-                      Dashboard: "breadcrumb.dashboard",
-                      Applications: "breadcrumb.applications",
-                      Documents: "breadcrumb.documents",
-                      Projects: "breadcrumb.projects",
-                      "New project": "breadcrumb.newProject",
-                      "Review queue": "breadcrumb.reviewQueue",
-                      Application: "breadcrumb.application",
-                      Details: "breadcrumb.details",
-                    } as const)[crumb as "Home"] ?? "nav.workspace")}
+                    {breadcrumbKey ? t(breadcrumbKey) : text(crumb)}
                   </li>
                   {!last && (
                     <ChevronRight

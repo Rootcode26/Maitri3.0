@@ -10,7 +10,10 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import Home from "@/app/page";
-import { LoginForm } from "@/features/auth/login-form";
+import {
+  getPostLoginRoute,
+  LoginForm,
+} from "@/features/auth/login-form";
 import { ForgotPasswordForm } from "@/features/auth/forgot-password-form";
 import { OtpForm } from "@/features/auth/otp-form";
 import { RegisterForm } from "@/features/auth/register-form";
@@ -61,6 +64,18 @@ describe("authentication workflow", () => {
       status: 200,
       json: async () => ({ status: "success", data: { user: authUser } }),
     });
+  });
+
+  it("returns inspectors to a requested workspace page after login", () => {
+    expect(
+      getPostLoginRoute("inspector", "/inspector/reports?period=september"),
+    ).toBe("/inspector/reports?period=september");
+    expect(getPostLoginRoute("inspector", "https://example.com/phishing")).toBe(
+      "/inspector/dashboard",
+    );
+    expect(getPostLoginRoute("inspector", "/applicant/documents")).toBe(
+      "/inspector/dashboard",
+    );
   });
 
   it("presents separate applicant and inspector workspaces", () => {

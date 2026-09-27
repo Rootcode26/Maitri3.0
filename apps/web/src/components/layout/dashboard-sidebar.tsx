@@ -1,7 +1,12 @@
 import {
+  BadgeCheck,
   Bell,
+  CalendarDays,
+  ChartNoAxesCombined,
   FileText,
+  Inbox,
   LayoutDashboard,
+  MessageSquareText,
   PlusSquare,
   ScrollText,
   ShieldCheck,
@@ -57,6 +62,36 @@ const inspectorNavItems: NavItem[] = [
     icon: LayoutDashboard,
     ready: true,
   },
+  {
+    label: "Applications",
+    href: "/inspector/applications",
+    icon: Inbox,
+    ready: true,
+  },
+  {
+    label: "Site inspections",
+    href: "/inspector/inspections",
+    icon: CalendarDays,
+    ready: true,
+  },
+  {
+    label: "Clarifications",
+    href: "/inspector/clarifications",
+    icon: MessageSquareText,
+    ready: true,
+  },
+  {
+    label: "Decisions",
+    href: "/inspector/decisions",
+    icon: BadgeCheck,
+    ready: true,
+  },
+  {
+    label: "Reports",
+    href: "/inspector/reports",
+    icon: ChartNoAxesCombined,
+    ready: true,
+  },
 ];
 
 export function DashboardSidebar({
@@ -73,8 +108,16 @@ export function DashboardSidebar({
   onClose?: () => void;
 }) {
   const { t } = useLanguage();
-  const translationKeys: TranslationKey[] = workspace === "inspector" ? ["nav.reviewQueue"] : ["nav.dashboard", "nav.newProject", "nav.applications", "nav.documents", "nav.notifications", "nav.verifyCertificate"];
-  const navItems = (workspace === "inspector" ? inspectorNavItems : applicantNavItems).map((item, index) => ({ ...item, label: t(translationKeys[index]!) }));
+  const translationKeys: TranslationKey[] = ["nav.dashboard", "nav.newProject", "nav.applications", "nav.documents", "nav.notifications", "nav.verifyCertificate"];
+  const navItems = workspace === "inspector"
+    ? inspectorNavItems.map((item, index) => ({
+        ...item,
+        label: index === 0 ? t("nav.reviewQueue") : item.label,
+      }))
+    : applicantNavItems.map((item, index) => ({
+        ...item,
+        label: t(translationKeys[index]!),
+      }));
   return (
     <aside
       id={id}
