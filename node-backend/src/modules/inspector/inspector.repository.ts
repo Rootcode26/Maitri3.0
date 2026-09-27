@@ -9,6 +9,9 @@ import type {
 import type { DocumentExtractionStatus, DocumentReadStatus } from '../documents/document.types.js';
 import type { InspectorQueueQuery } from './inspector.schemas.js';
 import type {
+  AttentionAssessment,
+  AttentionFactor,
+  AttentionLevel,
   DocumentReviewStatus,
   ClarificationRequest,
   ClarificationStatus,
@@ -22,7 +25,110 @@ import type {
   InspectorDecisionSummary,
   InspectorDocument,
   InspectorReport,
+  ValidationCheckStatus,
+  ValidationDocumentCheck,
+  ValidationFlag,
+  ValidationFlags,
 } from './inspector.types.js';
+
+const ATTENTION_LEVELS = ['standard', 'elevated', 'high_attention'] as const;
+
+const toAttentionLevel = (value: string | null): AttentionLevel | null =>
+  (ATTENTION_LEVELS as readonly string[]).includes(value ?? '')
+    ? (value as AttentionLevel)
+    : null;
+
+/** Coerce the persisted jsonb factors back into a typed, validated list. */
+const toAttentionFactors = (value: unknown): AttentionFactor[] => {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const factor = item as Record<string, unknown>;
+    if (
+      typeof factor.code === 'string' &&
+      typeof factor.label === 'string' &&
+      typeof factor.points === 'number' &&
+      typeof factor.explanation === 'string'
+    ) {
+      return [
+        {
+          code: factor.code,
+          label: factor.label,
+          points: factor.points,
+          explanation: factor.explanation,
+        },
+      ];
+    }
+    return [];
+  });
+};
+
+const toAttentionAssessment = (
+  score: number | null,
+  level: string | null,
+  factors: unknown,
+): AttentionAssessment | null => {
+  const normalisedLevel = toAttentionLevel(level);
+  if (score === null || normalisedLevel === null) return null;
+  return { score, level: normalisedLevel, factors: toAttentionFactors(factors) };
+};
+
+const asString = (value: unknown): string => (typeof value === 'string' ? value : '');
+const asNullableString = (value: unknown): string | null =>
+  typeof value === 'string' ? value : null;
+
+const CHECK_STATUSES: readonly string[] = [
+  'matched',
+  'mismatched',
+  'unavailable',
+  'review_required',
+];
+
+const toValidationFlag = (item: Record<string, unknown>): ValidationFlag => ({
+  code: asString(item.code),
+  message: asString(item.message),
+  suggestedAction: asString(item.suggestedAction),
+  approvalKey: asNullableString(item.approvalKey),
+  documentKey: asNullableString(item.documentKey),
+  field: asNullableString(item.field),
+});
+
+const toValidationFlagList = (value: unknown): ValidationFlag[] =>
+  Array.isArray(value)
+    ? value.flatMap((item) =>
+        item && typeof item === 'object' ? [toValidationFlag(item as Record<string, unknown>)] : [],
+      )
+    : [];
+
+const toDocumentChecks = (value: unknown): ValidationDocumentCheck[] =>
+  Array.isArray(value)
+    ? value.flatMap((item) => {
+        if (!item || typeof item !== 'object') return [];
+        const check = item as Record<string, unknown>;
+        const status = asString(check.status);
+        if (!CHECK_STATUSES.includes(status)) return [];
+        return [
+          {
+            approvalKey: asString(check.approvalKey),
+            documentKey: asString(check.documentKey),
+            field: asNullableString(check.field),
+            status: status as ValidationCheckStatus,
+            reason: asString(check.reason),
+          },
+        ];
+      })
+    : [];
+
+/** Coerce the persisted jsonb validation snapshot back into typed flags. */
+const toValidationFlags = (value: unknown): ValidationFlags | null => {
+  if (!value || typeof value !== 'object') return null;
+  const snapshot = value as Record<string, unknown>;
+  return {
+    warnings: toValidationFlagList(snapshot.warnings),
+    reviewItems: toValidationFlagList(snapshot.reviewItems),
+    documentChecks: toDocumentChecks(snapshot.documentChecks),
+  };
+};
 
 interface ClarificationRow {
   id: string;
@@ -76,6 +182,10 @@ interface DetailRow {
   applicant_id: string;
   applicant_name: string;
   applicant_phone: string;
+  attention_score: number | null;
+  attention_level: string | null;
+  attention_factors: unknown;
+  validation_flags: unknown;
   details: CreateProjectInput;
 }
 
@@ -129,12 +239,7 @@ const mapQueueRow = (row: QueueRow): InspectorApplicationSummary => ({
   dueAt: row.due_at?.toISOString() ?? null,
   overdue: row.overdue,
   attentionScore: row.attention_score,
-  attentionLevel:
-    row.attention_level === 'standard' ||
-    row.attention_level === 'elevated' ||
-    row.attention_level === 'high_attention'
-      ? row.attention_level
-      : null,
+  attentionLevel: toAttentionLevel(row.attention_level),
 });
 
 const mapApproval = (row: ApprovalRow): InspectorApproval => ({
@@ -569,6 +674,8 @@ export class InspectorRepository {
       `SELECT p.id AS project_id, p.enterprise_name, p.industry, p.district,
               p.primary_activity, p.status AS project_status,
               COALESCE(p.submitted_at, p.created_at) AS submitted_at,
+              p.attention_score, p.attention_level, p.attention_factors,
+              p.validation_flags,
               p.details, u.id AS applicant_id, u.name AS applicant_name,
               u.phone_number AS applicant_phone
        FROM projects p
@@ -639,6 +746,12 @@ export class InspectorRepository {
         phoneNumber: project.applicant_phone,
       },
       details: project.details,
+      attention: toAttentionAssessment(
+        project.attention_score,
+        project.attention_level,
+        project.attention_factors,
+      ),
+      validation: toValidationFlags(project.validation_flags),
       approvals: approvals.rows.map(mapApproval),
       documents: documents.rows.map(mapDocument),
       clarifications: mapClarifications(clarifications.rows, clarificationResponses.rows),

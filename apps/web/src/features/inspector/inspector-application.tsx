@@ -6,6 +6,7 @@ import {
   Download,
   Eye,
   FileCheck2,
+  Gauge,
   Loader2,
   MessageSquareText,
 } from "lucide-react";
@@ -15,6 +16,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/providers/language-provider";
 import { formatDate } from "@/i18n/format";
+import type { TranslationKey } from "@/i18n/language/en";
 import { translateStatus } from "@/features/projects/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -25,9 +27,208 @@ import {
   reviewInspectorDocument,
   resolveInspectorClarification,
   startInspectorReview,
+  type AttentionAssessment,
+  type AttentionLevel,
   type InspectorApplication,
   type InspectorDocument,
+  type ValidationCheckStatus,
+  type ValidationFlag,
+  type ValidationFlags,
 } from "@/features/inspector/inspector-api";
+
+const attentionLevelKey: Record<AttentionLevel, TranslationKey> = {
+  standard: "attention.standard",
+  elevated: "attention.elevated",
+  high_attention: "attention.high_attention",
+};
+
+const attentionLevelClass: Record<AttentionLevel, string> = {
+  standard: "border-emerald-300 bg-emerald-50 text-emerald-800",
+  elevated: "border-amber-300 bg-amber-50 text-amber-900",
+  high_attention: "border-red-300 bg-red-50 text-red-800",
+};
+
+function AttentionCard({
+  attention,
+  t,
+}: {
+  attention: AttentionAssessment;
+  t: (key: TranslationKey) => string;
+}) {
+  return (
+    <Card className="rounded-md border-[#d8d3c8]">
+      <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
+        <CardTitle className="flex items-center gap-2 text-xl text-[#142b45]">
+          <Gauge className="size-5 text-slate-500" aria-hidden="true" />
+          {t("attention.title")}
+        </CardTitle>
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold ${attentionLevelClass[attention.level]}`}
+        >
+          {t(attentionLevelKey[attention.level])}
+          <span className="font-normal opacity-80">· {attention.score}/100</span>
+        </span>
+      </CardHeader>
+      <CardContent>
+        {attention.factors.length > 0 ? (
+          <>
+            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              {t("attention.heading")}
+            </p>
+            <ul className="mt-3 divide-y divide-[#e4e0d6] rounded-lg ring-1 ring-[#e4e0d6]">
+              {attention.factors.map((factor) => (
+                <li
+                  key={factor.code}
+                  className="flex items-start justify-between gap-4 px-4 py-3"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium text-[#142b45]">
+                      {factor.label}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-slate-500">
+                      {factor.explanation}
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                    +{factor.points}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p className="text-sm text-slate-600">{t("attention.noFactors")}</p>
+        )}
+        <p className="mt-3 text-xs text-slate-500">{t("attention.tooltip")}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+const checkStatusStyle: Record<
+  ValidationCheckStatus,
+  { className: string; labelKey: TranslationKey }
+> = {
+  matched: {
+    className: "bg-emerald-100 text-emerald-800",
+    labelKey: "validation.checkMatched",
+  },
+  mismatched: {
+    className: "bg-red-100 text-red-800",
+    labelKey: "validation.checkMismatched",
+  },
+  unavailable: {
+    className: "bg-slate-100 text-slate-600",
+    labelKey: "validation.checkUnavailable",
+  },
+  review_required: {
+    className: "bg-amber-100 text-amber-800",
+    labelKey: "validation.checkReview",
+  },
+};
+
+function FlagList({
+  heading,
+  flags,
+}: {
+  heading: string;
+  flags: ValidationFlag[];
+}) {
+  if (flags.length === 0) return null;
+  return (
+    <div className="mt-4 first:mt-0">
+      <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+        {heading}
+      </p>
+      <ul className="mt-2 space-y-2">
+        {flags.map((flag, index) => (
+          <li key={`${flag.code}-${index}`} className="text-sm">
+            <span className="font-medium text-[#142b45]">{flag.message}</span>
+            {flag.suggestedAction ? (
+              <span className="mt-0.5 block text-xs text-slate-500">
+                {flag.suggestedAction}
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ValidationFlagsCard({
+  validation,
+  t,
+  text,
+}: {
+  validation: ValidationFlags;
+  t: (key: TranslationKey) => string;
+  text: (source: string) => string;
+}) {
+  const isClean =
+    validation.warnings.length === 0 &&
+    validation.reviewItems.length === 0 &&
+    validation.documentChecks.length === 0;
+
+  return (
+    <Card className="rounded-md border-[#d8d3c8]">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-xl text-[#142b45]">
+          <FileCheck2 className="size-5 text-slate-500" aria-hidden="true" />
+          {t("validation.title")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isClean ? (
+          <p className="text-sm text-slate-600">{t("validation.clean")}</p>
+        ) : (
+          <>
+            <FlagList
+              heading={t("validation.warningsHeading")}
+              flags={validation.warnings}
+            />
+            <FlagList
+              heading={t("validation.reviewHeading")}
+              flags={validation.reviewItems}
+            />
+            {validation.documentChecks.length > 0 ? (
+              <div className="mt-4">
+                <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  {t("validation.checksHeading")}
+                </p>
+                <ul className="mt-2 divide-y divide-[#e4e0d6] rounded-lg ring-1 ring-[#e4e0d6]">
+                  {validation.documentChecks.map((check, index) => {
+                    const style = checkStatusStyle[check.status];
+                    return (
+                      <li
+                        key={`${check.documentKey}-${check.field ?? index}`}
+                        className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium text-[#142b45]">
+                            {text(check.documentKey)}
+                          </span>
+                          <span className="block truncate text-xs text-slate-500">
+                            {check.reason}
+                          </span>
+                        </span>
+                        <span
+                          className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${style.className}`}
+                        >
+                          {t(style.labelKey)}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : null}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 function ClarificationPanel({
   projectId,
@@ -448,6 +649,18 @@ function ReviewContent({
           ))}
         </CardContent>
       </Card>
+
+      {application.attention ? (
+        <AttentionCard attention={application.attention} t={t} />
+      ) : null}
+
+      {application.validation ? (
+        <ValidationFlagsCard
+          validation={application.validation}
+          t={t}
+          text={text}
+        />
+      ) : null}
 
       <Card className="rounded-md border-[#d8d3c8]">
         <CardHeader>

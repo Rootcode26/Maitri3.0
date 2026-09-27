@@ -30,6 +30,40 @@ const application = (
     phoneNumber: "+919876543210",
   },
   details: { enterpriseName: "Sahyadri Steel Works" },
+  attention: {
+    score: 35,
+    level: "elevated",
+    factors: [
+      {
+        code: "HAZARDOUS_CHEMICALS",
+        label: "Hazardous chemicals on site",
+        points: 20,
+        explanation: "The applicant reported handling hazardous chemicals.",
+      },
+    ],
+  },
+  validation: {
+    warnings: [
+      {
+        code: "DOCUMENT_VALUE_LOOKS_DIFFERENT",
+        message: "The PAN in the document looks different from the form.",
+        suggestedAction: "Confirm the correct PAN.",
+        approvalKey: "factory-registration",
+        documentKey: "factory-plan",
+        field: "project.pan",
+      },
+    ],
+    reviewItems: [],
+    documentChecks: [
+      {
+        approvalKey: "factory-registration",
+        documentKey: "factory-plan",
+        field: null,
+        status: "review_required",
+        reason: "Extraction could not confirm the contents.",
+      },
+    ],
+  },
   approvals: [
     {
       id: approvalId,
@@ -162,6 +196,15 @@ describe("inspector workflow", () => {
     vi.stubGlobal("fetch", fetchMock);
     renderWithQuery(<InspectorApplicationView projectId={projectId} />);
     expect(await screen.findByText("factory-plan.pdf")).toBeInTheDocument();
+    // The attention assessment and its contributing factors are shown.
+    expect(screen.getByText("Attention assessment")).toBeInTheDocument();
+    expect(screen.getByText("Hazardous chemicals on site")).toBeInTheDocument();
+    expect(screen.getByText("+20")).toBeInTheDocument();
+    // The automated validation flags are shown for the inspector.
+    expect(screen.getByText("Automated check flags")).toBeInTheDocument();
+    expect(
+      screen.getByText("The PAN in the document looks different from the form."),
+    ).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Start review" }));
     await waitFor(() =>
       expect(screen.getAllByText("Under review")).toHaveLength(2),

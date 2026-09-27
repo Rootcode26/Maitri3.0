@@ -279,7 +279,8 @@ export class ProjectRepository {
   async submitProject(
     applicantId: string,
     projectId: string,
-    attention: { score: number; level: string } | null = null,
+    attention: { score: number; level: string; factors?: unknown[] } | null = null,
+    validationFlags: unknown | null = null,
   ): Promise<{ project: ProjectRecord | null; missingDocuments: string[]; conflict: boolean }> {
     const client = await databasePool.connect();
     try {
@@ -325,9 +326,16 @@ export class ProjectRepository {
       await client.query(
         `UPDATE projects
             SET status = 'submitted', submitted_at = NOW(),
-                attention_score = $2, attention_level = $3
+                attention_score = $2, attention_level = $3, attention_factors = $4,
+                validation_flags = $5
           WHERE id = $1`,
-        [projectId, attention?.score ?? null, attention?.level ?? null],
+        [
+          projectId,
+          attention?.score ?? null,
+          attention?.level ?? null,
+          attention?.factors ? JSON.stringify(attention.factors) : null,
+          validationFlags ? JSON.stringify(validationFlags) : null,
+        ],
       );
       await client.query(
         `INSERT INTO application_status_history
