@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Download,
+  Eye,
   FileCheck2,
   Loader2,
   MessageSquareText,
@@ -220,6 +221,7 @@ function DocumentReviewCard({
   >(document.review.status === "pending" ? "accepted" : document.review.status);
   const [comment, setComment] = useState(document.review.comment ?? "");
   const [message, setMessage] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const review = useMutation({
     mutationFn: () =>
       reviewInspectorDocument(
@@ -252,6 +254,21 @@ function DocumentReviewCard({
     }
   }
 
+  async function togglePreview() {
+    if (previewUrl) {
+      setPreviewUrl(null);
+      return;
+    }
+    setMessage(null);
+    try {
+      setPreviewUrl(await getInspectorDocumentDownload(projectId, document.id));
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : t("inspector.openDocumentError"),
+      );
+    }
+  }
+
   return (
     <div className="border border-[#d8d3c8] bg-[#faf9f6] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -267,15 +284,33 @@ function DocumentReviewCard({
             {t("inspector.currentReview", { status: translateStatus(t, document.review.status) })}
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-9 rounded-md"
-          onClick={download}
-        >
-          <Download aria-hidden="true" /> {t("inspector.openFile")}
-        </Button>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 rounded-md"
+            onClick={togglePreview}
+          >
+            <Eye aria-hidden="true" />{" "}
+            {previewUrl ? t("inspector.hidePreview") : t("inspector.preview")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 rounded-md"
+            onClick={download}
+          >
+            <Download aria-hidden="true" /> {t("inspector.openFile")}
+          </Button>
+        </div>
       </div>
+      {previewUrl ? (
+        <iframe
+          src={previewUrl}
+          title={document.fileName}
+          className="mt-4 h-[32rem] w-full rounded-md border border-[#d8d3c8] bg-white"
+        />
+      ) : null}
       <div className="mt-4 grid gap-3 sm:grid-cols-[13rem_1fr_auto] sm:items-end">
         <label className="text-sm font-medium text-[#142b45]">
           {t("inspector.reviewResult")}

@@ -1,26 +1,44 @@
-import {
-  AlertTriangle,
-  ArrowRight,
-  Building2,
-  CalendarDays,
-  CheckCircle2,
-  Clock3,
-  Download,
-  FileCheck2,
-  FileText,
-  Filter,
-  MapPin,
-  Printer,
-  Route,
-  Search,
-  Send,
-  ShieldCheck,
-  SlidersHorizontal,
-  UserRound,
-  UsersRound,
-} from "lucide-react";
+"use client";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowRight, CalendarDays, Loader2, Search } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+
+import { useLanguage } from "@/components/providers/language-provider";
+import type { Language } from "@/i18n/config";
+import { formatDate } from "@/i18n/format";
+import type { TranslationKey } from "@/i18n/language/en";
+import { translateStatus } from "@/features/projects/status-badge";
+import {
+  getInspectorReport,
+  listInspectorApplications,
+  listInspectorClarifications,
+  listInspectorDecisions,
+  listInspectorInspections,
+  scheduleInspection,
+  updateInspection,
+  type AttentionLevel,
+  type ClarificationStatus,
+  type InspectionOutcome,
+  type InspectionStatus,
+  type InspectorDecisionSummary,
+  type ReviewStatus,
+} from "@/features/inspector/inspector-api";
+
+const reviewTone: Record<ReviewStatus, "blue" | "amber" | "green" | "red" | "slate"> = {
+  pending: "blue",
+  under_review: "blue",
+  correction_required: "amber",
+  approved: "green",
+  rejected: "red",
+};
+
+const attentionTone: Record<AttentionLevel, "green" | "amber" | "red"> = {
+  standard: "green",
+  elevated: "amber",
+  high_attention: "red",
+};
 
 const primaryAction =
   "inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -96,394 +114,560 @@ function MetricStrip({
   );
 }
 
-function Toolbar({ children }: { children?: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-3 border border-[#d8d3c8] bg-[#faf9f6] p-4 lg:flex-row lg:items-center">
-      <label className="relative min-w-0 flex-1">
-        <span className="sr-only">Search records</span>
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-        <input
-          type="search"
-          placeholder="Search by enterprise, applicant or reference number"
-          className="h-11 w-full rounded-md border border-[#cfd4dc] bg-white pl-10 pr-3 text-sm text-[#142b45] placeholder:text-slate-400 focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
-        />
-      </label>
-      {children}
-      <button type="button" className={secondaryAction}>
-        <Filter className="size-4" aria-hidden="true" /> More filters
-      </button>
-    </div>
-  );
-}
-
-const applications = [
-  {
-    reference: "MH-SWC-2026-04192",
-    enterprise: "Sahyadri Foods Private Limited",
-    approval: "Consent to operate",
-    applicant: "Surya Patil",
-    district: "Pune",
-    submitted: "24 Sep 2026",
-    due: "2 days",
-    status: "Under review",
-    tone: "blue" as const,
-  },
-  {
-    reference: "MH-SWC-2026-04187",
-    enterprise: "Pragati Precision Works",
-    approval: "Factory registration",
-    applicant: "Rohan Deshmukh",
-    district: "Nashik",
-    submitted: "23 Sep 2026",
-    due: "Today",
-    status: "SLA risk",
-    tone: "amber" as const,
-  },
-  {
-    reference: "MH-SWC-2026-04161",
-    enterprise: "Konkan Marine Exports",
-    approval: "Fire safety NOC",
-    applicant: "Meera Sawant",
-    district: "Ratnagiri",
-    submitted: "21 Sep 2026",
-    due: "4 days",
-    status: "Clarification received",
-    tone: "green" as const,
-  },
-  {
-    reference: "MH-SWC-2026-04098",
-    enterprise: "Vidarbha Agro Processing",
-    approval: "Food-related licence",
-    applicant: "Aarav Kulkarni",
-    district: "Nagpur",
-    submitted: "18 Sep 2026",
-    due: "6 days overdue",
-    status: "Overdue",
-    tone: "red" as const,
-  },
-  {
-    reference: "MH-SWC-2026-04085",
-    enterprise: "Deccan Green Energy LLP",
-    approval: "Consent to establish",
-    applicant: "Nisha Bhosale",
-    district: "Aurangabad",
-    submitted: "17 Sep 2026",
-    due: "Awaiting applicant",
-    status: "Correction required",
-    tone: "slate" as const,
-  },
+const applicationFilters: { label: string; value?: ReviewStatus }[] = [
+  { label: "status.all" },
+  { label: "status.pending", value: "pending" },
+  { label: "status.under_review", value: "under_review" },
+  { label: "status.correction_required", value: "correction_required" },
+  { label: "status.approved", value: "approved" },
+  { label: "status.rejected", value: "rejected" },
 ];
 
 export function InspectorApplicationsPage() {
+  const { t, text, language } = useLanguage();
+  const [filter, setFilter] = useState<ReviewStatus | undefined>();
+  const [search, setSearch] = useState("");
+  const query = useQuery({
+    queryKey: ["inspector-applications", filter, search],
+    queryFn: () => listInspectorApplications(filter, search),
+  });
+  const rows = query.data?.applications ?? [];
+  const total = query.data?.pagination.total ?? 0;
+
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-8">
       <PageIntro
-        section="Department work registry"
-        title="Applications"
-        description="Find every approval assigned to your department, track statutory deadlines and open the complete review record."
-        action={
-          <button type="button" className={secondaryAction}>
-            <Download className="size-4" aria-hidden="true" /> Export register
-          </button>
-        }
+        section={t("inspector.departmentReview")}
+        title={t("nav.applications")}
+        description={t("inspector.queueDescription")}
       />
 
       <div className="mt-7 space-y-5">
-        <MetricStrip
-          items={[
-            { label: "Assigned to department", value: "68", note: "Across all active officers" },
-            { label: "Due this week", value: "18", note: "5 require site inspection" },
-            { label: "At SLA risk", value: "07", note: "Action needed within 24 hours", tone: "text-amber-700" },
-            { label: "Closed this month", value: "124", note: "91% completed within SLA", tone: "text-emerald-700" },
-          ]}
-        />
+        <label className="relative block max-w-md">
+          <span className="sr-only">{t("inspector.search")}</span>
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={t("inspector.searchPlaceholder")}
+            className="h-11 w-full rounded-md border border-[#cfd4dc] bg-white pr-3 pl-10 text-sm text-[#142b45] focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
+          />
+        </label>
 
-        <Toolbar>
-          <select className="h-11 rounded-md border border-[#cfd4dc] bg-white px-3 text-sm text-[#142b45]" defaultValue="active" aria-label="Application status">
-            <option value="active">Active applications</option>
-            <option>Pending review</option>
-            <option>Correction required</option>
-            <option>Approved</option>
-            <option>Rejected</option>
-          </select>
-          <select className="h-11 rounded-md border border-[#cfd4dc] bg-white px-3 text-sm text-[#142b45]" defaultValue="deadline" aria-label="Sort applications">
-            <option value="deadline">Nearest deadline</option>
-            <option>Newest submission</option>
-            <option>Oldest submission</option>
-          </select>
-        </Toolbar>
+        <div className="flex flex-wrap items-center gap-2" aria-label={t("inspector.filterQueue")}>
+          {applicationFilters.map((item) => {
+            const active = filter === item.value;
+            return (
+              <button
+                key={item.value ?? "all"}
+                type="button"
+                onClick={() => setFilter(item.value)}
+                className={`h-10 rounded-md px-4 text-sm font-semibold ${active ? "bg-primary text-primary-foreground" : "border border-[#cfd4dc] bg-white text-[#142b45] hover:bg-[#f7f6f2]"}`}
+              >
+                {t(item.label as "status.all")}
+              </button>
+            );
+          })}
+        </div>
 
-        <section className="overflow-hidden border border-[#d8d3c8] bg-white" aria-labelledby="applications-table-title">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4e0d6] px-5 py-4">
-            <div>
-              <h2 id="applications-table-title" className="font-semibold text-[#142b45]">Active departmental applications</h2>
-              <p className="mt-0.5 text-xs text-slate-500">Showing 5 of 68 records</p>
+        {query.isPending ? (
+          <div className="flex items-center gap-3 border border-[#e4e0d6] bg-white p-6 text-slate-600">
+            <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loading")}
+          </div>
+        ) : query.isError ? (
+          <div role="alert" className="border border-destructive/30 bg-destructive/5 p-6 text-destructive">
+            {t("inspector.loadError")}
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="border border-[#e4e0d6] bg-[#faf9f6] p-10 text-center">
+            <h2 className="text-xl font-semibold text-[#142b45]">{t("inspector.noApplications")}</h2>
+            <p className="mt-2 text-sm text-slate-500">{t("inspector.emptyQueue")}</p>
+          </div>
+        ) : (
+          <section className="overflow-hidden border border-[#d8d3c8] bg-white" aria-labelledby="applications-table-title">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4e0d6] px-5 py-4">
+              <h2 id="applications-table-title" className="font-semibold text-[#142b45]">
+                {t("inspector.queue")}
+              </h2>
+              <span className="text-xs font-medium text-slate-500">
+                {t("common.assigned", { count: total })}
+              </span>
             </div>
-            <span className="text-xs font-medium text-slate-500">Last synced 10:42 AM</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1040px] border-collapse text-left">
-              <thead className="bg-[#f7f6f2] text-xs font-semibold text-slate-500">
-                <tr>
-                  <th className="px-5 py-3">Application</th>
-                  <th className="px-4 py-3">Approval</th>
-                  <th className="px-4 py-3">Applicant</th>
-                  <th className="px-4 py-3">Submitted</th>
-                  <th className="px-4 py-3">Deadline</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-5 py-3"><span className="sr-only">Action</span></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e4e0d6]">
-                {applications.map((item) => (
-                  <tr key={item.reference} className="align-top hover:bg-[#fcfbf8]">
-                    <td className="px-5 py-4">
-                      <p className="font-semibold text-[#142b45]">{item.enterprise}</p>
-                      <p className="mt-1 text-xs text-slate-500">{item.reference} · {item.district}</p>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-slate-700">{item.approval}</td>
-                    <td className="px-4 py-4 text-sm text-slate-700">{item.applicant}</td>
-                    <td className="px-4 py-4 text-sm text-slate-600">{item.submitted}</td>
-                    <td className={`px-4 py-4 text-sm font-semibold ${item.tone === "red" || item.tone === "amber" ? "text-amber-800" : "text-slate-700"}`}>{item.due}</td>
-                    <td className="px-4 py-4"><StatusPill tone={item.tone}>{item.status}</StatusPill></td>
-                    <td className="px-5 py-4 text-right">
-                      <Link href={`/inspector/applications/${item.reference}`} className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
-                        Open <ArrowRight className="size-4" aria-hidden="true" />
-                      </Link>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[960px] border-collapse text-left">
+                <thead className="bg-[#f7f6f2] text-xs font-semibold text-slate-500">
+                  <tr>
+                    <th className="px-5 py-3">{t("inspector.applicantProject")}</th>
+                    <th className="px-4 py-3">{t("inspector.reviewResult")}</th>
+                    <th className="px-4 py-3">{t("inspector.applicant")}</th>
+                    <th className="px-4 py-3">{t("common.submitted", { date: "" })}</th>
+                    <th className="px-4 py-3">{t("inspector.due")}</th>
+                    <th className="px-4 py-3">{t("attention.title")}</th>
+                    <th className="px-4 py-3">{t("status.submitted")}</th>
+                    <th className="px-5 py-3"><span className="sr-only">{t("common.open")}</span></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                </thead>
+                <tbody className="divide-y divide-[#e4e0d6]">
+                  {rows.map((item) => (
+                    <tr key={item.approvalId} className="align-top hover:bg-[#fcfbf8]">
+                      <td className="px-5 py-4">
+                        <p className="font-semibold text-[#142b45]">{item.enterpriseName}</p>
+                        <p className="mt-1 text-xs text-slate-500 capitalize">
+                          {text(item.industry)} · {text(item.district)}
+                        </p>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-slate-700">{item.approvalTitle}</td>
+                      <td className="px-4 py-4 text-sm text-slate-700">{item.applicantName}</td>
+                      <td className="px-4 py-4 text-sm text-slate-600">
+                        {formatDate(item.submittedAt, language)}
+                      </td>
+                      <td className="px-4 py-4 text-sm">
+                        {item.dueAt ? (
+                          <span className="flex flex-col gap-1">
+                            <span className={item.overdue ? "font-semibold text-red-700" : "text-slate-600"}>
+                              {formatDate(item.dueAt, language)}
+                            </span>
+                            {item.overdue ? (
+                              <StatusPill tone="red">{t("inspector.overdue")}</StatusPill>
+                            ) : null}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {item.attentionLevel ? (
+                          <StatusPill tone={attentionTone[item.attentionLevel]}>
+                            {t(`attention.${item.attentionLevel}` as "attention.standard")}
+                            {item.attentionScore !== null ? ` · ${item.attentionScore}` : ""}
+                          </StatusPill>
+                        ) : (
+                          <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        <StatusPill tone={reviewTone[item.reviewStatus]}>
+                          {translateStatus(t, item.reviewStatus)}
+                        </StatusPill>
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <Link
+                          href={`/inspector/applications/${item.projectId}`}
+                          className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                        >
+                          {t("inspector.openReview")} <ArrowRight className="size-4" aria-hidden="true" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
 }
 
-const inspectionRows = [
-  { time: "09:30", enterprise: "Pragati Precision Works", district: "Nashik", approval: "Factory registration", officer: "You + A. More", state: "Route confirmed", tone: "green" as const },
-  { time: "12:15", enterprise: "Western Biofuels Limited", district: "Nashik", approval: "Consent to establish", officer: "You", state: "Applicant confirmed", tone: "blue" as const },
-  { time: "15:30", enterprise: "Godavari Packaging", district: "Nashik", approval: "Fire safety NOC", officer: "You + Fire officer", state: "Documents pending", tone: "amber" as const },
-];
+const inspectionTone: Record<InspectionStatus, "blue" | "green" | "slate"> = {
+  scheduled: "blue",
+  completed: "green",
+  cancelled: "slate",
+};
+
+const inspectionStatusKey: Record<InspectionStatus, TranslationKey> = {
+  scheduled: "inspections.statusScheduled",
+  completed: "inspections.statusCompleted",
+  cancelled: "inspections.statusCancelled",
+};
+
+const outcomeKey: Record<InspectionOutcome, TranslationKey> = {
+  satisfactory: "inspections.outcomeSatisfactory",
+  needs_follow_up: "inspections.outcomeNeedsFollowUp",
+  failed: "inspections.outcomeFailed",
+};
+
+const outcomeOptions: InspectionOutcome[] = ["satisfactory", "needs_follow_up", "failed"];
 
 export function InspectorInspectionsPage() {
+  const { t, text, language } = useLanguage();
+  const queryClient = useQueryClient();
+  const inspections = useQuery({
+    queryKey: ["inspector-inspections"],
+    queryFn: listInspectorInspections,
+  });
+  const applications = useQuery({
+    queryKey: ["inspector-applications", undefined],
+    queryFn: () => listInspectorApplications(),
+  });
+
+  const [approvalId, setApprovalId] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [notes, setNotes] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ["inspector-inspections"] });
+
+  const schedule = useMutation({
+    mutationFn: async () => {
+      const app = applications.data?.applications.find((a) => a.approvalId === approvalId);
+      if (!app || !scheduledAt) throw new Error("incomplete");
+      return scheduleInspection({
+        projectId: app.projectId,
+        approvalId,
+        scheduledAt: new Date(scheduledAt).toISOString(),
+        notes: notes.trim() || undefined,
+      });
+    },
+    onSuccess: () => {
+      setApprovalId("");
+      setScheduledAt("");
+      setNotes("");
+      setFormError(null);
+      invalidate();
+    },
+    onError: () => setFormError(t("inspections.scheduleError")),
+  });
+
+  const update = useMutation({
+    mutationFn: (vars: { id: string; input: Parameters<typeof updateInspection>[1] }) =>
+      updateInspection(vars.id, vars.input),
+    onSuccess: invalidate,
+  });
+
+  const rows = inspections.data ?? [];
+  const openApplications = applications.data?.applications ?? [];
+
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-8">
+    <div className="mx-auto w-full max-w-5xl px-6 py-8">
       <PageIntro
-        section="Field operations"
-        title="Site inspections"
-        description="Plan visits, carry the prescribed checklist and record geo-tagged observations against the application."
-        action={<button type="button" className={primaryAction}><CalendarDays className="size-4" aria-hidden="true" /> Schedule inspection</button>}
+        section={t("inspector.departmentReview")}
+        title={t("inspections.title")}
+        description={t("inspections.description")}
       />
-      <div className="mt-7 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="space-y-6">
-          <MetricStrip
-            items={[
-              { label: "Today", value: "03", note: "First visit at 09:30" },
-              { label: "This week", value: "11", note: "Across 4 districts" },
-              { label: "Reports due", value: "04", note: "2 due before 5 PM", tone: "text-amber-700" },
-              { label: "Completed", value: "27", note: "During September", tone: "text-emerald-700" },
-            ]}
-          />
-          <section className="border border-[#d8d3c8] bg-white">
-            <div className="flex items-center justify-between gap-4 border-b border-[#e4e0d6] px-5 py-4">
-              <div>
-                <h2 className="font-semibold text-[#142b45]">Today’s field route</h2>
-                <p className="mt-0.5 text-xs text-slate-500">Sunday, 27 September · Nashik district</p>
-              </div>
-              <button type="button" className={secondaryAction}><Route className="size-4" aria-hidden="true" /> View route</button>
-            </div>
-            <div className="divide-y divide-[#e4e0d6]">
-              {inspectionRows.map((item, index) => (
-                <article key={item.enterprise} className="grid gap-4 p-5 md:grid-cols-[76px_minmax(0,1fr)_auto] md:items-center">
-                  <div>
-                    <p className="text-xl font-bold text-[#142b45]">{item.time}</p>
-                    <p className="text-xs text-slate-500">Visit {index + 1}</p>
-                  </div>
-                  <div className="border-l-2 border-primary/25 pl-4">
+
+      <div className="mt-7 space-y-6">
+        <section className="border border-[#d8d3c8] bg-white p-5">
+          <h2 className="font-semibold text-[#142b45]">{t("inspections.scheduleHeading")}</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="font-medium text-[#142b45]">{t("inspections.selectApplication")}</span>
+              <select
+                value={approvalId}
+                onChange={(event) => setApprovalId(event.target.value)}
+                className="mt-1 h-11 w-full rounded-md border border-[#cfd4dc] bg-white px-3 text-sm"
+              >
+                <option value="">—</option>
+                {openApplications.map((app) => (
+                  <option key={app.approvalId} value={app.approvalId}>
+                    {app.enterpriseName} · {app.approvalTitle}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm">
+              <span className="font-medium text-[#142b45]">{t("inspections.date")}</span>
+              <input
+                type="datetime-local"
+                value={scheduledAt}
+                onChange={(event) => setScheduledAt(event.target.value)}
+                className="mt-1 h-11 w-full rounded-md border border-[#cfd4dc] bg-white px-3 text-sm"
+              />
+            </label>
+            <label className="block text-sm sm:col-span-2">
+              <span className="font-medium text-[#142b45]">{t("inspections.notes")}</span>
+              <textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                className="mt-1 min-h-20 w-full rounded-md border border-[#cfd4dc] p-3 text-sm"
+              />
+            </label>
+          </div>
+          {formError ? (
+            <p role="alert" className="mt-3 text-sm font-medium text-destructive">
+              {formError}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            disabled={!approvalId || !scheduledAt || schedule.isPending}
+            onClick={() => schedule.mutate()}
+            className={`${primaryAction} mt-4 disabled:opacity-60`}
+          >
+            <CalendarDays className="size-4" aria-hidden="true" />
+            {schedule.isPending ? t("inspections.scheduling") : t("inspections.schedule")}
+          </button>
+        </section>
+
+        {inspections.isPending ? (
+          <div className="flex items-center gap-3 border border-[#e4e0d6] bg-white p-6 text-slate-600">
+            <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loading")}
+          </div>
+        ) : inspections.isError ? (
+          <div role="alert" className="border border-destructive/30 bg-destructive/5 p-6 text-destructive">
+            {t("inspector.loadError")}
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="border border-[#e4e0d6] bg-[#faf9f6] p-10 text-center">
+            <h2 className="text-xl font-semibold text-[#142b45]">{t("inspections.empty")}</h2>
+            <p className="mt-2 text-sm text-slate-500">{t("inspections.emptyHint")}</p>
+          </div>
+        ) : (
+          <ul className="space-y-4">
+            {rows.map((item) => (
+              <li key={item.id} className="border border-[#d8d3c8] bg-white p-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-semibold text-[#142b45]">{item.enterprise}</h3>
-                      <StatusPill tone={item.tone}>{item.state}</StatusPill>
+                      <StatusPill tone={inspectionTone[item.status]}>
+                        {t(inspectionStatusKey[item.status])}
+                      </StatusPill>
+                      {item.outcome ? (
+                        <StatusPill tone="slate">{t(outcomeKey[item.outcome])}</StatusPill>
+                      ) : null}
                     </div>
-                    <p className="mt-1 text-sm text-slate-600">{item.approval}</p>
-                    <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-                      <span className="inline-flex items-center gap-1"><MapPin className="size-3.5" aria-hidden="true" /> {item.district}</span>
-                      <span className="inline-flex items-center gap-1"><UsersRound className="size-3.5" aria-hidden="true" /> {item.officer}</span>
+                    <h3 className="mt-3 text-lg font-semibold text-[#142b45]">{item.enterpriseName}</h3>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {item.approvalTitle} · {text(item.district)}
                     </p>
+                    <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-700">
+                      <CalendarDays className="size-4 text-slate-400" aria-hidden="true" />
+                      {formatDate(item.scheduledAt, language)}
+                    </p>
+                    {item.notes ? (
+                      <p className="mt-2 text-sm text-slate-600">{item.notes}</p>
+                    ) : null}
                   </div>
-                  <button type="button" className={secondaryAction}>Open checklist</button>
-                </article>
-              ))}
-            </div>
-          </section>
-          <section className="border border-[#d8d3c8] bg-white p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="font-semibold text-[#142b45]">Upcoming inspections</h2>
-                <p className="mt-1 text-sm text-slate-500">8 visits awaiting final confirmation</p>
-              </div>
-              <button type="button" className={secondaryAction}><SlidersHorizontal className="size-4" aria-hidden="true" /> Manage schedule</button>
-            </div>
-            <div className="mt-5 grid gap-3 md:grid-cols-2">
-              {["28 Sep · Aurangabad · 4 visits", "29 Sep · Pune · 3 visits", "01 Oct · Satara · 2 visits", "03 Oct · Nagpur · 5 visits"].map((visit) => (
-                <div key={visit} className="flex items-center justify-between gap-3 border border-[#e4e0d6] bg-[#faf9f6] px-4 py-3 text-sm font-medium text-[#142b45]">
-                  <span>{visit}</span><ArrowRight className="size-4 text-slate-400" aria-hidden="true" />
+                  {item.status === "scheduled" ? (
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="text-xs font-medium text-slate-500">
+                        {t("inspections.completeAs")}
+                      </span>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        {outcomeOptions.map((outcome) => (
+                          <button
+                            key={outcome}
+                            type="button"
+                            disabled={update.isPending}
+                            onClick={() =>
+                              update.mutate({ id: item.id, input: { status: "completed", outcome } })
+                            }
+                            className={secondaryAction}
+                          >
+                            {t(outcomeKey[outcome])}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          disabled={update.isPending}
+                          onClick={() => update.mutate({ id: item.id, input: { status: "cancelled" } })}
+                          className={secondaryAction}
+                        >
+                          {t("inspections.cancel")}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
-              ))}
-            </div>
-          </section>
-        </div>
-        <aside className="space-y-5">
-          <section className="border border-[#d8d3c8] bg-[#faf9f6] p-5">
-            <p className="text-sm font-semibold text-primary">Before departure</p>
-            <h2 className="mt-1 text-xl font-bold text-[#142b45]">Field readiness</h2>
-            <ul className="mt-5 space-y-4 text-sm text-slate-700">
-              {["Download offline checklists", "Verify appointment contacts", "Carry department identity card", "Enable device location services"].map((item, index) => (
-                <li key={item} className="flex gap-3">
-                  {index < 2 ? <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-700" aria-hidden="true" /> : <span className="mt-0.5 size-5 shrink-0 rounded-full border-2 border-slate-300" />}
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-            <button type="button" className={`${primaryAction} mt-6 w-full`}><Download className="size-4" aria-hidden="true" /> Download day pack</button>
-          </section>
-          <section className="border-l-4 border-amber-400 bg-amber-50 p-5">
-            <div className="flex gap-3">
-              <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-800" aria-hidden="true" />
-              <div><h2 className="font-semibold text-amber-950">2 reports need filing</h2><p className="mt-1 text-sm leading-6 text-amber-900">Submit yesterday’s signed observations before starting a new decision.</p></div>
-            </div>
-          </section>
-        </aside>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
 }
 
-const clarificationThreads = [
-  { enterprise: "Konkan Marine Exports", subject: "Updated fire evacuation layout", age: "18 min", status: "Response received", tone: "green" as const, unread: true },
-  { enterprise: "Sahyadri Foods Private Limited", subject: "Water analysis report legibility", age: "2 hr", status: "Awaiting applicant", tone: "amber" as const, unread: false },
-  { enterprise: "Aster Medical Devices", subject: "Authorised signatory proof", age: "Yesterday", status: "Draft", tone: "slate" as const, unread: false },
-  { enterprise: "Deccan Green Energy LLP", subject: "Process flow discrepancy", age: "23 Sep", status: "Response received", tone: "green" as const, unread: true },
-];
+const clarificationTone: Record<ClarificationStatus, "amber" | "green" | "slate"> = {
+  open: "amber",
+  responded: "green",
+  resolved: "slate",
+};
 
 export function InspectorClarificationsPage() {
+  const { t, text, language } = useLanguage();
+  const query = useQuery({
+    queryKey: ["inspector-clarifications"],
+    queryFn: listInspectorClarifications,
+  });
+  const rows = query.data ?? [];
+
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-8">
+    <div className="mx-auto w-full max-w-5xl px-6 py-8">
       <PageIntro
-        section="Applicant correspondence"
-        title="Clarifications"
-        description="Keep document questions, applicant replies and review outcomes in one traceable thread."
-        action={<button type="button" className={secondaryAction}><Download className="size-4" aria-hidden="true" /> Export correspondence</button>}
+        section={t("inspector.departmentReview")}
+        title={t("clarifications.title")}
+        description={t("clarifications.description")}
       />
-      <div className="mt-7 grid min-h-[650px] overflow-hidden border border-[#d8d3c8] bg-white lg:grid-cols-[390px_minmax(0,1fr)]">
-        <section className="border-b border-[#d8d3c8] lg:border-b-0 lg:border-r" aria-label="Clarification threads">
-          <div className="border-b border-[#e4e0d6] bg-[#faf9f6] p-4">
-            <label className="relative block">
-              <span className="sr-only">Search clarifications</span>
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-              <input type="search" placeholder="Search correspondence" className="h-11 w-full rounded-md border border-[#cfd4dc] bg-white pl-10 pr-3 text-sm" />
-            </label>
-            <div className="mt-3 flex items-center justify-between text-xs text-slate-500"><span>12 open threads</span><button type="button" className="font-semibold text-primary">Unread first</button></div>
+      <div className="mt-7">
+        {query.isPending ? (
+          <div className="flex items-center gap-3 border border-[#e4e0d6] bg-white p-6 text-slate-600">
+            <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loading")}
           </div>
-          <div className="divide-y divide-[#e4e0d6]">
-            {clarificationThreads.map((thread, index) => (
-              <button key={thread.enterprise} type="button" className={`w-full p-4 text-left ${index === 0 ? "border-l-4 border-primary bg-blue-50/60" : "border-l-4 border-transparent hover:bg-[#faf9f6]"}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <p className="font-semibold text-[#142b45]">{thread.enterprise}</p>
-                  <span className="shrink-0 text-xs text-slate-500">{thread.age}</span>
+        ) : query.isError ? (
+          <div role="alert" className="border border-destructive/30 bg-destructive/5 p-6 text-destructive">
+            {t("inspector.loadError")}
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="border border-[#e4e0d6] bg-[#faf9f6] p-10 text-center">
+            <h2 className="text-xl font-semibold text-[#142b45]">{t("clarifications.empty")}</h2>
+            <p className="mt-2 text-sm text-slate-500">{t("clarifications.emptyHint")}</p>
+          </div>
+        ) : (
+          <ul className="space-y-4">
+            {rows.map((item) => (
+              <li key={item.id} className="border border-[#d8d3c8] bg-white p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill tone={clarificationTone[item.status]}>
+                        {translateStatus(t, item.status)}
+                      </StatusPill>
+                      {item.dueAt ? (
+                        <span className="text-xs text-slate-500">
+                          {t("inspector.dateDue", { date: formatDate(item.dueAt, language) })}
+                        </span>
+                      ) : null}
+                    </div>
+                    <h3 className="mt-3 text-lg font-semibold text-[#142b45]">{item.enterpriseName}</h3>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {item.approvalTitle} · {text(item.district)}
+                    </p>
+                    <p className="mt-3 text-sm text-slate-700">{item.message}</p>
+                    <p className="mt-3 text-xs text-slate-500">
+                      {t("clarifications.replies", { count: item.responseCount })} ·{" "}
+                      {t("common.applicant", { name: item.applicantName })}
+                    </p>
+                  </div>
+                  <Link href={`/inspector/applications/${item.projectId}`} className={secondaryAction}>
+                    {t("inspector.openReview")} <ArrowRight className="size-4" aria-hidden="true" />
+                  </Link>
                 </div>
-                <p className="mt-1 text-sm text-slate-600">{thread.subject}</p>
-                <div className="mt-3 flex items-center justify-between gap-2"><StatusPill tone={thread.tone}>{thread.status}</StatusPill>{thread.unread ? <span className="size-2 rounded-full bg-primary" aria-label="Unread" /> : null}</div>
-              </button>
+              </li>
             ))}
-          </div>
-        </section>
-        <section className="flex min-w-0 flex-col" aria-label="Selected clarification">
-          <header className="border-b border-[#e4e0d6] px-6 py-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div><p className="text-xs font-semibold text-primary">MH-SWC-2026-04161 · Fire safety NOC</p><h2 className="mt-1 text-xl font-bold text-[#142b45]">Updated fire evacuation layout</h2><p className="mt-1 text-sm text-slate-500">Konkan Marine Exports · Ratnagiri</p></div>
-              <StatusPill tone="green">Response received</StatusPill>
-            </div>
-          </header>
-          <div className="flex-1 space-y-5 bg-[#faf9f6] p-6">
-            <article className="max-w-2xl border border-[#d8d3c8] bg-white p-5">
-              <div className="flex items-center justify-between gap-3"><p className="font-semibold text-[#142b45]">You · Department inspector</p><time className="text-xs text-slate-500">25 Sep, 11:40 AM</time></div>
-              <p className="mt-3 text-sm leading-6 text-slate-700">The assembly point shown in the evacuation layout does not match the site plan. Upload a revised, signed drawing and mark the unobstructed exit route.</p>
-              <div className="mt-4 flex items-center gap-2 border border-[#e4e0d6] bg-[#faf9f6] px-3 py-2 text-sm text-slate-700"><FileText className="size-4 text-primary" aria-hidden="true" /> Evacuation-layout-v1.pdf <span className="ml-auto text-xs text-slate-500">2.8 MB</span></div>
-            </article>
-            <article className="ml-auto max-w-2xl border border-blue-200 bg-blue-50 p-5">
-              <div className="flex items-center justify-between gap-3"><p className="font-semibold text-[#142b45]">Meera Sawant · Applicant</p><time className="text-xs text-slate-500">Today, 10:12 AM</time></div>
-              <p className="mt-3 text-sm leading-6 text-slate-700">We have corrected the assembly point and added directional markings. The revised drawing is signed by the authorised architect.</p>
-              <div className="mt-4 flex items-center gap-2 border border-blue-200 bg-white px-3 py-2 text-sm text-slate-700"><FileCheck2 className="size-4 text-emerald-700" aria-hidden="true" /> Evacuation-layout-v2-signed.pdf <span className="ml-auto text-xs text-slate-500">3.1 MB</span></div>
-            </article>
-          </div>
-          <div className="border-t border-[#e4e0d6] bg-white p-5">
-            <label className="block text-sm font-semibold text-[#142b45]">Record your response<textarea className="mt-2 min-h-24 w-full rounded-md border border-[#cfd4dc] p-3 font-normal" placeholder="Write a clear instruction or confirm that the response is sufficient." /></label>
-            <div className="mt-3 flex flex-wrap justify-between gap-3"><button type="button" className={secondaryAction}><FileText className="size-4" aria-hidden="true" /> Attach reference</button><div className="flex flex-wrap gap-3"><button type="button" className={secondaryAction}><CheckCircle2 className="size-4 text-emerald-700" aria-hidden="true" /> Resolve thread</button><button type="button" className={primaryAction}><Send className="size-4" aria-hidden="true" /> Send reply</button></div></div>
-          </div>
-        </section>
+          </ul>
+        )}
       </div>
     </div>
   );
 }
 
-const decisionRows = [
-  { enterprise: "Sahyadri Foods Private Limited", approval: "Consent to operate", reference: "MH-SWC-2026-04192", reviewed: "All 7 documents accepted", age: "Ready for 3 hours" },
-  { enterprise: "Mula Textile Processors", approval: "Factory registration", reference: "MH-SWC-2026-04139", reviewed: "Inspection report filed", age: "Ready since yesterday" },
-  { enterprise: "Aster Medical Devices", approval: "Fire safety NOC", reference: "MH-SWC-2026-04071", reviewed: "All observations closed", age: "Ready for 2 days" },
-];
+function DecisionRow({
+  item,
+  t,
+  text,
+  language,
+}: {
+  item: InspectorDecisionSummary;
+  t: (key: TranslationKey, values?: Record<string, string | number | Date>) => string;
+  text: (source: string) => string;
+  language: Language;
+}) {
+  return (
+    <article className="p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <StatusPill tone={reviewTone[item.reviewStatus]}>
+            {translateStatus(t, item.reviewStatus)}
+          </StatusPill>
+          <h3 className="mt-3 text-lg font-semibold text-[#142b45]">{item.enterpriseName}</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            {item.approvalTitle} · {text(item.district)}
+          </p>
+          {item.decidedAt ? (
+            <p className="mt-2 text-xs text-slate-500">
+              {t("common.submitted", { date: formatDate(item.decidedAt, language) })}
+              {item.decidedByName
+                ? ` · ${t("decisions.decidedBy", { name: item.decidedByName })}`
+                : ""}
+            </p>
+          ) : null}
+          {item.decisionNote ? (
+            <p className="mt-2 text-sm text-slate-700">{item.decisionNote}</p>
+          ) : null}
+        </div>
+        <Link href={`/inspector/applications/${item.projectId}`} className={primaryAction}>
+          {t("inspector.openReview")} <ArrowRight className="size-4" aria-hidden="true" />
+        </Link>
+      </div>
+    </article>
+  );
+}
 
 export function InspectorDecisionsPage() {
+  const { t, text, language } = useLanguage();
+  const query = useQuery({
+    queryKey: ["inspector-decisions"],
+    queryFn: listInspectorDecisions,
+  });
+  const rows = query.data ?? [];
+  const ready = rows.filter((row) => row.reviewStatus === "under_review");
+  const decided = rows.filter((row) => row.decidedAt !== null);
+
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-8">
+    <div className="mx-auto w-full max-w-5xl px-6 py-8">
       <PageIntro
-        section="Statutory action"
-        title="Decisions"
-        description="Issue reasoned approval orders, return incomplete cases and maintain the department’s signed decision register."
-        action={<button type="button" className={secondaryAction}><Printer className="size-4" aria-hidden="true" /> Print register</button>}
+        section={t("inspector.departmentReview")}
+        title={t("decisions.title")}
+        description={t("decisions.description")}
       />
       <div className="mt-7 space-y-6">
-        <MetricStrip items={[
-          { label: "Ready for decision", value: "08", note: "3 awaiting your signature" },
-          { label: "Approved this month", value: "79", note: "Median time 12.4 days", tone: "text-emerald-700" },
-          { label: "Returned for correction", value: "14", note: "Clear reasons recorded" },
-          { label: "Rejected this month", value: "03", note: "All include speaking orders" },
-        ]} />
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <section className="border border-[#d8d3c8] bg-white">
-            <div className="border-b border-[#e4e0d6] px-5 py-4"><h2 className="font-semibold text-[#142b45]">Ready for your decision</h2><p className="mt-1 text-xs text-slate-500">Review findings are complete; verify the record before signing.</p></div>
-            <div className="divide-y divide-[#e4e0d6]">
-              {decisionRows.map((item) => (
-                <article key={item.reference} className="p-5">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div><div className="flex flex-wrap items-center gap-2"><StatusPill tone="green">Review complete</StatusPill><span className="text-xs text-slate-500">{item.age}</span></div><h3 className="mt-3 text-lg font-semibold text-[#142b45]">{item.enterprise}</h3><p className="mt-1 text-sm text-slate-600">{item.approval}</p><p className="mt-2 text-xs text-slate-500">{item.reference} · {item.reviewed}</p></div>
-                    <button type="button" className={primaryAction}>Prepare order <ArrowRight className="size-4" aria-hidden="true" /></button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-          <aside className="space-y-5">
-            <section className="border border-[#d8d3c8] bg-[#faf9f6] p-5">
-              <p className="text-sm font-semibold text-primary">Signing controls</p><h2 className="mt-1 text-xl font-bold text-[#142b45]">Decision checklist</h2>
-              <ul className="mt-5 space-y-4">
-                {["Document findings recorded", "Inspection observations closed", "Legal conditions selected", "Reasoned order previewed", "Digital signature available"].map((item) => <li key={item} className="flex items-center gap-3 text-sm text-slate-700"><CheckCircle2 className="size-5 shrink-0 text-emerald-700" aria-hidden="true" /> {item}</li>)}
-              </ul>
-              <div className="mt-6 border-t border-[#d8d3c8] pt-4 text-xs leading-5 text-slate-500">Every signed order receives a certificate number, QR verification link and immutable audit entry.</div>
+        {query.isPending ? (
+          <div className="flex items-center gap-3 border border-[#e4e0d6] bg-white p-6 text-slate-600">
+            <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loading")}
+          </div>
+        ) : query.isError ? (
+          <div role="alert" className="border border-destructive/30 bg-destructive/5 p-6 text-destructive">
+            {t("inspector.loadError")}
+          </div>
+        ) : (
+          <>
+            <section className="border border-[#d8d3c8] bg-white">
+              <div className="border-b border-[#e4e0d6] px-5 py-4">
+                <h2 className="font-semibold text-[#142b45]">{t("decisions.readyHeading")}</h2>
+              </div>
+              {ready.length === 0 ? (
+                <p className="p-6 text-sm text-slate-500">{t("decisions.readyEmpty")}</p>
+              ) : (
+                <div className="divide-y divide-[#e4e0d6]">
+                  {ready.map((item) => (
+                    <DecisionRow
+                      key={item.approvalId}
+                      item={item}
+                      t={t}
+                      text={text}
+                      language={language}
+                    />
+                  ))}
+                </div>
+              )}
             </section>
-            <section className="border border-[#d8d3c8] bg-white p-5"><div className="flex items-center gap-3"><ShieldCheck className="size-8 text-primary" aria-hidden="true" /><div><h2 className="font-semibold text-[#142b45]">Digital signing service</h2><p className="text-sm text-emerald-700">Available and verified</p></div></div></section>
-          </aside>
-        </div>
-        <section className="overflow-hidden border border-[#d8d3c8] bg-white">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4e0d6] px-5 py-4"><div><h2 className="font-semibold text-[#142b45]">Recent decision register</h2><p className="mt-1 text-xs text-slate-500">Digitally signed orders issued by your department</p></div><button type="button" className={secondaryAction}>View full register</button></div>
-          <div className="overflow-x-auto"><table className="w-full min-w-[820px] text-left text-sm"><thead className="bg-[#f7f6f2] text-xs text-slate-500"><tr><th className="px-5 py-3">Certificate</th><th className="px-4 py-3">Enterprise</th><th className="px-4 py-3">Decision</th><th className="px-4 py-3">Signed</th><th className="px-5 py-3">Officer</th></tr></thead><tbody className="divide-y divide-[#e4e0d6]">{[
-            ["CTO-2026-00918", "Riverbend Foods", "Approved", "26 Sep 2026", "S. Kulkarni"],
-            ["FR-2026-00452", "Kaveri Engineering", "Correction required", "26 Sep 2026", "S. Kulkarni"],
-            ["FNOC-2026-00631", "Northstar Warehousing", "Approved", "25 Sep 2026", "P. Jadhav"],
-          ].map((row) => <tr key={row[0]}>{row.map((cell, i) => <td key={cell} className={`px-4 py-4 ${i === 0 ? "font-semibold text-primary" : "text-slate-700"}`}>{cell}</td>)}</tr>)}</tbody></table></div>
-        </section>
+
+            <section className="border border-[#d8d3c8] bg-white">
+              <div className="border-b border-[#e4e0d6] px-5 py-4">
+                <h2 className="font-semibold text-[#142b45]">{t("decisions.registerHeading")}</h2>
+              </div>
+              {decided.length === 0 ? (
+                <p className="p-6 text-sm text-slate-500">{t("decisions.registerEmpty")}</p>
+              ) : (
+                <div className="divide-y divide-[#e4e0d6]">
+                  {decided.map((item) => (
+                    <DecisionRow
+                      key={item.approvalId}
+                      item={item}
+                      t={t}
+                      text={text}
+                      language={language}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </div>
   );
@@ -494,32 +678,125 @@ function ProgressRow({ label, value, note, tone = "bg-primary" }: { label: strin
 }
 
 export function InspectorReportsPage() {
+  const { t } = useLanguage();
+  const query = useQuery({ queryKey: ["inspector-report"], queryFn: getInspectorReport });
+
+  if (query.isPending) {
+    return (
+      <div className="mx-auto w-full max-w-6xl px-6 py-8">
+        <div className="flex items-center gap-3 border border-[#e4e0d6] bg-white p-6 text-slate-600">
+          <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loading")}
+        </div>
+      </div>
+    );
+  }
+  if (query.isError || !query.data) {
+    return (
+      <div className="mx-auto w-full max-w-6xl px-6 py-8">
+        <div role="alert" className="border border-destructive/30 bg-destructive/5 p-6 text-destructive">
+          {t("inspector.loadError")}
+        </div>
+      </div>
+    );
+  }
+
+  const report = query.data;
+  const { totals } = report;
+
+  const waiting: [number, string][] = [
+    [totals.pending, t("status.pending")],
+    [totals.underReview, t("status.under_review")],
+    [totals.correctionRequired, t("status.correction_required")],
+    [report.clarifications.open, t("reports.openClarifications")],
+  ];
+
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-8">
+    <div className="mx-auto w-full max-w-6xl px-6 py-8">
       <PageIntro
-        section="Department performance"
-        title="Reports"
-        description="Monitor statutory timelines, team workload and recurring causes of delay without losing the case-level audit trail."
-        action={<div className="flex flex-wrap gap-3"><select className="h-10 rounded-md border border-[#cfd4dc] bg-white px-3 text-sm font-semibold text-[#142b45]" defaultValue="sep"><option value="sep">September 2026</option><option>August 2026</option><option>July 2026</option></select><button type="button" className={primaryAction}><Download className="size-4" aria-hidden="true" /> Download report</button></div>}
+        section={t("inspector.departmentReview")}
+        title={t("reports.title")}
+        description={t("reports.description")}
       />
       <div className="mt-7 space-y-6">
-        <MetricStrip items={[
-          { label: "Applications received", value: "146", note: "+12% from August" },
-          { label: "Decisions issued", value: "124", note: "85% of monthly intake" },
-          { label: "Within statutory SLA", value: "91%", note: "Target is 95%", tone: "text-amber-700" },
-          { label: "Median decision time", value: "12.4d", note: "1.8 days faster than August", tone: "text-emerald-700" },
-        ]} />
+        <MetricStrip
+          items={[
+            { label: t("reports.assigned"), value: String(totals.assigned), note: t("reports.assignedNote") },
+            {
+              label: t("reports.decided"),
+              value: String(totals.decided),
+              note: t("reports.decidedNote", { approved: totals.approved, rejected: totals.rejected }),
+              tone: "text-emerald-700",
+            },
+            { label: t("reports.awaiting"), value: String(totals.pending + totals.underReview), note: t("reports.awaitingNote") },
+            {
+              label: t("reports.avgDays"),
+              value: report.averageDecisionDays !== null ? report.averageDecisionDays.toFixed(1) : "—",
+              note: t("reports.avgDaysNote"),
+              tone: "text-emerald-700",
+            },
+          ]}
+        />
+
         <div className="grid gap-6 lg:grid-cols-2">
-          <section className="border border-[#d8d3c8] bg-white p-6"><div className="flex items-start justify-between gap-4"><div><h2 className="font-semibold text-[#142b45]">SLA performance by approval</h2><p className="mt-1 text-sm text-slate-500">Share completed within the statutory period</p></div><Clock3 className="size-6 text-primary" aria-hidden="true" /></div><div className="mt-7 space-y-6"><ProgressRow label="Food-related licence" value={97} note="38 decisions" tone="bg-emerald-700" /><ProgressRow label="Factory registration" value={93} note="31 decisions" tone="bg-emerald-700" /><ProgressRow label="Fire safety NOC" value={88} note="29 decisions" tone="bg-amber-500" /><ProgressRow label="Consent to operate" value={84} note="26 decisions" tone="bg-amber-500" /></div></section>
-          <section className="border border-[#d8d3c8] bg-white p-6"><div className="flex items-start justify-between gap-4"><div><h2 className="font-semibold text-[#142b45]">Where cases are waiting</h2><p className="mt-1 text-sm text-slate-500">Current active inventory by next required action</p></div><Building2 className="size-6 text-primary" aria-hidden="true" /></div><div className="mt-6 grid grid-cols-2 gap-px bg-[#d8d3c8] border border-[#d8d3c8]">{[
-            ["24", "Inspector document review"], ["18", "Applicant clarification"], ["11", "Site inspection"], ["08", "Final decision"],
-          ].map(([value, label]) => <div key={label} className="bg-[#faf9f6] p-5"><p className="text-3xl font-bold text-[#142b45]">{value}</p><p className="mt-2 text-sm text-slate-600">{label}</p></div>)}</div><div className="mt-5 border-l-4 border-amber-400 bg-amber-50 p-4"><p className="font-semibold text-amber-950">Primary delay: incomplete site layouts</p><p className="mt-1 text-sm leading-6 text-amber-900">Appears in 9 active clarification requests. Consider updating the applicant checklist guidance.</p></div></section>
+          <section className="border border-[#d8d3c8] bg-white p-6">
+            <h2 className="font-semibold text-[#142b45]">{t("reports.byApproval")}</h2>
+            {report.byApproval.length === 0 ? (
+              <p className="mt-4 text-sm text-slate-500">{t("reports.noData")}</p>
+            ) : (
+              <div className="mt-6 space-y-6">
+                {report.byApproval.map((item) => {
+                  const rate = item.total ? Math.round((item.approved / item.total) * 100) : 0;
+                  return (
+                    <ProgressRow
+                      key={item.approvalKey}
+                      label={item.approvalTitle}
+                      value={rate}
+                      note={t("reports.decisionsCount", { count: item.total })}
+                      tone={rate >= 80 ? "bg-emerald-700" : rate >= 50 ? "bg-amber-500" : "bg-slate-400"}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          <section className="border border-[#d8d3c8] bg-white p-6">
+            <h2 className="font-semibold text-[#142b45]">{t("reports.waiting")}</h2>
+            <div className="mt-6 grid grid-cols-2 gap-px border border-[#d8d3c8] bg-[#d8d3c8]">
+              {waiting.map(([value, label]) => (
+                <div key={label} className="bg-[#faf9f6] p-5">
+                  <p className="text-3xl font-bold text-[#142b45]">{value}</p>
+                  <p className="mt-2 text-sm text-slate-600">{label}</p>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
-        <section className="border border-[#d8d3c8] bg-white">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4e0d6] px-5 py-4"><div><h2 className="font-semibold text-[#142b45]">Officer workload</h2><p className="mt-1 text-xs text-slate-500">Open assignments and monthly completion</p></div><button type="button" className={secondaryAction}><UsersRound className="size-4" aria-hidden="true" /> Manage allocation</button></div>
-          <div className="grid divide-y divide-[#e4e0d6] md:grid-cols-2 md:divide-x md:divide-y-0 xl:grid-cols-4">{[
-            ["S. Kulkarni", "18 open", "34 closed", "92% SLA"], ["P. Jadhav", "14 open", "29 closed", "96% SLA"], ["R. Shinde", "21 open", "31 closed", "87% SLA"], ["M. Patwardhan", "15 open", "30 closed", "94% SLA"],
-          ].map(([name, open, closed, sla]) => <article key={name} className="p-5"><div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full bg-primary text-sm font-bold text-white"><UserRound className="size-5" aria-hidden="true" /></span><div><h3 className="font-semibold text-[#142b45]">{name}</h3><p className="text-xs text-slate-500">Department inspector</p></div></div><dl className="mt-5 grid grid-cols-3 gap-2 text-center"><div><dt className="text-xs text-slate-500">Active</dt><dd className="mt-1 text-sm font-semibold text-[#142b45]">{open}</dd></div><div><dt className="text-xs text-slate-500">Closed</dt><dd className="mt-1 text-sm font-semibold text-[#142b45]">{closed}</dd></div><div><dt className="text-xs text-slate-500">SLA</dt><dd className="mt-1 text-sm font-semibold text-[#142b45]">{sla}</dd></div></dl></article>)}</div>
+
+        <section className="border border-[#d8d3c8] bg-white p-6">
+          <h2 className="font-semibold text-[#142b45]">{t("reports.activity")}</h2>
+          <div className="mt-5 grid gap-4 sm:grid-cols-3">
+            <div className="border border-[#e4e0d6] bg-[#faf9f6] p-5">
+              <p className="text-sm text-slate-500">{t("inspections.title")}</p>
+              <p className="mt-2 text-2xl font-bold text-[#142b45]">
+                {report.inspections.completed}/
+                {report.inspections.scheduled + report.inspections.completed + report.inspections.cancelled}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">{t("reports.inspectionsNote")}</p>
+            </div>
+            <div className="border border-[#e4e0d6] bg-[#faf9f6] p-5">
+              <p className="text-sm text-slate-500">{t("reports.openClarifications")}</p>
+              <p className="mt-2 text-2xl font-bold text-[#142b45]">{report.clarifications.open}</p>
+              <p className="mt-1 text-xs text-slate-500">{t("reports.clarificationsNote")}</p>
+            </div>
+            <div className="border border-[#e4e0d6] bg-[#faf9f6] p-5">
+              <p className="text-sm text-slate-500">{t("reports.approvalRate")}</p>
+              <p className="mt-2 text-2xl font-bold text-[#142b45]">
+                {totals.decided ? Math.round((totals.approved / totals.decided) * 100) : 0}%
+              </p>
+              <p className="mt-1 text-xs text-slate-500">{t("reports.approvalRateNote")}</p>
+            </div>
+          </div>
         </section>
       </div>
     </div>

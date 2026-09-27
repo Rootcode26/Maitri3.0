@@ -15,6 +15,8 @@ export interface InspectorApplicationSummary {
   projectStatus: string;
   reviewStatus: ReviewStatus;
   submittedAt: string;
+  dueAt: string | null;
+  overdue: boolean;
   attentionScore: number | null;
   attentionLevel: AttentionLevel | null;
 }
@@ -120,8 +122,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body;
 }
 
-export async function listInspectorApplications(status?: ReviewStatus) {
-  const search = status ? `?status=${encodeURIComponent(status)}` : "";
+export async function listInspectorApplications(status?: ReviewStatus, q?: string) {
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  if (q?.trim()) params.set("q", q.trim());
+  const search = params.toString() ? `?${params.toString()}` : "";
   const response = await request<{
     data: {
       applications: InspectorApplicationSummary[];
@@ -134,6 +139,134 @@ export async function listInspectorApplications(status?: ReviewStatus) {
     };
   }>(`/applications${search}`);
   return response.data;
+}
+
+export type ClarificationStatus = "open" | "responded" | "resolved";
+
+export interface InspectorClarificationSummary {
+  id: string;
+  projectId: string;
+  approvalId: string;
+  approvalTitle: string;
+  enterpriseName: string;
+  applicantName: string;
+  district: string;
+  message: string;
+  status: ClarificationStatus;
+  dueAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  responseCount: number;
+  latestResponseAt: string | null;
+}
+
+export interface InspectorDecisionSummary {
+  projectId: string;
+  approvalId: string;
+  approvalKey: string;
+  approvalTitle: string;
+  enterpriseName: string;
+  applicantName: string;
+  district: string;
+  reviewStatus: ReviewStatus;
+  decisionNote: string | null;
+  decidedAt: string | null;
+  decidedByName: string | null;
+  submittedAt: string;
+}
+
+export type InspectionStatus = "scheduled" | "completed" | "cancelled";
+export type InspectionOutcome = "satisfactory" | "needs_follow_up" | "failed";
+
+export interface InspectionSummary {
+  id: string;
+  projectId: string;
+  approvalId: string;
+  approvalTitle: string;
+  enterpriseName: string;
+  district: string;
+  scheduledAt: string;
+  status: InspectionStatus;
+  outcome: InspectionOutcome | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InspectorReport {
+  totals: {
+    assigned: number;
+    pending: number;
+    underReview: number;
+    correctionRequired: number;
+    approved: number;
+    rejected: number;
+    decided: number;
+  };
+  averageDecisionDays: number | null;
+  byApproval: {
+    approvalKey: string;
+    approvalTitle: string;
+    total: number;
+    approved: number;
+  }[];
+  inspections: { scheduled: number; completed: number; cancelled: number };
+  clarifications: { open: number; responded: number; resolved: number };
+}
+
+export async function getInspectorReport() {
+  const response = await request<{ data: { report: InspectorReport } }>("/reports");
+  return response.data.report;
+}
+
+export async function listInspectorInspections() {
+  const response = await request<{
+    data: { inspections: InspectionSummary[] };
+  }>("/inspections");
+  return response.data.inspections;
+}
+
+export async function scheduleInspection(input: {
+  projectId: string;
+  approvalId: string;
+  scheduledAt: string;
+  notes?: string;
+}) {
+  const response = await request<{ data: { inspection: InspectionSummary } }>(
+    "/inspections",
+    { method: "POST", body: JSON.stringify(input) },
+  );
+  return response.data.inspection;
+}
+
+export async function updateInspection(
+  inspectionId: string,
+  input: {
+    status?: InspectionStatus;
+    outcome?: InspectionOutcome | null;
+    scheduledAt?: string;
+    notes?: string | null;
+  },
+) {
+  const response = await request<{ data: { inspection: InspectionSummary } }>(
+    `/inspections/${inspectionId}`,
+    { method: "PATCH", body: JSON.stringify(input) },
+  );
+  return response.data.inspection;
+}
+
+export async function listInspectorClarifications() {
+  const response = await request<{
+    data: { clarifications: InspectorClarificationSummary[] };
+  }>("/clarifications");
+  return response.data.clarifications;
+}
+
+export async function listInspectorDecisions() {
+  const response = await request<{
+    data: { decisions: InspectorDecisionSummary[] };
+  }>("/decisions");
+  return response.data.decisions;
 }
 
 export async function getInspectorApplication(projectId: string) {
