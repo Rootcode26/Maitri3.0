@@ -3,12 +3,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
+  Award,
   Download,
   Eye,
   FileCheck2,
   Gauge,
+  History,
   Loader2,
   MessageSquareText,
+  ShieldX,
+  UserCog,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -20,15 +24,21 @@ import type { TranslationKey } from "@/i18n/language/en";
 import { translateStatus } from "@/features/projects/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  assignApproval,
   decideInspectorApproval,
   createInspectorClarification,
   getInspectorApplication,
+  getInspectorCertificate,
+  getInspectorCertificateDownloadUrl,
   getInspectorDocumentDownload,
+  listDepartmentOfficers,
   reviewInspectorDocument,
   resolveInspectorClarification,
+  revokeInspectorCertificate,
   startInspectorReview,
   type AttentionAssessment,
   type AttentionLevel,
+  type ApplicationStatusEvent,
   type InspectorApplication,
   type InspectorDocument,
   type ValidationCheckStatus,
@@ -558,6 +568,257 @@ function DocumentReviewCard({
   );
 }
 
+function ApprovalAssignControl({
+  projectId,
+  approvalId,
+  assignedTo,
+}: {
+  projectId: string;
+  approvalId: string;
+  assignedTo: string | null;
+}) {
+  const { t } = useLanguage();
+  const queryClient = useQueryClient();
+  const officers = useQuery({
+    queryKey: ["inspector-officers"],
+    queryFn: listDepartmentOfficers,
+  });
+  const assign = useMutation({
+    mutationFn: (assigneeId: string | null) =>
+      assignApproval(projectId, approvalId, assigneeId),
+    onSuccess: (updated) =>
+      queryClient.setQueryData(["inspector-application", projectId], updated),
+  });
+
+  return (
+    <label className="flex items-center gap-2 text-sm">
+      <UserCog className="size-4 text-slate-500" aria-hidden="true" />
+      <span className="text-slate-500">{t("assignment.assignedTo")}</span>
+      <select
+        value={assignedTo ?? ""}
+        disabled={assign.isPending || officers.isPending}
+        onChange={(event) => assign.mutate(event.target.value || null)}
+        className="h-9 rounded-md border border-[#cfd4dc] bg-white px-2 text-sm text-[#142b45]"
+      >
+        <option value="">{t("assignment.unassigned")}</option>
+        {(officers.data ?? []).map((officer) => (
+          <option key={officer.id} value={officer.id}>
+            {officer.name} ({officer.assignedCount})
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function ActivityTimelineCard({
+  timeline,
+}: {
+  timeline: ApplicationStatusEvent[];
+}) {
+  const { t, language } = useLanguage();
+  if (timeline.length === 0) return null;
+  return (
+    <Card className="rounded-md border-[#d8d3c8]">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-xl text-[#142b45]">
+          <History className="size-5 text-slate-500" aria-hidden="true" />
+          {t("activity.title")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ol className="space-y-4">
+          {timeline.map((event) => (
+            <li key={event.id} className="flex gap-3">
+              <span
+                className="mt-1.5 size-2 shrink-0 rounded-full bg-slate-400"
+                aria-hidden="true"
+              />
+              <div className="min-w-0">
+                <p className="text-sm text-[#142b45]">
+                  <span className="font-semibold">{event.actorName}</span>{" "}
+                  <span className="text-slate-600">
+                    {t(
+                      event.actorRole === "inspector"
+                        ? "activity.byInspector"
+                        : "activity.byApplicant",
+                    )}
+                  </span>{" "}
+                  · {translateStatus(t, event.fromStatus)} →{" "}
+                  <span className="font-medium">
+                    {translateStatus(t, event.toStatus)}
+                  </span>
+                  {event.approvalTitle ? (
+                    <span className="text-slate-600"> · {event.approvalTitle}</span>
+                  ) : null}
+                </p>
+                {event.note ? (
+                  <p className="mt-0.5 text-sm text-slate-600">{event.note}</p>
+                ) : null}
+                <p className="mt-0.5 text-xs text-slate-400">
+                  {formatDate(event.createdAt, language)}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </CardContent>
+    </Card>
+  );
+}
+
+function InspectorCertificateCard({ projectId }: { projectId: string }) {
+  const { t, language } = useLanguage();
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
+  const [revoking, setRevoking] = useState(false);
+
+  const query = useQuery({
+    queryKey: ["inspector-certificate", projectId],
+    queryFn: () => getInspectorCertificate(projectId),
+    retry: false,
+  });
+
+  const download = useMutation({
+    mutationFn: () => getInspectorCertificateDownloadUrl(projectId),
+    onSuccess: (url) => window.open(url, "_blank", "noopener,noreferrer"),
+    onError: (err) =>
+      setError(err instanceof Error ? err.message : t("inspector.actionError")),
+  });
+
+  const revoke = useMutation({
+    mutationFn: () => revokeInspectorCertificate(projectId, reason.trim()),
+    onSuccess: (updated) => {
+      setError(null);
+      setRevoking(false);
+      setReason("");
+      queryClient.setQueryData(["inspector-certificate", projectId], updated);
+    },
+    onError: (err) =>
+      setError(err instanceof Error ? err.message : t("inspector.actionError")),
+  });
+
+  const certificate = query.data;
+
+  return (
+    <Card className="rounded-md border-[#d8d3c8]">
+      <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
+        <CardTitle className="flex items-center gap-2 text-xl text-[#142b45]">
+          <Award className="size-5 text-emerald-600" aria-hidden="true" />
+          {t("certificate.title")}
+        </CardTitle>
+        {certificate ? (
+          <span
+            className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold ${
+              certificate.status === "active"
+                ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                : "border-red-300 bg-red-50 text-red-800"
+            }`}
+          >
+            {t(
+              certificate.status === "active"
+                ? "certificate.statusActive"
+                : "certificate.statusRevoked",
+            )}
+          </span>
+        ) : null}
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {query.isLoading ? (
+          <p className="flex items-center gap-2 text-sm text-slate-500">
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            {t("certificate.loading")}
+          </p>
+        ) : !certificate ? (
+          <p className="text-sm text-slate-600">{t("certificate.pending")}</p>
+        ) : (
+          <>
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  {t("certificate.number")}
+                </dt>
+                <dd className="mt-1 text-sm font-medium text-[#142b45]">
+                  {certificate.certificateNumber}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  {t("certificate.issuedOn")}
+                </dt>
+                <dd className="mt-1 text-sm font-medium text-[#142b45]">
+                  {formatDate(certificate.issuedAt, language)}
+                </dd>
+              </div>
+            </dl>
+            {certificate.status === "revoked" && certificate.revokeReason ? (
+              <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                {certificate.revokeReason}
+              </p>
+            ) : null}
+            <div className="flex flex-wrap gap-3">
+              <Button
+                type="button"
+                onClick={() => download.mutate()}
+                disabled={download.isPending}
+                className="gap-2"
+              >
+                <Download className="size-4" aria-hidden="true" />
+                {t("certificate.download")}
+              </Button>
+              {certificate.status === "active" ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setRevoking((value) => !value)}
+                  className="gap-2 border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  <ShieldX className="size-4" aria-hidden="true" />
+                  {t("certificate.revoke")}
+                </Button>
+              ) : null}
+            </div>
+            {revoking ? (
+              <div className="space-y-2 rounded-md border border-[#e4e0d6] bg-[#faf8f3] p-3">
+                <label
+                  htmlFor="revoke-reason"
+                  className="text-sm font-medium text-[#142b45]"
+                >
+                  {t("certificate.revokeReason")}
+                </label>
+                <textarea
+                  id="revoke-reason"
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                  rows={3}
+                  className="w-full rounded-md border border-[#d8d3c8] px-3 py-2 text-sm"
+                />
+                <Button
+                  type="button"
+                  onClick={() => revoke.mutate()}
+                  disabled={revoke.isPending || reason.trim().length < 10}
+                  className="gap-2 bg-red-700 hover:bg-red-800"
+                >
+                  {revoke.isPending ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  ) : null}
+                  {t("certificate.confirmRevoke")}
+                </Button>
+              </div>
+            ) : null}
+          </>
+        )}
+        {error ? (
+          <p role="alert" className="text-sm font-medium text-destructive">
+            {error}
+          </p>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
 function ReviewContent({
   projectId,
   application,
@@ -662,6 +923,10 @@ function ReviewContent({
         />
       ) : null}
 
+      {application.projectStatus === "approved" ? (
+        <InspectorCertificateCard projectId={projectId} />
+      ) : null}
+
       <Card className="rounded-md border-[#d8d3c8]">
         <CardHeader>
           <CardTitle className="text-xl text-[#142b45]">
@@ -685,6 +950,8 @@ function ReviewContent({
           </dl>
         </CardContent>
       </Card>
+
+      <ActivityTimelineCard timeline={application.timeline} />
 
       {actionError ? (
         <p
@@ -715,16 +982,23 @@ function ReviewContent({
                     {text(approval.title)}
                   </CardTitle>
                 </div>
-                {approval.reviewStatus === "pending" ? (
-                  <Button
-                    type="button"
-                    className="h-10 rounded-md px-5"
-                    onClick={() => start.mutate(approval.id)}
-                    disabled={start.isPending}
-                  >
-                    {start.isPending ? t("inspector.starting") : t("inspector.startReview")}
-                  </Button>
-                ) : null}
+                <div className="flex flex-wrap items-center gap-4">
+                  <ApprovalAssignControl
+                    projectId={projectId}
+                    approvalId={approval.id}
+                    assignedTo={approval.assignedTo}
+                  />
+                  {approval.reviewStatus === "pending" ? (
+                    <Button
+                      type="button"
+                      className="h-10 rounded-md px-5"
+                      onClick={() => start.mutate(approval.id)}
+                      disabled={start.isPending}
+                    >
+                      {start.isPending ? t("inspector.starting") : t("inspector.startReview")}
+                    </Button>
+                  ) : null}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4 p-6">

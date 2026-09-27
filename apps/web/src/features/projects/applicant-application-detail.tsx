@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Download, FileUp, Loader2 } from "lucide-react";
+import { ArrowLeft, Award, Download, FileUp, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 
@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   getApplicantApplication,
+  getApplicantCertificate,
+  getApplicantCertificateDownloadUrl,
   getProjectDocumentDownload,
   uploadProjectDocument,
   type ProjectDocument,
@@ -87,6 +89,79 @@ function CorrectDocument({
         </p>
       ) : null}
     </div>
+  );
+}
+
+function ApplicantCertificateCard({ projectId }: { projectId: string }) {
+  const { t, language } = useLanguage();
+  const [error, setError] = useState<string | null>(null);
+  const query = useQuery({
+    queryKey: ["applicant-certificate", projectId],
+    queryFn: () => getApplicantCertificate(projectId),
+    retry: false,
+  });
+  const download = useMutation({
+    mutationFn: () => getApplicantCertificateDownloadUrl(projectId),
+    onSuccess: (url) => window.open(url, "_blank", "noopener,noreferrer"),
+    onError: (err) =>
+      setError(err instanceof Error ? err.message : t("certificate.downloadError")),
+  });
+
+  if (query.isLoading || !query.data) return null;
+  const certificate = query.data;
+
+  return (
+    <Card className="mt-6 rounded-md border-emerald-300 bg-emerald-50/60">
+      <CardHeader className="flex-row items-center gap-2 space-y-0">
+        <Award className="size-5 text-emerald-600" aria-hidden="true" />
+        <CardTitle className="text-xl text-[#142b45]">
+          {t("certificate.applicantTitle")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {certificate.status === "revoked" ? (
+          <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+            {t("certificate.applicantRevoked")}
+          </p>
+        ) : (
+          <p className="text-sm text-slate-700">{t("certificate.applicantReady")}</p>
+        )}
+        <dl className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              {t("certificate.number")}
+            </dt>
+            <dd className="mt-1 text-sm font-medium text-[#142b45]">
+              {certificate.certificateNumber}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              {t("certificate.issuedOn")}
+            </dt>
+            <dd className="mt-1 text-sm font-medium text-[#142b45]">
+              {formatDate(certificate.issuedAt, language)}
+            </dd>
+          </div>
+        </dl>
+        {certificate.status === "active" ? (
+          <Button
+            type="button"
+            onClick={() => download.mutate()}
+            disabled={download.isPending}
+            className="gap-2"
+          >
+            <Download className="size-4" aria-hidden="true" />
+            {t("certificate.download")}
+          </Button>
+        ) : null}
+        {error ? (
+          <p role="alert" className="text-sm font-medium text-destructive">
+            {error}
+          </p>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -189,6 +264,10 @@ export function ApplicantApplicationDetail({
             {t("application.correctionInstructions")}
           </p>
         </div>
+      ) : null}
+
+      {application.status === "approved" ? (
+        <ApplicantCertificateCard projectId={projectId} />
       ) : null}
 
       <section className="mt-7">

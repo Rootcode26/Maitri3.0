@@ -19,6 +19,14 @@ export interface InspectorApplicationSummary {
   overdue: boolean;
   attentionScore: number | null;
   attentionLevel: AttentionLevel | null;
+  assignedTo: string | null;
+  assigneeName: string | null;
+}
+
+export interface DepartmentOfficer {
+  id: string;
+  name: string;
+  assignedCount: number;
 }
 
 export interface InspectorDocument {
@@ -53,6 +61,8 @@ export interface InspectorApproval {
   reviewStartedAt: string | null;
   decidedAt: string | null;
   processingDays: number;
+  assignedTo: string | null;
+  assigneeName: string | null;
   documents: { key: string; name: string; required?: boolean }[];
 }
 
@@ -116,6 +126,18 @@ export interface ValidationFlags {
   documentChecks: ValidationDocumentCheck[];
 }
 
+export interface ApplicationStatusEvent {
+  id: string;
+  approvalId: string | null;
+  approvalTitle: string | null;
+  actorName: string;
+  actorRole: "applicant" | "inspector";
+  fromStatus: string;
+  toStatus: string;
+  note: string | null;
+  createdAt: string;
+}
+
 export interface InspectorApplication {
   projectId: string;
   enterpriseName: string;
@@ -131,6 +153,7 @@ export interface InspectorApplication {
   approvals: InspectorApproval[];
   documents: InspectorDocument[];
   clarifications: ClarificationRequest[];
+  timeline: ApplicationStatusEvent[];
 }
 
 export class InspectorApiError extends Error {
@@ -166,10 +189,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body;
 }
 
-export async function listInspectorApplications(status?: ReviewStatus, q?: string) {
+export interface InspectorQueueFilters {
+  status?: ReviewStatus;
+  q?: string;
+  mine?: boolean;
+  unassigned?: boolean;
+}
+
+export async function listInspectorApplications(filters: InspectorQueueFilters = {}) {
   const params = new URLSearchParams();
-  if (status) params.set("status", status);
-  if (q?.trim()) params.set("q", q.trim());
+  if (filters.status) params.set("status", filters.status);
+  if (filters.q?.trim()) params.set("q", filters.q.trim());
+  if (filters.mine) params.set("mine", "true");
+  if (filters.unassigned) params.set("unassigned", "true");
   const search = params.toString() ? `?${params.toString()}` : "";
   const response = await request<{
     data: {
@@ -183,6 +215,25 @@ export async function listInspectorApplications(status?: ReviewStatus, q?: strin
     };
   }>(`/applications${search}`);
   return response.data;
+}
+
+export async function listDepartmentOfficers() {
+  const response = await request<{ data?: { officers?: DepartmentOfficer[] } }>(
+    "/officers",
+  );
+  return response.data?.officers ?? [];
+}
+
+export async function assignApproval(
+  projectId: string,
+  approvalId: string,
+  assigneeId: string | null,
+) {
+  const response = await request<{ data: { application: InspectorApplication } }>(
+    `/applications/${projectId}/approvals/${approvalId}/assign`,
+    { method: "POST", body: JSON.stringify({ assigneeId }) },
+  );
+  return response.data.application;
 }
 
 export type ClarificationStatus = "open" | "responded" | "resolved";
@@ -394,4 +445,80 @@ export async function resolveInspectorClarification(
     method: "POST",
   });
   return response.data.application;
+}
+
+export type CertificateStatus = "active" | "revoked";
+
+export interface CertificateSummary {
+  certificateNumber: string;
+  status: CertificateStatus;
+  issuedAt: string;
+  revokedAt: string | null;
+  revokeReason: string | null;
+  verifyUrl: string;
+}
+
+export interface PublicCertificate {
+  valid: boolean;
+  certificateNumber: string;
+  status: CertificateStatus;
+  enterpriseName: string;
+  district: string;
+  issuedAt: string;
+}
+
+/** Certificate for a project in the inspector's department; null if not issued. */
+export async function getInspectorCertificate(
+  projectId: string,
+): Promise<CertificateSummary | null> {
+  try {
+    const response = await request<{ data: { certificate: CertificateSummary } }>(
+      `/applications/${projectId}/certificate`,
+    );
+    return response.data.certificate;
+  } catch (error) {
+    if (error instanceof InspectorApiError && error.status === 404) return null;
+    throw error;
+  }
+}
+
+export async function getInspectorCertificateDownloadUrl(
+  projectId: string,
+): Promise<string> {
+  const response = await request<{ data: { url: string } }>(
+    `/applications/${projectId}/certificate/download`,
+  );
+  return response.data.url;
+}
+
+export async function revokeInspectorCertificate(
+  projectId: string,
+  reason: string,
+): Promise<CertificateSummary> {
+  const response = await request<{ data: { certificate: CertificateSummary } }>(
+    `/applications/${projectId}/certificate/revoke`,
+    { method: "POST", body: JSON.stringify({ reason }) },
+  );
+  return response.data.certificate;
+}
+
+/** Public, unauthenticated certificate verification. */
+export async function verifyCertificate(
+  verificationCode: string,
+): Promise<PublicCertificate | null> {
+  const response = await fetch(`/api/v1/verify/${verificationCode}`, {
+    credentials: "include",
+  });
+  if (response.status === 404) return null;
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string;
+    data?: { certificate: PublicCertificate };
+  };
+  if (!response.ok || !body.data) {
+    throw new InspectorApiError(
+      body.message ?? "Could not verify this certificate.",
+      response.status,
+    );
+  }
+  return body.data.certificate;
 }
