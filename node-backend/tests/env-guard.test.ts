@@ -23,6 +23,11 @@ const loadEnv = async (overrides: Record<string, string>) => {
   if (!('OTP_DEVELOPMENT_CODE' in overrides)) {
     vi.stubEnv('OTP_DEVELOPMENT_CODE', undefined);
   }
+  // Keep the boolean-default assertions independent of any ambient value that a
+  // local .env may have leaked into process.env (Vitest auto-loads .env).
+  if (!('VALIDATION_INCLUDE_DOCUMENT_BYTES' in overrides)) {
+    vi.stubEnv('VALIDATION_INCLUDE_DOCUMENT_BYTES', undefined);
+  }
   for (const [key, value] of Object.entries({ ...baseEnv, ...overrides })) {
     vi.stubEnv(key, value);
   }
