@@ -30,6 +30,8 @@ const application = (
       reviewStartedAt: null,
       decidedAt: null,
       processingDays: 15,
+      assignedTo: null,
+      assigneeName: null,
       documents: [{ key: 'plan', name: 'Factory plan', required: true }],
     },
   ],
@@ -53,6 +55,7 @@ const application = (
     },
   ],
   clarifications: [],
+  timeline: [],
 });
 
 const makeService = (
@@ -63,7 +66,9 @@ const makeService = (
 describe('InspectorService', () => {
   it('requires every inspector to have a department', async () => {
     const service = makeService({ listApplications: vi.fn() });
-    await expect(service.listApplications(null, { page: 1, pageSize: 20 })).rejects.toMatchObject({
+    await expect(
+      service.listApplications(null, { page: 1, pageSize: 20 }, 'inspector-1'),
+    ).rejects.toMatchObject({
       statusCode: 403,
       code: 'INSPECTOR_DEPARTMENT_REQUIRED',
     });
@@ -72,12 +77,66 @@ describe('InspectorService', () => {
   it('passes the authenticated department into the queue query', async () => {
     const listApplications = vi.fn().mockResolvedValue({ items: [], total: 0 });
     const service = makeService({ listApplications });
-    await service.listApplications('department-1', { page: 1, pageSize: 20, status: 'pending' });
-    expect(listApplications).toHaveBeenCalledWith('department-1', {
-      page: 1,
-      pageSize: 20,
-      status: 'pending',
+    await service.listApplications(
+      'department-1',
+      { page: 1, pageSize: 20, status: 'pending' },
+      'inspector-1',
+    );
+    expect(listApplications).toHaveBeenCalledWith(
+      'department-1',
+      {
+        page: 1,
+        pageSize: 20,
+        status: 'pending',
+      },
+      'inspector-1',
+    );
+  });
+
+  it('assigns an approval to an officer in the same department', async () => {
+    const setApprovalAssignee = vi.fn().mockResolvedValue(true);
+    const service = makeService({
+      approvalInDepartment: vi.fn().mockResolvedValue(true),
+      assigneeInDepartment: vi.fn().mockResolvedValue(true),
+      setApprovalAssignee,
+      findApplication: vi.fn().mockResolvedValue(application('under_review')),
     });
+
+    await service.assignApproval('department-1', 'project-1', 'approval-1', 'officer-9');
+
+    expect(setApprovalAssignee).toHaveBeenCalledWith(
+      'project-1',
+      'approval-1',
+      'department-1',
+      'officer-9',
+    );
+  });
+
+  it('rejects assigning to an officer outside the department', async () => {
+    const setApprovalAssignee = vi.fn();
+    const service = makeService({
+      approvalInDepartment: vi.fn().mockResolvedValue(true),
+      assigneeInDepartment: vi.fn().mockResolvedValue(false),
+      setApprovalAssignee,
+    });
+
+    await expect(
+      service.assignApproval('department-1', 'project-1', 'approval-1', 'stranger'),
+    ).rejects.toMatchObject({ statusCode: 422, code: 'ASSIGNEE_NOT_IN_DEPARTMENT' });
+    expect(setApprovalAssignee).not.toHaveBeenCalled();
+  });
+
+  it('rejects assigning an approval outside the inspector department', async () => {
+    const setApprovalAssignee = vi.fn();
+    const service = makeService({
+      approvalInDepartment: vi.fn().mockResolvedValue(false),
+      setApprovalAssignee,
+    });
+
+    await expect(
+      service.assignApproval('department-1', 'project-1', 'approval-1', null),
+    ).rejects.toMatchObject({ statusCode: 404, code: 'APPROVAL_NOT_FOUND' });
+    expect(setApprovalAssignee).not.toHaveBeenCalled();
   });
 
   it('scopes the clarifications and decisions lists to the inspector department', async () => {

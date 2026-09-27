@@ -1,5 +1,6 @@
 import type { CreateProjectInput } from '../projects/project.schemas.js';
 import type {
+  ApplicationStatusEvent,
   ApprovalDocument,
   ApprovalReviewStatus,
   Industry,
@@ -89,6 +90,8 @@ export interface InspectorApplicationSummary {
   overdue: boolean;
   attentionScore: number | null;
   attentionLevel: AttentionLevel | null;
+  assignedTo: string | null;
+  assigneeName: string | null;
 }
 
 /** A department-wide clarification row for the Clarifications workspace. */
@@ -185,7 +188,16 @@ export interface InspectorApproval {
   reviewStartedAt: string | null;
   decidedAt: string | null;
   processingDays: number;
+  assignedTo: string | null;
+  assigneeName: string | null;
   documents: ApprovalDocument[];
+}
+
+/** An inspecting officer in a department, with their current open workload. */
+export interface DepartmentOfficer {
+  id: string;
+  name: string;
+  assignedCount: number;
 }
 
 export interface InspectorApplicationDetail {
@@ -203,4 +215,5 @@ export interface InspectorApplicationDetail {
   approvals: InspectorApproval[];
   documents: InspectorDocument[];
   clarifications: ClarificationRequest[];
+  timeline: ApplicationStatusEvent[];
 }

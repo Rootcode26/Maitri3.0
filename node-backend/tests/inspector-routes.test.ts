@@ -63,6 +63,7 @@ describe('inspector routes', () => {
     expect(service.listApplications).toHaveBeenCalledWith(
       departmentId,
       expect.objectContaining({ status: 'pending', page: 2, pageSize: 10 }),
+      '55555555-5555-4555-8555-555555555555',
     );
   });
 

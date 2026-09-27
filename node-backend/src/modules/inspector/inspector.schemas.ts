@@ -15,8 +15,14 @@ export const inspectorQueueQuerySchema = z.object({
   industry: z.enum(['food', 'textile', 'steel']).optional(),
   district: z.string().trim().min(1).max(80).optional(),
   q: z.string().trim().min(1).max(120).optional(),
+  mine: z.stringbool().optional(),
+  unassigned: z.stringbool().optional(),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(100).default(20),
+});
+
+export const assignApprovalSchema = z.object({
+  assigneeId: z.uuid().nullable(),
 });
 
 export const approvalDecisionSchema = z
@@ -90,3 +96,4 @@ export type DocumentReviewInput = z.infer<typeof documentReviewSchema>;
 export type CreateClarificationInput = z.infer<typeof createClarificationSchema>;
 export type ScheduleInspectionInput = z.infer<typeof scheduleInspectionSchema>;
 export type UpdateInspectionInput = z.infer<typeof updateInspectionSchema>;
+export type AssignApprovalInput = z.infer<typeof assignApprovalSchema>;

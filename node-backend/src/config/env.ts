@@ -10,6 +10,7 @@ const envSchema = z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
     SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
+    PUBLIC_BASE_URL: z.url({ protocol: /^https?$/ }).default('http://localhost:3000'),
     DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
     DB_POOL_MAX: z.coerce.number().int().positive().default(10),
     DB_IDLE_TIMEOUT_MS: z.coerce.number().int().nonnegative().default(30_000),

@@ -3,6 +3,7 @@ import type { RequestHandler } from 'express';
 import {
   approvalDecisionSchema,
   approvalParamsSchema,
+  assignApprovalSchema,
   clarificationParamsSchema,
   createClarificationSchema,
   documentParamsSchema,
@@ -13,6 +14,7 @@ import {
   scheduleInspectionSchema,
   updateInspectionSchema,
 } from './inspector.schemas.js';
+import { revokeCertificateSchema } from '../certificates/certificate.schemas.js';
 import type { InspectorService } from './inspector.service.js';
 
 export class InspectorController {
@@ -20,7 +22,11 @@ export class InspectorController {
 
   readonly list: RequestHandler = async (request, response) => {
     const filters = inspectorQueueQuerySchema.parse(request.query);
-    const result = await this.service.listApplications(request.user!.departmentId, filters);
+    const result = await this.service.listApplications(
+      request.user!.departmentId,
+      filters,
+      request.user!.userId,
+    );
     response.status(200).json({
       status: 'success',
       data: {
@@ -150,5 +156,45 @@ export class InspectorController {
       input,
     );
     response.status(200).json({ status: 'success', data: { application } });
+  };
+
+  readonly listOfficers: RequestHandler = async (request, response) => {
+    const officers = await this.service.listOfficers(request.user!.departmentId);
+    response.status(200).json({ status: 'success', data: { officers } });
+  };
+
+  readonly assign: RequestHandler = async (request, response) => {
+    const { projectId, approvalId } = approvalParamsSchema.parse(request.params);
+    const { assigneeId } = assignApprovalSchema.parse(request.body);
+    const application = await this.service.assignApproval(
+      request.user!.departmentId,
+      projectId,
+      approvalId,
+      assigneeId,
+    );
+    response.status(200).json({ status: 'success', data: { application } });
+  };
+
+  readonly getCertificate: RequestHandler = async (request, response) => {
+    const { projectId } = projectIdParamsSchema.parse(request.params);
+    const certificate = await this.service.getCertificate(request.user!.departmentId, projectId);
+    response.status(200).json({ status: 'success', data: { certificate } });
+  };
+
+  readonly downloadCertificate: RequestHandler = async (request, response) => {
+    const { projectId } = projectIdParamsSchema.parse(request.params);
+    const url = await this.service.getCertificateDownloadUrl(request.user!.departmentId, projectId);
+    response.status(200).json({ status: 'success', data: { url } });
+  };
+
+  readonly revokeCertificate: RequestHandler = async (request, response) => {
+    const { projectId } = projectIdParamsSchema.parse(request.params);
+    const { reason } = revokeCertificateSchema.parse(request.body);
+    const certificate = await this.service.revokeCertificate(
+      request.user!.departmentId,
+      projectId,
+      reason,
+    );
+    response.status(200).json({ status: 'success', data: { certificate } });
   };
 }

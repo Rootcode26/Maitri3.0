@@ -7,6 +7,7 @@ export const createInspectorRouter = (controller: InspectorController): Router =
   const router = Router();
   router.use(requireAuthentication, requireRoles('inspector'));
   router.get('/applications', controller.list);
+  router.get('/officers', controller.listOfficers);
   router.get('/clarifications', controller.listClarifications);
   router.get('/decisions', controller.listDecisions);
   router.get('/inspections', controller.listInspections);
@@ -19,6 +20,7 @@ export const createInspectorRouter = (controller: InspectorController): Router =
     controller.startReview,
   );
   router.post('/applications/:projectId/approvals/:approvalId/decision', controller.decide);
+  router.post('/applications/:projectId/approvals/:approvalId/assign', controller.assign);
   router.post(
     '/applications/:projectId/approvals/:approvalId/clarifications',
     controller.createClarification,
@@ -29,5 +31,8 @@ export const createInspectorRouter = (controller: InspectorController): Router =
   );
   router.get('/applications/:projectId/documents/:documentId/download', controller.download);
   router.post('/applications/:projectId/documents/:documentId/review', controller.reviewDocument);
+  router.get('/applications/:projectId/certificate', controller.getCertificate);
+  router.get('/applications/:projectId/certificate/download', controller.downloadCertificate);
+  router.post('/applications/:projectId/certificate/revoke', controller.revokeCertificate);
   return router;
 };
