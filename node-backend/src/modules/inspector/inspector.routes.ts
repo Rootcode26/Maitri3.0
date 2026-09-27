@@ -7,6 +7,12 @@ export const createInspectorRouter = (controller: InspectorController): Router =
   const router = Router();
   router.use(requireAuthentication, requireRoles('inspector'));
   router.get('/applications', controller.list);
+  router.get('/clarifications', controller.listClarifications);
+  router.get('/decisions', controller.listDecisions);
+  router.get('/inspections', controller.listInspections);
+  router.post('/inspections', controller.scheduleInspection);
+  router.patch('/inspections/:inspectionId', controller.updateInspection);
+  router.get('/reports', controller.getReport);
   router.get('/applications/:projectId', controller.getOne);
   router.post(
     '/applications/:projectId/approvals/:approvalId/start-review',

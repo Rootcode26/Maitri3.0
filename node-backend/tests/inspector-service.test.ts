@@ -78,6 +78,74 @@ describe('InspectorService', () => {
     });
   });
 
+  it('scopes the clarifications and decisions lists to the inspector department', async () => {
+    const listClarifications = vi.fn().mockResolvedValue([]);
+    const listDecisions = vi.fn().mockResolvedValue([]);
+    const service = makeService({ listClarifications, listDecisions });
+
+    await service.listClarifications('department-1');
+    expect(listClarifications).toHaveBeenCalledWith('department-1');
+
+    await service.listDecisions('department-1');
+    expect(listDecisions).toHaveBeenCalledWith('department-1');
+
+    await expect(service.listClarifications(null)).rejects.toMatchObject({
+      code: 'INSPECTOR_DEPARTMENT_REQUIRED',
+    });
+    await expect(service.listDecisions(null)).rejects.toMatchObject({
+      code: 'INSPECTOR_DEPARTMENT_REQUIRED',
+    });
+  });
+
+  it('schedules an inspection only for an approval in the inspector department', async () => {
+    const approvalInDepartment = vi.fn().mockResolvedValue(false);
+    const scheduleInspection = vi.fn();
+    const service = makeService({ approvalInDepartment, scheduleInspection });
+    const input = {
+      projectId: 'p1',
+      approvalId: 'a1',
+      scheduledAt: '2026-10-05T09:30:00+05:30',
+    };
+
+    // Approval outside the department -> rejected, never scheduled.
+    await expect(service.scheduleInspection('department-1', 'inspector-1', input)).rejects.toMatchObject(
+      { statusCode: 404, code: 'APPROVAL_NOT_FOUND' },
+    );
+    expect(scheduleInspection).not.toHaveBeenCalled();
+
+    // Approval in the department -> scheduled with the resolved department + inspector.
+    approvalInDepartment.mockResolvedValue(true);
+    scheduleInspection.mockResolvedValue({ id: 'i1' });
+    await service.scheduleInspection('department-1', 'inspector-1', input);
+    expect(approvalInDepartment).toHaveBeenCalledWith('p1', 'a1', 'department-1');
+    expect(scheduleInspection).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectId: 'p1',
+        approvalId: 'a1',
+        departmentId: 'department-1',
+        createdBy: 'inspector-1',
+      }),
+    );
+  });
+
+  it('reports a missing inspection on update as not found', async () => {
+    const updateInspection = vi.fn().mockResolvedValue(null);
+    const service = makeService({ updateInspection });
+    await expect(
+      service.updateInspection('department-1', 'i-404', { status: 'completed' }),
+    ).rejects.toMatchObject({ statusCode: 404, code: 'INSPECTION_NOT_FOUND' });
+  });
+
+  it('scopes the report to the inspector department', async () => {
+    const getReport = vi.fn().mockResolvedValue({});
+    const service = makeService({ getReport });
+    await service.getReport('department-1');
+    expect(getReport).toHaveBeenCalledWith('department-1');
+    await expect(service.getReport(null)).rejects.toMatchObject({
+      code: 'INSPECTOR_DEPARTMENT_REQUIRED',
+    });
+  });
+
   it('hides applications outside the inspector department as not found', async () => {
     const service = makeService({ findApplication: vi.fn().mockResolvedValue(null) });
     await expect(service.getApplication('department-1', 'project-1')).rejects.toMatchObject({

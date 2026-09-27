@@ -11,10 +11,17 @@ import type { InspectorQueueQuery } from './inspector.schemas.js';
 import type {
   DocumentReviewStatus,
   ClarificationRequest,
+  ClarificationStatus,
+  InspectionOutcome,
+  InspectionStatus,
+  InspectionSummary,
   InspectorApplicationDetail,
   InspectorApplicationSummary,
   InspectorApproval,
+  InspectorClarificationSummary,
+  InspectorDecisionSummary,
   InspectorDocument,
+  InspectorReport,
 } from './inspector.types.js';
 
 interface ClarificationRow {
@@ -52,6 +59,8 @@ interface QueueRow {
   project_status: ProjectStatus;
   review_status: ApprovalReviewStatus;
   submitted_at: Date;
+  due_at: Date | null;
+  overdue: boolean;
   attention_score: number | null;
   attention_level: string | null;
 }
@@ -117,6 +126,8 @@ const mapQueueRow = (row: QueueRow): InspectorApplicationSummary => ({
   projectStatus: row.project_status,
   reviewStatus: row.review_status,
   submittedAt: row.submitted_at.toISOString(),
+  dueAt: row.due_at?.toISOString() ?? null,
+  overdue: row.overdue,
   attentionScore: row.attention_score,
   attentionLevel:
     row.attention_level === 'standard' ||
@@ -189,6 +200,44 @@ const mapClarifications = (
       })),
   }));
 
+interface InspectionRow {
+  id: string;
+  project_id: string;
+  approval_id: string;
+  approval_title: string;
+  enterprise_name: string;
+  district: string;
+  scheduled_at: Date;
+  status: InspectionStatus;
+  outcome: InspectionOutcome | null;
+  notes: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+const INSPECTION_SELECT = `
+  SELECT i.id, i.project_id, i.approval_id, pa.title AS approval_title,
+         p.enterprise_name, p.district, i.scheduled_at, i.status, i.outcome,
+         i.notes, i.created_at, i.updated_at
+    FROM inspections i
+    JOIN project_approvals pa ON pa.id = i.approval_id
+    JOIN projects p ON p.id = i.project_id`;
+
+const mapInspection = (row: InspectionRow): InspectionSummary => ({
+  id: row.id,
+  projectId: row.project_id,
+  approvalId: row.approval_id,
+  approvalTitle: row.approval_title,
+  enterpriseName: row.enterprise_name,
+  district: row.district,
+  scheduledAt: row.scheduled_at.toISOString(),
+  status: row.status,
+  outcome: row.outcome,
+  notes: row.notes,
+  createdAt: row.created_at.toISOString(),
+  updatedAt: row.updated_at.toISOString(),
+});
+
 export class InspectorRepository {
   async listApplications(
     departmentId: string,
@@ -208,6 +257,12 @@ export class InspectorRepository {
       values.push(filters.district);
       where.push(`p.district ILIKE $${values.length}`);
     }
+    if (filters.q) {
+      values.push(`%${filters.q}%`);
+      where.push(
+        `(p.enterprise_name ILIKE $${values.length} OR u.name ILIKE $${values.length} OR p.id::text ILIKE $${values.length})`,
+      );
+    }
     const countValues = [...values];
     values.push(filters.pageSize, (filters.page - 1) * filters.pageSize);
     const result = await query<QueueRow>(
@@ -215,6 +270,11 @@ export class InspectorRepository {
               pa.title AS approval_title, p.enterprise_name, u.name AS applicant_name,
               p.industry, p.district, p.status AS project_status, pa.review_status,
               COALESCE(p.submitted_at, p.created_at) AS submitted_at,
+              COALESCE(p.submitted_at, p.created_at)
+                + make_interval(days => pa.processing_days) AS due_at,
+              (COALESCE(p.submitted_at, p.created_at)
+                + make_interval(days => pa.processing_days) < now()
+                AND pa.review_status NOT IN ('approved', 'rejected')) AS overdue,
               p.attention_score, p.attention_level
        FROM project_approvals pa
        JOIN projects p ON p.id = pa.project_id
@@ -228,10 +288,277 @@ export class InspectorRepository {
       `SELECT COUNT(*) AS total
        FROM project_approvals pa
        JOIN projects p ON p.id = pa.project_id
+       JOIN users u ON u.id = p.applicant_id
        WHERE ${where.join(' AND ')}`,
       countValues,
     );
     return { items: result.rows.map(mapQueueRow), total: Number(count.rows[0]?.total ?? 0) };
+  }
+
+  async listClarifications(departmentId: string): Promise<InspectorClarificationSummary[]> {
+    const result = await query<{
+      id: string;
+      project_id: string;
+      approval_id: string;
+      approval_title: string;
+      enterprise_name: string;
+      applicant_name: string;
+      district: string;
+      message: string;
+      status: ClarificationStatus;
+      due_at: Date | null;
+      created_at: Date;
+      updated_at: Date;
+      response_count: string;
+      latest_response_at: Date | null;
+    }>(
+      `SELECT cr.id, cr.project_id, cr.approval_id, pa.title AS approval_title,
+              p.enterprise_name, p.district, applicant.name AS applicant_name,
+              cr.message, cr.status, cr.due_at, cr.created_at, cr.updated_at,
+              (SELECT COUNT(*) FROM clarification_responses resp
+                 WHERE resp.clarification_id = cr.id) AS response_count,
+              (SELECT MAX(resp.created_at) FROM clarification_responses resp
+                 WHERE resp.clarification_id = cr.id) AS latest_response_at
+         FROM clarification_requests cr
+         JOIN project_approvals pa ON pa.id = cr.approval_id
+         JOIN projects p ON p.id = cr.project_id
+         JOIN users applicant ON applicant.id = p.applicant_id
+        WHERE pa.department_id = $1
+        ORDER BY cr.updated_at DESC`,
+      [departmentId],
+    );
+    return result.rows.map((row) => ({
+      id: row.id,
+      projectId: row.project_id,
+      approvalId: row.approval_id,
+      approvalTitle: row.approval_title,
+      enterpriseName: row.enterprise_name,
+      applicantName: row.applicant_name,
+      district: row.district,
+      message: row.message,
+      status: row.status,
+      dueAt: row.due_at?.toISOString() ?? null,
+      createdAt: row.created_at.toISOString(),
+      updatedAt: row.updated_at.toISOString(),
+      responseCount: Number(row.response_count),
+      latestResponseAt: row.latest_response_at?.toISOString() ?? null,
+    }));
+  }
+
+  async listDecisions(departmentId: string): Promise<InspectorDecisionSummary[]> {
+    const result = await query<{
+      project_id: string;
+      approval_id: string;
+      approval_key: string;
+      approval_title: string;
+      enterprise_name: string;
+      applicant_name: string;
+      district: string;
+      review_status: ApprovalReviewStatus;
+      decision_note: string | null;
+      decided_at: Date | null;
+      decided_by_name: string | null;
+      submitted_at: Date;
+    }>(
+      `SELECT p.id AS project_id, pa.id AS approval_id, pa.approval_key,
+              pa.title AS approval_title, p.enterprise_name, p.district,
+              applicant.name AS applicant_name, pa.review_status, pa.decision_note,
+              pa.decided_at, decider.name AS decided_by_name,
+              COALESCE(p.submitted_at, p.created_at) AS submitted_at
+         FROM project_approvals pa
+         JOIN projects p ON p.id = pa.project_id
+         JOIN users applicant ON applicant.id = p.applicant_id
+         LEFT JOIN users decider ON decider.id = pa.decided_by
+        WHERE pa.department_id = $1 AND p.status <> 'draft'
+        ORDER BY (pa.review_status IN ('under_review', 'correction_required')) DESC,
+                 pa.decided_at DESC NULLS LAST, submitted_at ASC`,
+      [departmentId],
+    );
+    return result.rows.map((row) => ({
+      projectId: row.project_id,
+      approvalId: row.approval_id,
+      approvalKey: row.approval_key,
+      approvalTitle: row.approval_title,
+      enterpriseName: row.enterprise_name,
+      applicantName: row.applicant_name,
+      district: row.district,
+      reviewStatus: row.review_status,
+      decisionNote: row.decision_note,
+      decidedAt: row.decided_at?.toISOString() ?? null,
+      decidedByName: row.decided_by_name,
+      submittedAt: row.submitted_at.toISOString(),
+    }));
+  }
+
+  async getReport(departmentId: string): Promise<InspectorReport> {
+    const [statusRows, avgRow, approvalRows, inspectionRows, clarificationRows] = await Promise.all([
+      query<{ review_status: string; count: string }>(
+        `SELECT pa.review_status, COUNT(*) AS count
+           FROM project_approvals pa JOIN projects p ON p.id = pa.project_id
+          WHERE pa.department_id = $1 AND p.status <> 'draft'
+          GROUP BY pa.review_status`,
+        [departmentId],
+      ),
+      query<{ avg_days: string | null }>(
+        `SELECT AVG(EXTRACT(EPOCH FROM (pa.decided_at - COALESCE(p.submitted_at, p.created_at))) / 86400)
+                  AS avg_days
+           FROM project_approvals pa JOIN projects p ON p.id = pa.project_id
+          WHERE pa.department_id = $1 AND pa.decided_at IS NOT NULL`,
+        [departmentId],
+      ),
+      query<{ approval_key: string; title: string; total: string; approved: string }>(
+        `SELECT pa.approval_key, pa.title, COUNT(*) AS total,
+                COUNT(*) FILTER (WHERE pa.review_status = 'approved') AS approved
+           FROM project_approvals pa JOIN projects p ON p.id = pa.project_id
+          WHERE pa.department_id = $1 AND p.status <> 'draft'
+          GROUP BY pa.approval_key, pa.title
+          ORDER BY total DESC`,
+        [departmentId],
+      ),
+      query<{ status: string; count: string }>(
+        `SELECT status, COUNT(*) AS count FROM inspections
+          WHERE department_id = $1 GROUP BY status`,
+        [departmentId],
+      ),
+      query<{ status: string; count: string }>(
+        `SELECT cr.status, COUNT(*) AS count
+           FROM clarification_requests cr JOIN project_approvals pa ON pa.id = cr.approval_id
+          WHERE pa.department_id = $1 GROUP BY cr.status`,
+        [departmentId],
+      ),
+    ]);
+
+    const countOf = <T extends { count: string }>(rows: T[], match: (row: T) => boolean) =>
+      Number(rows.find(match)?.count ?? 0);
+
+    const status = (value: string) =>
+      countOf(statusRows.rows, (row) => row.review_status === value);
+    const inspectionOf = (value: string) =>
+      countOf(inspectionRows.rows, (row) => row.status === value);
+    const clarificationOf = (value: string) =>
+      countOf(clarificationRows.rows, (row) => row.status === value);
+
+    const approved = status('approved');
+    const rejected = status('rejected');
+    const avgDays = avgRow.rows[0]?.avg_days;
+
+    return {
+      totals: {
+        assigned: statusRows.rows.reduce((sum, row) => sum + Number(row.count), 0),
+        pending: status('pending'),
+        underReview: status('under_review'),
+        correctionRequired: status('correction_required'),
+        approved,
+        rejected,
+        decided: approved + rejected,
+      },
+      averageDecisionDays: avgDays === null || avgDays === undefined ? null : Number(avgDays),
+      byApproval: approvalRows.rows.map((row) => ({
+        approvalKey: row.approval_key,
+        approvalTitle: row.title,
+        total: Number(row.total),
+        approved: Number(row.approved),
+      })),
+      inspections: {
+        scheduled: inspectionOf('scheduled'),
+        completed: inspectionOf('completed'),
+        cancelled: inspectionOf('cancelled'),
+      },
+      clarifications: {
+        open: clarificationOf('open'),
+        responded: clarificationOf('responded'),
+        resolved: clarificationOf('resolved'),
+      },
+    };
+  }
+
+  async listInspections(departmentId: string): Promise<InspectionSummary[]> {
+    const result = await query<InspectionRow>(
+      `${INSPECTION_SELECT} WHERE i.department_id = $1 ORDER BY i.scheduled_at DESC`,
+      [departmentId],
+    );
+    return result.rows.map(mapInspection);
+  }
+
+  /** True only when the approval belongs to this project and this department. */
+  async approvalInDepartment(
+    projectId: string,
+    approvalId: string,
+    departmentId: string,
+  ): Promise<boolean> {
+    const result = await query(
+      `SELECT 1 FROM project_approvals
+        WHERE id = $1 AND project_id = $2 AND department_id = $3`,
+      [approvalId, projectId, departmentId],
+    );
+    return result.rows.length > 0;
+  }
+
+  async scheduleInspection(input: {
+    projectId: string;
+    approvalId: string;
+    departmentId: string;
+    scheduledAt: string;
+    notes?: string | null;
+    createdBy: string;
+  }): Promise<InspectionSummary> {
+    const inserted = await query<{ id: string }>(
+      `INSERT INTO inspections
+         (project_id, approval_id, department_id, scheduled_at, notes, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id`,
+      [
+        input.projectId,
+        input.approvalId,
+        input.departmentId,
+        input.scheduledAt,
+        input.notes ?? null,
+        input.createdBy,
+      ],
+    );
+    const result = await query<InspectionRow>(`${INSPECTION_SELECT} WHERE i.id = $1`, [
+      inserted.rows[0]!.id,
+    ]);
+    return mapInspection(result.rows[0]!);
+  }
+
+  async updateInspection(input: {
+    inspectionId: string;
+    departmentId: string;
+    status?: InspectionStatus | undefined;
+    outcome?: InspectionOutcome | null | undefined;
+    scheduledAt?: string | undefined;
+    notes?: string | null | undefined;
+  }): Promise<InspectionSummary | null> {
+    const sets: string[] = [];
+    const values: unknown[] = [];
+    const set = (column: string, value: unknown) => {
+      values.push(value);
+      sets.push(`${column} = $${values.length}`);
+    };
+    if (input.status !== undefined) set('status', input.status);
+    if (input.outcome !== undefined) set('outcome', input.outcome);
+    if (input.scheduledAt !== undefined) set('scheduled_at', input.scheduledAt);
+    if (input.notes !== undefined) set('notes', input.notes);
+    if (sets.length === 0) {
+      const current = await query<InspectionRow>(
+        `${INSPECTION_SELECT} WHERE i.id = $1 AND i.department_id = $2`,
+        [input.inspectionId, input.departmentId],
+      );
+      return current.rows[0] ? mapInspection(current.rows[0]) : null;
+    }
+    values.push(input.inspectionId, input.departmentId);
+    const updated = await query<{ id: string }>(
+      `UPDATE inspections SET ${sets.join(', ')}
+        WHERE id = $${values.length - 1} AND department_id = $${values.length}
+        RETURNING id`,
+      values,
+    );
+    if (updated.rows.length === 0) return null;
+    const result = await query<InspectionRow>(`${INSPECTION_SELECT} WHERE i.id = $1`, [
+      input.inspectionId,
+    ]);
+    return mapInspection(result.rows[0]!);
   }
 
   async findApplication(

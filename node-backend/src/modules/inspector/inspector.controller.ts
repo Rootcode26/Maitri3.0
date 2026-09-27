@@ -7,8 +7,11 @@ import {
   createClarificationSchema,
   documentParamsSchema,
   documentReviewSchema,
+  inspectionParamsSchema,
   inspectorQueueQuerySchema,
   projectIdParamsSchema,
+  scheduleInspectionSchema,
+  updateInspectionSchema,
 } from './inspector.schemas.js';
 import type { InspectorService } from './inspector.service.js';
 
@@ -30,6 +33,47 @@ export class InspectorController {
         },
       },
     });
+  };
+
+  readonly listClarifications: RequestHandler = async (request, response) => {
+    const clarifications = await this.service.listClarifications(request.user!.departmentId);
+    response.status(200).json({ status: 'success', data: { clarifications } });
+  };
+
+  readonly listDecisions: RequestHandler = async (request, response) => {
+    const decisions = await this.service.listDecisions(request.user!.departmentId);
+    response.status(200).json({ status: 'success', data: { decisions } });
+  };
+
+  readonly listInspections: RequestHandler = async (request, response) => {
+    const inspections = await this.service.listInspections(request.user!.departmentId);
+    response.status(200).json({ status: 'success', data: { inspections } });
+  };
+
+  readonly getReport: RequestHandler = async (request, response) => {
+    const report = await this.service.getReport(request.user!.departmentId);
+    response.status(200).json({ status: 'success', data: { report } });
+  };
+
+  readonly scheduleInspection: RequestHandler = async (request, response) => {
+    const input = scheduleInspectionSchema.parse(request.body);
+    const inspection = await this.service.scheduleInspection(
+      request.user!.departmentId,
+      request.user!.userId,
+      input,
+    );
+    response.status(201).json({ status: 'success', data: { inspection } });
+  };
+
+  readonly updateInspection: RequestHandler = async (request, response) => {
+    const { inspectionId } = inspectionParamsSchema.parse(request.params);
+    const input = updateInspectionSchema.parse(request.body);
+    const inspection = await this.service.updateInspection(
+      request.user!.departmentId,
+      inspectionId,
+      input,
+    );
+    response.status(200).json({ status: 'success', data: { inspection } });
   };
 
   readonly getOne: RequestHandler = async (request, response) => {

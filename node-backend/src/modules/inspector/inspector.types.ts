@@ -47,8 +47,85 @@ export interface InspectorApplicationSummary {
   projectStatus: ProjectStatus;
   reviewStatus: ApprovalReviewStatus;
   submittedAt: string;
+  dueAt: string | null;
+  overdue: boolean;
   attentionScore: number | null;
   attentionLevel: AttentionLevel | null;
+}
+
+/** A department-wide clarification row for the Clarifications workspace. */
+export interface InspectorClarificationSummary {
+  id: string;
+  projectId: string;
+  approvalId: string;
+  approvalTitle: string;
+  enterpriseName: string;
+  applicantName: string;
+  district: string;
+  message: string;
+  status: ClarificationStatus;
+  dueAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  responseCount: number;
+  latestResponseAt: string | null;
+}
+
+/** Department analytics for the Reports workspace, aggregated from live data. */
+export interface InspectorReport {
+  totals: {
+    assigned: number;
+    pending: number;
+    underReview: number;
+    correctionRequired: number;
+    approved: number;
+    rejected: number;
+    decided: number;
+  };
+  averageDecisionDays: number | null;
+  byApproval: {
+    approvalKey: string;
+    approvalTitle: string;
+    total: number;
+    approved: number;
+  }[];
+  inspections: { scheduled: number; completed: number; cancelled: number };
+  clarifications: { open: number; responded: number; resolved: number };
+}
+
+export type InspectionStatus = 'scheduled' | 'completed' | 'cancelled';
+export type InspectionOutcome = 'satisfactory' | 'needs_follow_up' | 'failed';
+
+/** A scheduled/recorded site inspection for the Inspections workspace. */
+export interface InspectionSummary {
+  id: string;
+  projectId: string;
+  approvalId: string;
+  approvalTitle: string;
+  enterpriseName: string;
+  district: string;
+  scheduledAt: string;
+  status: InspectionStatus;
+  outcome: InspectionOutcome | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** A department-wide approval row for the Decisions workspace. */
+export interface InspectorDecisionSummary {
+  projectId: string;
+  approvalId: string;
+  approvalKey: string;
+  approvalTitle: string;
+  enterpriseName: string;
+  applicantName: string;
+  district: string;
+  reviewStatus: ApprovalReviewStatus;
+  decisionNote: string | null;
+  decidedAt: string | null;
+  decidedByName: string | null;
+  submittedAt: string;
 }
 
 export interface InspectorDocument extends Omit<ProjectDocumentRecord, 'storageKey'> {

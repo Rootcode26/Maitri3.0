@@ -5,6 +5,8 @@ import type {
   CreateClarificationInput,
   DocumentReviewInput,
   InspectorQueueQuery,
+  ScheduleInspectionInput,
+  UpdateInspectionInput,
 } from './inspector.schemas.js';
 import type { InspectorRepository } from './inspector.repository.js';
 
@@ -26,6 +28,68 @@ export class InspectorService {
 
   async listApplications(departmentId: string | null, filters: InspectorQueueQuery) {
     return this.repository.listApplications(this.departmentId(departmentId), filters);
+  }
+
+  async listClarifications(departmentId: string | null) {
+    return this.repository.listClarifications(this.departmentId(departmentId));
+  }
+
+  async listDecisions(departmentId: string | null) {
+    return this.repository.listDecisions(this.departmentId(departmentId));
+  }
+
+  async listInspections(departmentId: string | null) {
+    return this.repository.listInspections(this.departmentId(departmentId));
+  }
+
+  async getReport(departmentId: string | null) {
+    return this.repository.getReport(this.departmentId(departmentId));
+  }
+
+  async scheduleInspection(
+    departmentId: string | null,
+    inspectorId: string,
+    input: ScheduleInspectionInput,
+  ) {
+    const resolvedDepartmentId = this.departmentId(departmentId);
+    const owned = await this.repository.approvalInDepartment(
+      input.projectId,
+      input.approvalId,
+      resolvedDepartmentId,
+    );
+    if (!owned) {
+      throw new AppError('Approval not found for this department', {
+        statusCode: 404,
+        code: 'APPROVAL_NOT_FOUND',
+      });
+    }
+    return this.repository.scheduleInspection({
+      projectId: input.projectId,
+      approvalId: input.approvalId,
+      departmentId: resolvedDepartmentId,
+      scheduledAt: input.scheduledAt,
+      notes: input.notes ?? null,
+      createdBy: inspectorId,
+    });
+  }
+
+  async updateInspection(
+    departmentId: string | null,
+    inspectionId: string,
+    input: UpdateInspectionInput,
+  ) {
+    const inspection = await this.repository.updateInspection({
+      inspectionId,
+      departmentId: this.departmentId(departmentId),
+      ...input,
+    });
+    if (!inspection) {
+      throw new AppError('Inspection not found', {
+        statusCode: 404,
+        code: 'INSPECTION_NOT_FOUND',
+      });
+    }
+    return inspection;
   }
 
   async getApplication(departmentId: string | null, projectId: string) {
