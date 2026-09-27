@@ -153,12 +153,7 @@ export class ProjectService {
       };
     }
 
-    const result = await this.repository.submitProject(
-      applicantId,
-      projectId,
-      attention,
-      flags,
-    );
+    const result = await this.repository.submitProject(applicantId, projectId, attention, flags);
     if (result.missingDocuments.length > 0) {
       throw new AppError('Upload all required documents before submitting', {
         statusCode: 422,

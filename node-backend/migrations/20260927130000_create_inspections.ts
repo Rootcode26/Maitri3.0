@@ -26,7 +26,11 @@ export const up = (pgm: MigrationBuilder): void => {
     foreignKeys: { columns: 'project_id', references: 'projects(id)', onDelete: 'CASCADE' },
   });
   pgm.addConstraint('inspections', 'inspections_approval_fk', {
-    foreignKeys: { columns: 'approval_id', references: 'project_approvals(id)', onDelete: 'CASCADE' },
+    foreignKeys: {
+      columns: 'approval_id',
+      references: 'project_approvals(id)',
+      onDelete: 'CASCADE',
+    },
   });
   pgm.addConstraint('inspections', 'inspections_department_fk', {
     foreignKeys: { columns: 'department_id', references: 'departments(id)', onDelete: 'CASCADE' },

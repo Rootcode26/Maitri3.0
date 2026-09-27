@@ -110,9 +110,9 @@ describe('InspectorService', () => {
     };
 
     // Approval outside the department -> rejected, never scheduled.
-    await expect(service.scheduleInspection('department-1', 'inspector-1', input)).rejects.toMatchObject(
-      { statusCode: 404, code: 'APPROVAL_NOT_FOUND' },
-    );
+    await expect(
+      service.scheduleInspection('department-1', 'inspector-1', input),
+    ).rejects.toMatchObject({ statusCode: 404, code: 'APPROVAL_NOT_FOUND' });
     expect(scheduleInspection).not.toHaveBeenCalled();
 
     // Approval in the department -> scheduled with the resolved department + inspector.

@@ -34,9 +34,7 @@ import type {
 const ATTENTION_LEVELS = ['standard', 'elevated', 'high_attention'] as const;
 
 const toAttentionLevel = (value: string | null): AttentionLevel | null =>
-  (ATTENTION_LEVELS as readonly string[]).includes(value ?? '')
-    ? (value as AttentionLevel)
-    : null;
+  (ATTENTION_LEVELS as readonly string[]).includes(value ?? '') ? (value as AttentionLevel) : null;
 
 /** Coerce the persisted jsonb factors back into a typed, validated list. */
 const toAttentionFactors = (value: unknown): AttentionFactor[] => {
@@ -496,42 +494,44 @@ export class InspectorRepository {
   }
 
   async getReport(departmentId: string): Promise<InspectorReport> {
-    const [statusRows, avgRow, approvalRows, inspectionRows, clarificationRows] = await Promise.all([
-      query<{ review_status: string; count: string }>(
-        `SELECT pa.review_status, COUNT(*) AS count
+    const [statusRows, avgRow, approvalRows, inspectionRows, clarificationRows] = await Promise.all(
+      [
+        query<{ review_status: string; count: string }>(
+          `SELECT pa.review_status, COUNT(*) AS count
            FROM project_approvals pa JOIN projects p ON p.id = pa.project_id
           WHERE pa.department_id = $1 AND p.status <> 'draft'
           GROUP BY pa.review_status`,
-        [departmentId],
-      ),
-      query<{ avg_days: string | null }>(
-        `SELECT AVG(EXTRACT(EPOCH FROM (pa.decided_at - COALESCE(p.submitted_at, p.created_at))) / 86400)
+          [departmentId],
+        ),
+        query<{ avg_days: string | null }>(
+          `SELECT AVG(EXTRACT(EPOCH FROM (pa.decided_at - COALESCE(p.submitted_at, p.created_at))) / 86400)
                   AS avg_days
            FROM project_approvals pa JOIN projects p ON p.id = pa.project_id
           WHERE pa.department_id = $1 AND pa.decided_at IS NOT NULL`,
-        [departmentId],
-      ),
-      query<{ approval_key: string; title: string; total: string; approved: string }>(
-        `SELECT pa.approval_key, pa.title, COUNT(*) AS total,
+          [departmentId],
+        ),
+        query<{ approval_key: string; title: string; total: string; approved: string }>(
+          `SELECT pa.approval_key, pa.title, COUNT(*) AS total,
                 COUNT(*) FILTER (WHERE pa.review_status = 'approved') AS approved
            FROM project_approvals pa JOIN projects p ON p.id = pa.project_id
           WHERE pa.department_id = $1 AND p.status <> 'draft'
           GROUP BY pa.approval_key, pa.title
           ORDER BY total DESC`,
-        [departmentId],
-      ),
-      query<{ status: string; count: string }>(
-        `SELECT status, COUNT(*) AS count FROM inspections
+          [departmentId],
+        ),
+        query<{ status: string; count: string }>(
+          `SELECT status, COUNT(*) AS count FROM inspections
           WHERE department_id = $1 GROUP BY status`,
-        [departmentId],
-      ),
-      query<{ status: string; count: string }>(
-        `SELECT cr.status, COUNT(*) AS count
+          [departmentId],
+        ),
+        query<{ status: string; count: string }>(
+          `SELECT cr.status, COUNT(*) AS count
            FROM clarification_requests cr JOIN project_approvals pa ON pa.id = cr.approval_id
           WHERE pa.department_id = $1 GROUP BY cr.status`,
-        [departmentId],
-      ),
-    ]);
+          [departmentId],
+        ),
+      ],
+    );
 
     const countOf = <T extends { count: string }>(rows: T[], match: (row: T) => boolean) =>
       Number(rows.find(match)?.count ?? 0);

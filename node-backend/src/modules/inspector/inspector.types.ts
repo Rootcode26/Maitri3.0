@@ -57,11 +57,7 @@ export interface ValidationFlag {
   field: string | null;
 }
 
-export type ValidationCheckStatus =
-  | 'matched'
-  | 'mismatched'
-  | 'unavailable'
-  | 'review_required';
+export type ValidationCheckStatus = 'matched' | 'mismatched' | 'unavailable' | 'review_required';
 
 export interface ValidationDocumentCheck {
   approvalKey: string;
