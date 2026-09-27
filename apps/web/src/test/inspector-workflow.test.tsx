@@ -75,6 +75,8 @@ const application = (
       reviewStartedAt: null,
       decidedAt: null,
       processingDays: 15,
+      assignedTo: null,
+      assigneeName: null,
       documents: [
         { key: "factory-plan", name: "Factory plan", required: true },
       ],
@@ -104,6 +106,7 @@ const application = (
     },
   ],
   clarifications: [],
+  timeline: [],
 });
 
 function renderWithQuery(ui: ReactNode) {
@@ -181,18 +184,27 @@ describe("inspector workflow", () => {
   });
 
   it("loads the application and starts a pending review", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ data: { application: application("pending") } }),
-      })
-      .mockResolvedValueOnce({
+    let started = false;
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).includes("/officers")) {
+        return { ok: true, json: async () => ({ data: { officers: [] } }) };
+      }
+      if (String(url).includes("/start-review")) {
+        started = true;
+        return {
+          ok: true,
+          json: async () => ({
+            data: { application: application("under_review") },
+          }),
+        };
+      }
+      return {
         ok: true,
         json: async () => ({
-          data: { application: application("under_review") },
+          data: { application: application(started ? "under_review" : "pending") },
         }),
-      });
+      };
+    });
     vi.stubGlobal("fetch", fetchMock);
     renderWithQuery(<InspectorApplicationView projectId={projectId} />);
     expect(await screen.findByText("factory-plan.pdf")).toBeInTheDocument();
@@ -209,10 +221,12 @@ describe("inspector workflow", () => {
     await waitFor(() =>
       expect(screen.getAllByText("Under review")).toHaveLength(2),
     );
-    expect(fetchMock.mock.calls[1]?.[0]).toBe(
-      `/api/v1/inspector/applications/${projectId}/approvals/${approvalId}/start-review`,
+    const startCall = fetchMock.mock.calls.find(
+      ([callUrl, callInit]) =>
+        String(callUrl).includes("/start-review") &&
+        (callInit as RequestInit | undefined)?.method === "POST",
     );
-    expect((fetchMock.mock.calls[1]?.[1] as RequestInit).method).toBe("POST");
+    expect(startCall).toBeTruthy();
   });
 
   it("protects every inspector workspace route", async () => {
@@ -245,18 +259,20 @@ describe("inspector workflow", () => {
         responses: [],
       },
     ];
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).includes("/officers")) {
+        return { ok: true, json: async () => ({ data: { officers: [] } }) };
+      }
+      if (String(url).includes("/clarifications")) {
+        return { ok: true, json: async () => ({ data: { application: updated } }) };
+      }
+      return {
         ok: true,
         json: async () => ({
           data: { application: application("under_review") },
         }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ data: { application: updated } }),
-      });
+      };
+    });
     vi.stubGlobal("fetch", fetchMock);
     renderWithQuery(<InspectorApplicationView projectId={projectId} />);
     const input = await screen.findByPlaceholderText(
@@ -274,7 +290,12 @@ describe("inspector workflow", () => {
         "Please confirm the furnace capacity shown in the plan.",
       ),
     ).toBeInTheDocument();
-    expect(fetchMock.mock.calls[1]?.[0]).toContain("/clarifications");
+    expect(
+      fetchMock.mock.calls.some(([callUrl, callInit]) =>
+        String(callUrl).includes("/clarifications") &&
+        (callInit as RequestInit | undefined)?.method === "POST",
+      ),
+    ).toBe(true);
   });
 });
 

@@ -1,4 +1,5 @@
 import { AppError } from '../../errors/app-error.js';
+import type { CertificateService } from '../certificates/certificate.service.js';
 import type { ObjectStorage } from '../../integrations/s3/storage.js';
 import type {
   ApprovalDecisionInput,
@@ -14,7 +15,36 @@ export class InspectorService {
   constructor(
     private readonly repository: InspectorRepository,
     private readonly storage: ObjectStorage | null,
+    private readonly certificates: CertificateService | null = null,
   ) {}
+
+  private requireCertificates(): CertificateService {
+    if (!this.certificates) {
+      throw new AppError('Certificates are not enabled', {
+        statusCode: 503,
+        code: 'CERTIFICATES_NOT_CONFIGURED',
+      });
+    }
+    return this.certificates;
+  }
+
+  /** Certificate metadata for a project in the inspector's department. */
+  async getCertificate(departmentId: string | null, projectId: string) {
+    await this.getApplication(this.departmentId(departmentId), projectId);
+    return this.requireCertificates().getForProject(projectId);
+  }
+
+  /** A short-lived signed download URL for a department project's certificate. */
+  async getCertificateDownloadUrl(departmentId: string | null, projectId: string): Promise<string> {
+    await this.getApplication(this.departmentId(departmentId), projectId);
+    return this.requireCertificates().getDownloadUrl(projectId);
+  }
+
+  /** Revoke the certificate for a project in the inspector's department. */
+  async revokeCertificate(departmentId: string | null, projectId: string, reason: string) {
+    await this.getApplication(this.departmentId(departmentId), projectId);
+    return this.requireCertificates().revoke(projectId, reason);
+  }
 
   private departmentId(value: string | null): string {
     if (!value) {
@@ -26,8 +56,54 @@ export class InspectorService {
     return value;
   }
 
-  async listApplications(departmentId: string | null, filters: InspectorQueueQuery) {
-    return this.repository.listApplications(this.departmentId(departmentId), filters);
+  async listApplications(
+    departmentId: string | null,
+    filters: InspectorQueueQuery,
+    currentUserId: string,
+  ) {
+    return this.repository.listApplications(
+      this.departmentId(departmentId),
+      filters,
+      currentUserId,
+    );
+  }
+
+  async listOfficers(departmentId: string | null) {
+    return this.repository.listDepartmentOfficers(this.departmentId(departmentId));
+  }
+
+  /** Assign (or, with a null assignee, unassign) an approval to a department officer. */
+  async assignApproval(
+    departmentId: string | null,
+    projectId: string,
+    approvalId: string,
+    assigneeId: string | null,
+  ) {
+    const resolvedDepartmentId = this.departmentId(departmentId);
+    const owned = await this.repository.approvalInDepartment(
+      projectId,
+      approvalId,
+      resolvedDepartmentId,
+    );
+    if (!owned) {
+      throw new AppError('Approval not found', { statusCode: 404, code: 'APPROVAL_NOT_FOUND' });
+    }
+    if (assigneeId) {
+      const eligible = await this.repository.assigneeInDepartment(assigneeId, resolvedDepartmentId);
+      if (!eligible) {
+        throw new AppError('The selected officer is not in this department', {
+          statusCode: 422,
+          code: 'ASSIGNEE_NOT_IN_DEPARTMENT',
+        });
+      }
+    }
+    await this.repository.setApprovalAssignee(
+      projectId,
+      approvalId,
+      resolvedDepartmentId,
+      assigneeId,
+    );
+    return this.getApplication(resolvedDepartmentId, projectId);
   }
 
   async listClarifications(departmentId: string | null) {
@@ -335,6 +411,14 @@ export class InspectorService {
         code: 'INVALID_REVIEW_TRANSITION',
       });
     }
+
+    // When this decision clears the last outstanding approval, the project
+    // becomes fully approved — issue the clearance certificate automatically.
+    // Issuance never rolls back the recorded decision.
+    if (updated.projectStatus === 'approved' && this.certificates) {
+      await this.certificates.issueForProjectSafely(projectId, inspectorId);
+    }
+
     return updated;
   }
 }

@@ -30,6 +30,22 @@ export class ProjectController {
     response.status(200).json({ status: 'success', data: { project } });
   };
 
+  readonly getCertificate: RequestHandler = async (request, response) => {
+    const certificate = await this.projectService.getCertificate(
+      request.user!.userId,
+      request.params.id as string,
+    );
+    response.status(200).json({ status: 'success', data: { certificate } });
+  };
+
+  readonly downloadCertificate: RequestHandler = async (request, response) => {
+    const url = await this.projectService.getCertificateDownloadUrl(
+      request.user!.userId,
+      request.params.id as string,
+    );
+    response.status(200).json({ status: 'success', data: { url } });
+  };
+
   readonly getApplicationDetail: RequestHandler = async (request, response) => {
     const application = await this.projectService.getApplicationDetail(
       request.user!.userId,

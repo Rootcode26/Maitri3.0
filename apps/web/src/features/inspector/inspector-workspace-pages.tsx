@@ -123,13 +123,22 @@ const applicationFilters: { label: string; value?: ReviewStatus }[] = [
   { label: "status.rejected", value: "rejected" },
 ];
 
+type AssignmentFilter = "all" | "mine" | "unassigned";
+
 export function InspectorApplicationsPage() {
   const { t, text, language } = useLanguage();
   const [filter, setFilter] = useState<ReviewStatus | undefined>();
   const [search, setSearch] = useState("");
+  const [assignment, setAssignment] = useState<AssignmentFilter>("all");
   const query = useQuery({
-    queryKey: ["inspector-applications", filter, search],
-    queryFn: () => listInspectorApplications(filter, search),
+    queryKey: ["inspector-applications", filter, search, assignment],
+    queryFn: () =>
+      listInspectorApplications({
+        status: filter,
+        q: search,
+        mine: assignment === "mine",
+        unassigned: assignment === "unassigned",
+      }),
   });
   const rows = query.data?.applications ?? [];
   const total = query.data?.pagination.total ?? 0;
@@ -171,6 +180,28 @@ export function InspectorApplicationsPage() {
           })}
         </div>
 
+        <div className="flex flex-wrap items-center gap-2" aria-label={t("assignment.filter")}>
+          {(
+            [
+              ["all", "assignment.all"],
+              ["mine", "assignment.mine"],
+              ["unassigned", "assignment.unassigned"],
+            ] as const
+          ).map(([value, label]) => {
+            const active = assignment === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setAssignment(value)}
+                className={`h-9 rounded-full px-4 text-sm font-medium ${active ? "bg-[#142b45] text-white" : "border border-[#cfd4dc] bg-white text-[#142b45] hover:bg-[#f7f6f2]"}`}
+              >
+                {t(label)}
+              </button>
+            );
+          })}
+        </div>
+
         {query.isPending ? (
           <div className="flex items-center gap-3 border border-[#e4e0d6] bg-white p-6 text-slate-600">
             <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loading")}
@@ -204,6 +235,7 @@ export function InspectorApplicationsPage() {
                     <th className="px-4 py-3">{t("common.submitted", { date: "" })}</th>
                     <th className="px-4 py-3">{t("inspector.due")}</th>
                     <th className="px-4 py-3">{t("attention.columnLabel")}</th>
+                    <th className="px-4 py-3">{t("assignment.column")}</th>
                     <th className="px-4 py-3">{t("status.submitted")}</th>
                     <th className="px-5 py-3"><span className="sr-only">{t("common.open")}</span></th>
                   </tr>
@@ -244,6 +276,11 @@ export function InspectorApplicationsPage() {
                           </StatusPill>
                         ) : (
                           <span className="text-xs text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-slate-700">
+                        {item.assigneeName ?? (
+                          <span className="text-slate-400">{t("assignment.unassigned")}</span>
                         )}
                       </td>
                       <td className="px-4 py-4">

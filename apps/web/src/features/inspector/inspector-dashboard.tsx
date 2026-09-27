@@ -72,7 +72,7 @@ export function InspectorDashboard() {
   const [filter, setFilter] = useState<ReviewStatus | undefined>();
   const query = useQuery({
     queryKey: ["inspector-applications", filter],
-    queryFn: () => listInspectorApplications(filter),
+    queryFn: () => listInspectorApplications({ status: filter }),
   });
 
   return (

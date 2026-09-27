@@ -662,3 +662,56 @@ export async function validateProjectDocuments(
   }
   return body.data.validation;
 }
+
+export type CertificateStatus = "active" | "revoked";
+
+export interface CertificateSummary {
+  certificateNumber: string;
+  status: CertificateStatus;
+  issuedAt: string;
+  revokedAt: string | null;
+  revokeReason: string | null;
+  verifyUrl: string;
+}
+
+/** Fetch the clearance certificate for a project the applicant owns. Returns
+ * null when none has been issued yet (project not fully approved). */
+export async function getApplicantCertificate(
+  projectId: string,
+): Promise<CertificateSummary | null> {
+  const response = await fetch(`/api/v1/projects/${projectId}/certificate`, {
+    credentials: "include",
+  });
+  if (response.status === 404) return null;
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string;
+    data?: { certificate: CertificateSummary };
+  };
+  if (!response.ok || !body.data) {
+    throw new ProjectApiError(
+      body.message ?? "Could not load your certificate.",
+      response.status,
+    );
+  }
+  return body.data.certificate;
+}
+
+export async function getApplicantCertificateDownloadUrl(
+  projectId: string,
+): Promise<string> {
+  const response = await fetch(
+    `/api/v1/projects/${projectId}/certificate/download`,
+    { credentials: "include" },
+  );
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string;
+    data?: { url: string };
+  };
+  if (!response.ok || !body.data) {
+    throw new ProjectApiError(
+      body.message ?? "Could not prepare the certificate download.",
+      response.status,
+    );
+  }
+  return body.data.url;
+}

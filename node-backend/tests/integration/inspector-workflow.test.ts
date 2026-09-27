@@ -110,7 +110,11 @@ describe.runIf(runDbTests)('inspector manual review workflow (integration)', () 
     const submitted = await projects.submitProject(applicantId, projectId);
     expect(submitted.project?.status).toBe('submitted');
 
-    const queue = await inspector.listApplications(departmentId, { page: 1, pageSize: 20 });
+    const queue = await inspector.listApplications(
+      departmentId,
+      { page: 1, pageSize: 20 },
+      inspectorId,
+    );
     expect(queue.items).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ projectId, approvalId, reviewStatus: 'pending' }),

@@ -24,6 +24,9 @@ import { ProjectService } from './modules/projects/project.service.js';
 import { InspectorController } from './modules/inspector/inspector.controller.js';
 import { InspectorRepository } from './modules/inspector/inspector.repository.js';
 import { InspectorService } from './modules/inspector/inspector.service.js';
+import { CertificateController } from './modules/certificates/certificate.controller.js';
+import { CertificateRepository } from './modules/certificates/certificate.repository.js';
+import { CertificateService } from './modules/certificates/certificate.service.js';
 import { createMalwareScanner } from './integrations/clamav/scanner.js';
 import { createObjectStorage } from './integrations/s3/storage.js';
 import { localizationMiddleware } from './i18n/index.js';
@@ -67,6 +70,12 @@ export const createApp = ({
     },
   );
   const documentController = new DocumentController(documentService);
+  const certificateService = new CertificateService(
+    new CertificateRepository(),
+    objectStorage,
+    env.PUBLIC_BASE_URL,
+  );
+  const certificateController = new CertificateController(certificateService);
   // The document service doubles as the submission validator, but only when the
   // validation engine is actually configured; otherwise submission keeps its
   // required-documents check without a hard validation gate.
@@ -75,10 +84,11 @@ export const createApp = ({
       projectRepository,
       createRulesEngineClient(env),
       validationClient ? documentService : null,
+      certificateService,
     ),
   );
   const inspectorController = new InspectorController(
-    new InspectorService(new InspectorRepository(), objectStorage),
+    new InspectorService(new InspectorRepository(), objectStorage, certificateService),
   );
 
   app.disable('x-powered-by');
@@ -98,6 +108,7 @@ export const createApp = ({
       projectController,
       documentController,
       inspectorController,
+      certificateController,
     ),
   );
 

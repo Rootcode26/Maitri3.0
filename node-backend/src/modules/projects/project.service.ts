@@ -9,6 +9,7 @@ import type {
   ValidationIssue,
   ValidationResult,
 } from '../documents/document.validation-client.js';
+import type { CertificateService } from '../certificates/certificate.service.js';
 import type { ProjectRepository } from './project.repository.js';
 import { RulesEngineError, type RulesEngineClient } from './project.rules-client.js';
 import { deriveApprovals, type RecommendedApproval } from './project.rules.js';
@@ -48,7 +49,30 @@ export class ProjectService {
     private readonly repository: ProjectRepository,
     private readonly rulesEngine: RulesEngineClient | null = null,
     private readonly validator: ProjectValidator | null = null,
+    private readonly certificates: CertificateService | null = null,
   ) {}
+
+  private requireCertificates(): CertificateService {
+    if (!this.certificates) {
+      throw new AppError('Certificates are not enabled', {
+        statusCode: 503,
+        code: 'CERTIFICATES_NOT_CONFIGURED',
+      });
+    }
+    return this.certificates;
+  }
+
+  /** Certificate metadata for a project the applicant owns. */
+  async getCertificate(applicantId: string, projectId: string) {
+    await this.getProject(applicantId, projectId);
+    return this.requireCertificates().getForProject(projectId);
+  }
+
+  /** A short-lived signed download URL for the applicant's certificate PDF. */
+  async getCertificateDownloadUrl(applicantId: string, projectId: string): Promise<string> {
+    await this.getProject(applicantId, projectId);
+    return this.requireCertificates().getDownloadUrl(projectId);
+  }
 
   async createProject(applicantId: string, input: CreateProjectInput): Promise<ProjectRecord> {
     const projectId = randomUUID();

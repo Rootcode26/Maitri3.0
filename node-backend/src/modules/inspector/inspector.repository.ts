@@ -1,6 +1,7 @@
 import { databasePool, query } from '../../database/database.js';
 import type { CreateProjectInput } from '../projects/project.schemas.js';
 import type {
+  ApplicationStatusEvent,
   ApprovalDocument,
   ApprovalReviewStatus,
   Industry,
@@ -12,6 +13,7 @@ import type {
   AttentionAssessment,
   AttentionFactor,
   AttentionLevel,
+  DepartmentOfficer,
   DocumentReviewStatus,
   ClarificationRequest,
   ClarificationStatus,
@@ -151,6 +153,30 @@ interface ClarificationResponseRow {
   created_at: Date;
 }
 
+interface StatusEventRow {
+  id: string;
+  approval_id: string | null;
+  approval_title: string | null;
+  actor_name: string;
+  actor_role: 'applicant' | 'inspector';
+  from_status: string;
+  to_status: string;
+  note: string | null;
+  created_at: Date;
+}
+
+const mapStatusEvent = (row: StatusEventRow): ApplicationStatusEvent => ({
+  id: row.id,
+  approvalId: row.approval_id,
+  approvalTitle: row.approval_title,
+  actorName: row.actor_name,
+  actorRole: row.actor_role,
+  fromStatus: row.from_status,
+  toStatus: row.to_status,
+  note: row.note,
+  createdAt: row.created_at.toISOString(),
+});
+
 interface QueueRow {
   project_id: string;
   approval_id: string;
@@ -167,6 +193,8 @@ interface QueueRow {
   overdue: boolean;
   attention_score: number | null;
   attention_level: string | null;
+  assigned_to: string | null;
+  assignee_name: string | null;
 }
 
 interface DetailRow {
@@ -197,6 +225,8 @@ interface ApprovalRow {
   review_started_at: Date | null;
   decided_at: Date | null;
   processing_days: number;
+  assigned_to: string | null;
+  assignee_name: string | null;
   documents: ApprovalDocument[];
 }
 
@@ -238,6 +268,8 @@ const mapQueueRow = (row: QueueRow): InspectorApplicationSummary => ({
   overdue: row.overdue,
   attentionScore: row.attention_score,
   attentionLevel: toAttentionLevel(row.attention_level),
+  assignedTo: row.assigned_to,
+  assigneeName: row.assignee_name,
 });
 
 const mapApproval = (row: ApprovalRow): InspectorApproval => ({
@@ -250,6 +282,8 @@ const mapApproval = (row: ApprovalRow): InspectorApproval => ({
   reviewStartedAt: row.review_started_at?.toISOString() ?? null,
   decidedAt: row.decided_at?.toISOString() ?? null,
   processingDays: row.processing_days,
+  assignedTo: row.assigned_to,
+  assigneeName: row.assignee_name,
   documents: row.documents,
 });
 
@@ -345,6 +379,7 @@ export class InspectorRepository {
   async listApplications(
     departmentId: string,
     filters: InspectorQueueQuery,
+    currentUserId: string,
   ): Promise<{ items: InspectorApplicationSummary[]; total: number }> {
     const values: unknown[] = [departmentId];
     const where = [`pa.department_id = $1`, `p.status <> 'draft'`];
@@ -366,6 +401,13 @@ export class InspectorRepository {
         `(p.enterprise_name ILIKE $${values.length} OR u.name ILIKE $${values.length} OR p.id::text ILIKE $${values.length})`,
       );
     }
+    if (filters.mine) {
+      values.push(currentUserId);
+      where.push(`pa.assigned_to = $${values.length}`);
+    }
+    if (filters.unassigned) {
+      where.push(`pa.assigned_to IS NULL`);
+    }
     const countValues = [...values];
     values.push(filters.pageSize, (filters.page - 1) * filters.pageSize);
     const result = await query<QueueRow>(
@@ -378,10 +420,12 @@ export class InspectorRepository {
               (COALESCE(p.submitted_at, p.created_at)
                 + make_interval(days => pa.processing_days) < now()
                 AND pa.review_status NOT IN ('approved', 'rejected')) AS overdue,
-              p.attention_score, p.attention_level
+              p.attention_score, p.attention_level,
+              pa.assigned_to, assignee.name AS assignee_name
        FROM project_approvals pa
        JOIN projects p ON p.id = pa.project_id
        JOIN users u ON u.id = p.applicant_id
+       LEFT JOIN users assignee ON assignee.id = pa.assigned_to
        WHERE ${where.join(' AND ')}
        ORDER BY p.submitted_at ASC, pa.created_at ASC
        LIMIT $${values.length - 1} OFFSET $${values.length}`,
@@ -599,6 +643,49 @@ export class InspectorRepository {
     return result.rows.length > 0;
   }
 
+  async assigneeInDepartment(userId: string, departmentId: string): Promise<boolean> {
+    const result = await query(
+      `SELECT 1 FROM users
+        WHERE id = $1 AND role = 'inspector' AND department_id = $2`,
+      [userId, departmentId],
+    );
+    return result.rows.length > 0;
+  }
+
+  async setApprovalAssignee(
+    projectId: string,
+    approvalId: string,
+    departmentId: string,
+    assigneeId: string | null,
+  ): Promise<boolean> {
+    const result = await query(
+      `UPDATE project_approvals SET assigned_to = $4
+        WHERE id = $1 AND project_id = $2 AND department_id = $3`,
+      [approvalId, projectId, departmentId, assigneeId],
+    );
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async listDepartmentOfficers(departmentId: string): Promise<DepartmentOfficer[]> {
+    const result = await query<{ id: string; name: string; assigned_count: string }>(
+      `SELECT u.id, u.name,
+              COUNT(pa.id) FILTER (
+                WHERE pa.review_status NOT IN ('approved', 'rejected')
+              ) AS assigned_count
+         FROM users u
+         LEFT JOIN project_approvals pa ON pa.assigned_to = u.id
+        WHERE u.role = 'inspector' AND u.department_id = $1
+        GROUP BY u.id, u.name
+        ORDER BY u.name`,
+      [departmentId],
+    );
+    return result.rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      assignedCount: Number(row.assigned_count),
+    }));
+  }
+
   async scheduleInspection(input: {
     projectId: string;
     approvalId: string;
@@ -688,11 +775,13 @@ export class InspectorRepository {
     const project = projectResult.rows[0];
     if (!project) return null;
     const approvals = await query<ApprovalRow>(
-      `SELECT id, approval_key, title, status, review_status, decision_note,
-              review_started_at, decided_at, processing_days, documents
-       FROM project_approvals
-       WHERE project_id = $1 AND department_id = $2
-       ORDER BY created_at`,
+      `SELECT pa.id, pa.approval_key, pa.title, pa.status, pa.review_status,
+              pa.decision_note, pa.review_started_at, pa.decided_at, pa.processing_days,
+              pa.documents, pa.assigned_to, assignee.name AS assignee_name
+       FROM project_approvals pa
+       LEFT JOIN users assignee ON assignee.id = pa.assigned_to
+       WHERE pa.project_id = $1 AND pa.department_id = $2
+       ORDER BY pa.created_at`,
       [projectId, departmentId],
     );
     const documents = await query<DocumentRow>(
@@ -732,6 +821,17 @@ export class InspectorRepository {
        ORDER BY response.created_at`,
       [projectId, departmentId],
     );
+    const timeline = await query<StatusEventRow>(
+      `SELECT history.id, history.approval_id, pa.title AS approval_title,
+              actor.name AS actor_name, actor.role AS actor_role,
+              history.from_status, history.to_status, history.note, history.created_at
+       FROM application_status_history history
+       JOIN users actor ON actor.id = history.actor_id
+       LEFT JOIN project_approvals pa ON pa.id = history.approval_id
+       WHERE history.project_id = $1
+       ORDER BY history.created_at DESC`,
+      [projectId],
+    );
     return {
       projectId: project.project_id,
       enterpriseName: project.enterprise_name,
@@ -755,6 +855,7 @@ export class InspectorRepository {
       approvals: approvals.rows.map(mapApproval),
       documents: documents.rows.map(mapDocument),
       clarifications: mapClarifications(clarifications.rows, clarificationResponses.rows),
+      timeline: timeline.rows.map(mapStatusEvent),
     };
   }
 
