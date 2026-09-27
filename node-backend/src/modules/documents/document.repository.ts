@@ -23,6 +23,15 @@ interface DocumentRow {
   updated_at: Date;
 }
 
+// A DATE column comes back from node-postgres as a JS Date at LOCAL midnight, so
+// toISOString() (UTC) can shift it to the previous day. Format from local parts.
+const toDateString = (value: Date): string => {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const mapRow = (row: DocumentRow): ProjectDocumentRecord => ({
   id: row.id,
   projectId: row.project_id,
@@ -36,7 +45,7 @@ const mapRow = (row: DocumentRow): ProjectDocumentRecord => ({
   storageKey: row.storage_key,
   fileReadStatus: row.file_read_status,
   extractionStatus: row.extraction_status,
-  expiresOn: row.expires_on ? row.expires_on.toISOString().slice(0, 10) : null,
+  expiresOn: row.expires_on ? toDateString(row.expires_on) : null,
   createdAt: row.created_at.toISOString(),
   updatedAt: row.updated_at.toISOString(),
 });
@@ -53,6 +62,7 @@ export interface CreateDocumentInput {
   storageKey: string;
   fileReadStatus: DocumentReadStatus;
   uploadedBy: string;
+  expiresOn?: string | null;
 }
 
 export class DocumentRepository {
@@ -87,8 +97,8 @@ export class DocumentRepository {
     const result = await query<DocumentRow>(
       `INSERT INTO project_documents
          (project_id, approval_key, document_key, version, file_name, mime_type,
-          detected_mime_type, size_bytes, storage_key, file_read_status, uploaded_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          detected_mime_type, size_bytes, storage_key, file_read_status, uploaded_by, expires_on)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING id, project_id, approval_key, document_key, version, file_name, mime_type,
                  detected_mime_type, size_bytes, storage_key, file_read_status, extraction_status,
                  expires_on, created_at, updated_at`,
@@ -104,6 +114,7 @@ export class DocumentRepository {
         input.storageKey,
         input.fileReadStatus,
         input.uploadedBy,
+        input.expiresOn ?? null,
       ],
     );
     return mapRow(result.rows[0]!);

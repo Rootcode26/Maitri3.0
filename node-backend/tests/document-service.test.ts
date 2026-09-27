@@ -202,6 +202,30 @@ describe('DocumentService.uploadDocument', () => {
     expect(record.id).toBe('doc-1');
   });
 
+  it('persists an optional expiry date and defaults it to null', async () => {
+    inspectMock.mockResolvedValue({ detectedMimeType: 'application/pdf' });
+    const { service, documentRepository } = makeService({});
+    await service.uploadDocument(
+      'applicant-1',
+      'project-1',
+      { approvalKey: 'food-licence', documentKey: 'factory-plan', expiresOn: '2027-01-31' },
+      file(),
+    );
+    expect(documentRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ expiresOn: '2027-01-31' }),
+    );
+
+    await service.uploadDocument(
+      'applicant-1',
+      'project-1',
+      { approvalKey: 'food-licence', documentKey: 'factory-plan' },
+      file(),
+    );
+    expect(documentRepository.create).toHaveBeenLastCalledWith(
+      expect.objectContaining({ expiresOn: null }),
+    );
+  });
+
   it('accepts only explicitly corrected documents during correction resubmission', async () => {
     inspectMock.mockResolvedValue({ detectedMimeType: 'application/pdf' });
     const correctedProject = {

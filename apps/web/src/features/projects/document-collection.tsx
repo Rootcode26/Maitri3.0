@@ -414,6 +414,9 @@ export function DocumentCollection({
     useState<Record<string, ProjectDocument>>(initialByKey);
   const [current, setCurrent] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [expiresOnByKey, setExpiresOnByKey] = useState<Record<string, string>>(
+    {},
+  );
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -473,6 +476,7 @@ export function DocumentCollection({
         approvalKey,
         key,
         file,
+        expiresOnByKey[key] || undefined,
       );
       setUploadedByKey((previous) => ({ ...previous, [key]: document }));
       onUploadedChange?.([
@@ -703,6 +707,23 @@ export function DocumentCollection({
           <h4 className="font-heading text-lg font-semibold text-[#142b45]">
             {t("documents.selectDocument")}
           </h4>
+
+          <label className="mt-4 block">
+            <span className="text-sm font-medium text-[#142b45]">
+              {t("documents.expiryLabel")}
+            </span>
+            <input
+              type="date"
+              value={expiresOnByKey[spec.key] ?? ""}
+              onChange={(event) =>
+                setExpiresOnByKey((previous) => ({
+                  ...previous,
+                  [spec.key]: event.target.value,
+                }))
+              }
+              className="mt-1 block h-11 w-full max-w-xs rounded-md border border-[#aeb7c4] px-3 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            />
+          </label>
 
           <input
             ref={inputRef}
