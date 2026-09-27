@@ -16,6 +16,12 @@ workflow for applicants and government departments.
   <strong>Applicant workspace</strong> · <strong>Inspector workspace</strong> · <strong>Explainable rules</strong> · <strong>Multilingual access</strong>
 </p>
 
+<p align="center">
+  <img src="apps/web/public/images/steel-plant-campus.png" alt="Industrial campus representing the UdyogSetu use case" width="920" />
+</p>
+
+<p align="center"><em>One digital journey from industrial project profile to department decision.</em></p>
+
 ---
 
 ## Why UdyogSetu?
@@ -44,6 +50,25 @@ Decision with an auditable timeline
 The platform currently supports screening workflows for food processing,
 textiles and steel and metals projects, with a Maharashtra-focused rules
 context.
+
+### At a glance
+
+| 🏭 **For applicants** | 🧾 **For departments** | ⚙️ **For engineering teams** | 🌐 **For access** |
+| --- | --- | --- | --- |
+| Guided project intake, document checklist and status tracking | Review queue, clarifications, inspections and decisions | Contract-driven Node.js and FastAPI services | English, Hindi, Marathi and Odia catalogue support |
+
+```mermaid
+flowchart LR
+    A[Applicant] --> B[Project profile]
+    B --> C[Explainable approval rules]
+    C --> D[Department checklist]
+    D --> E[Secure document workflow]
+    E --> F[Inspector review]
+    F --> G{Clarification needed?}
+    G -- Yes --> H[Applicant response]
+    H --> F
+    G -- No --> I[Decision and audit timeline]
+```
 
 ## Product overview
 
@@ -96,6 +121,48 @@ marking them as approved. Inspectors can open a clarification thread, attach a
 document when needed, set a due date and receive an applicant response in the
 same application record.
 
+## Role-based product map
+
+```mermaid
+flowchart TB
+    U[UdyogSetu]
+    U --> A[Applicant workspace]
+    U --> I[Inspector workspace]
+    U --> R[Rules and validation]
+
+    A --> A1[Create project]
+    A --> A2[Upload documents]
+    A --> A3[Track progress]
+    A --> A4[Respond to clarifications]
+
+    I --> I1[Review queue]
+    I --> I2[Document decisions]
+    I --> I3[Site inspections]
+    I --> I4[Reports and decisions]
+
+    R --> R1[Rule evidence]
+    R --> R2[Missing information]
+    R --> R3[Review-required findings]
+    R --> R4[Versioned contracts]
+```
+
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <h3>👤 Applicant</h3>
+      <p>Completes one guided profile, receives a tailored preparation checklist and follows every request from the departments.</p>
+    </td>
+    <td width="33%" valign="top">
+      <h3>🛡️ Inspector</h3>
+      <p>Works from a department-scoped queue, reviews evidence, asks focused questions and records reasoned outcomes.</p>
+    </td>
+    <td width="33%" valign="top">
+      <h3>🔍 Rules service</h3>
+      <p>Explains how a recommendation was reached and keeps uncertainty visible for owner or department confirmation.</p>
+    </td>
+  </tr>
+</table>
+
 ### Secure workflow foundations
 
 - Separate applicant and inspector access paths
@@ -135,6 +202,32 @@ The Node API owns users, workflow state, PostgreSQL and document-storage
 coordination. The Python service is an internal, stateless decision service.
 The services communicate through the contract models under
 `packages/contracts`.
+
+### End-to-end system flow
+
+```mermaid
+sequenceDiagram
+    actor Applicant
+    participant Web as Next.js web
+    participant API as Node API
+    participant Rules as FastAPI rules service
+    participant Data as PostgreSQL / Redis
+    participant Files as S3-compatible storage
+    actor Inspector
+
+    Applicant->>Web: Complete project profile
+    Web->>API: Create project and save draft
+    API->>Rules: Evaluate trusted project snapshot
+    Rules-->>API: Recommendations, evidence and findings
+    API->>Data: Persist workflow state
+    API-->>Web: Checklist and next actions
+    Applicant->>API: Upload document version
+    API->>Files: Store and scan file
+    Inspector->>API: Review document or request clarification
+    API-->>Web: Applicant receives response request
+    Inspector->>API: Record decision
+    API->>Data: Append timeline event
+```
 
 ## Repository layout
 
