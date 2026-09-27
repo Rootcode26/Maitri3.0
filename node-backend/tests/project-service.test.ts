@@ -74,8 +74,8 @@ describe('ProjectService', () => {
     const service = new ProjectService({ submitProject } as unknown as ProjectRepository);
 
     await expect(service.submitProject('applicant-1', 'p1')).resolves.toBe(project);
-    // No validator configured -> no attention captured.
-    expect(submitProject).toHaveBeenCalledWith('applicant-1', 'p1', null);
+    // No validator configured -> no attention or flags captured.
+    expect(submitProject).toHaveBeenCalledWith('applicant-1', 'p1', null, null);
   });
 
   it('rejects submission when required documents are missing', async () => {
@@ -170,7 +170,13 @@ describe('ProjectService', () => {
             suggestedAction: 'Pending officer review.',
           },
         ],
-        attentionAssessment: { score: 45, level: 'high_attention' },
+        attentionAssessment: {
+          score: 45,
+          level: 'high_attention',
+          factors: [
+            { code: 'HAZARDOUS', label: 'Hazardous chemicals', points: 20, explanation: 'x' },
+          ],
+        },
       }),
     );
     const service = new ProjectService({ submitProject } as unknown as ProjectRepository, null, {
@@ -179,11 +185,38 @@ describe('ProjectService', () => {
 
     await expect(service.submitProject('applicant-1', 'p1')).resolves.toBe(project);
     expect(validateProject).toHaveBeenCalledWith('applicant-1', 'p1');
-    // The attention estimate is captured and persisted with the submission.
-    expect(submitProject).toHaveBeenCalledWith('applicant-1', 'p1', {
-      score: 45,
-      level: 'high_attention',
-    });
+    // The attention estimate and the non-blocking validation flags are both
+    // captured and persisted with the submission for the inspector.
+    expect(submitProject).toHaveBeenCalledWith(
+      'applicant-1',
+      'p1',
+      {
+        score: 45,
+        level: 'high_attention',
+        factors: [
+          { code: 'HAZARDOUS', label: 'Hazardous chemicals', points: 20, explanation: 'x' },
+        ],
+      },
+      {
+        warnings: [
+          {
+            code: 'DOCUMENT_VALUE_LOOKS_DIFFERENT',
+            severity: 'warning',
+            message: 'The document value looks different.',
+            suggestedAction: 'Double-check it.',
+          },
+        ],
+        reviewItems: [
+          {
+            code: 'DOCUMENT_CONTENT_REVIEW_NEEDED',
+            severity: 'review',
+            message: 'An officer should review this.',
+            suggestedAction: 'Pending officer review.',
+          },
+        ],
+        documentChecks: [],
+      },
+    );
   });
 
   it('fails submission closed when the configured validator is unavailable', async () => {

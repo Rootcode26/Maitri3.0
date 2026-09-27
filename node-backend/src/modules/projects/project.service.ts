@@ -2,7 +2,13 @@ import { randomUUID } from 'node:crypto';
 
 import { AppError } from '../../errors/app-error.js';
 import { logger } from '../../config/logger.js';
-import type { AttentionLevel, ValidationResult } from '../documents/document.validation-client.js';
+import type {
+  AttentionFactor,
+  AttentionLevel,
+  ValidationDocumentCheck,
+  ValidationIssue,
+  ValidationResult,
+} from '../documents/document.validation-client.js';
 import type { ProjectRepository } from './project.repository.js';
 import { RulesEngineError, type RulesEngineClient } from './project.rules-client.js';
 import { deriveApprovals, type RecommendedApproval } from './project.rules.js';
@@ -27,6 +33,14 @@ export interface ProjectValidator {
 export interface AttentionSummary {
   score: number;
   level: AttentionLevel;
+  factors: AttentionFactor[];
+}
+
+/** The non-blocking validation flags persisted with a submission for the inspector. */
+export interface ValidationFlags {
+  warnings: ValidationIssue[];
+  reviewItems: ValidationIssue[];
+  documentChecks: ValidationDocumentCheck[];
 }
 
 export class ProjectService {
@@ -106,6 +120,7 @@ export class ProjectService {
     // validator is configured but unreachable, validateProject throws (502/503),
     // so submission fails closed rather than slipping past the check.
     let attention: AttentionSummary | null = null;
+    let flags: ValidationFlags | null = null;
     if (this.validator) {
       const validation = await this.validator.validateProject(applicantId, projectId);
       if (validation.blockingIssues.length > 0) {
@@ -119,14 +134,31 @@ export class ProjectService {
           details: { blockingIssues: validation.blockingIssues },
         });
       }
-      // Capture the review-effort estimate so the inspector queue can triage by it.
+      // Capture the review-effort estimate (and why) so the inspector queue can
+      // triage by it and the detail view can explain it.
       const assessment = validation.attentionAssessment;
       if (assessment) {
-        attention = { score: assessment.score, level: assessment.level };
+        attention = {
+          score: assessment.score,
+          level: assessment.level,
+          factors: assessment.factors ?? [],
+        };
       }
+      // Capture the non-blocking flags so the inspector sees what the automated
+      // check surfaced (warnings, officer-review items, per-document checks).
+      flags = {
+        warnings: validation.warnings,
+        reviewItems: validation.reviewItems,
+        documentChecks: validation.documentChecks,
+      };
     }
 
-    const result = await this.repository.submitProject(applicantId, projectId, attention);
+    const result = await this.repository.submitProject(
+      applicantId,
+      projectId,
+      attention,
+      flags,
+    );
     if (result.missingDocuments.length > 0) {
       throw new AppError('Upload all required documents before submitting', {
         statusCode: 422,

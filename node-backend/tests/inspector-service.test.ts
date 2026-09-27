@@ -17,6 +17,8 @@ const application = (
   submittedAt: '2026-09-21T00:00:00.000Z',
   applicant: { id: 'applicant-1', name: 'Applicant', phoneNumber: '+919876543210' },
   details: {} as InspectorApplicationDetail['details'],
+  attention: null,
+  validation: null,
   approvals: [
     {
       id: '22222222-2222-4222-8222-222222222222',

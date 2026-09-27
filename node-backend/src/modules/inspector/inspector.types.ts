@@ -35,6 +35,48 @@ export interface ClarificationRequest {
 
 export type AttentionLevel = 'standard' | 'elevated' | 'high_attention';
 
+export interface AttentionFactor {
+  code: string;
+  label: string;
+  points: number;
+  explanation: string;
+}
+
+export interface AttentionAssessment {
+  score: number;
+  level: AttentionLevel;
+  factors: AttentionFactor[];
+}
+
+export interface ValidationFlag {
+  code: string;
+  message: string;
+  suggestedAction: string;
+  approvalKey: string | null;
+  documentKey: string | null;
+  field: string | null;
+}
+
+export type ValidationCheckStatus =
+  | 'matched'
+  | 'mismatched'
+  | 'unavailable'
+  | 'review_required';
+
+export interface ValidationDocumentCheck {
+  approvalKey: string;
+  documentKey: string;
+  field: string | null;
+  status: ValidationCheckStatus;
+  reason: string;
+}
+
+export interface ValidationFlags {
+  warnings: ValidationFlag[];
+  reviewItems: ValidationFlag[];
+  documentChecks: ValidationDocumentCheck[];
+}
+
 export interface InspectorApplicationSummary {
   projectId: string;
   approvalId: string;
@@ -83,6 +125,8 @@ export interface InspectorApplicationDetail {
   submittedAt: string;
   applicant: { id: string; name: string; phoneNumber: string };
   details: CreateProjectInput;
+  attention: AttentionAssessment | null;
+  validation: ValidationFlags | null;
   approvals: InspectorApproval[];
   documents: InspectorDocument[];
   clarifications: ClarificationRequest[];
