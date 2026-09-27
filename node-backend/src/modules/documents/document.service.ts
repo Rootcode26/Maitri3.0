@@ -177,6 +177,7 @@ export class DocumentService {
         storageKey,
         fileReadStatus,
         uploadedBy: applicantId,
+        expiresOn: input.expiresOn ?? null,
       });
     } catch (error) {
       await this.storage.delete(storageKey).catch((cleanupError) => {

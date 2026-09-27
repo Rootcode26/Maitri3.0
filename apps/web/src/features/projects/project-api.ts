@@ -506,11 +506,13 @@ export async function uploadProjectDocument(
   approvalKey: string,
   documentKey: string,
   file: File,
+  expiresOn?: string,
 ): Promise<ProjectDocument> {
   const form = new FormData();
   form.append("approvalKey", approvalKey);
   form.append("documentKey", documentKey);
   form.append("file", file);
+  if (expiresOn) form.append("expiresOn", expiresOn);
 
   let response: Response;
   try {

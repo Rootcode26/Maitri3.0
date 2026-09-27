@@ -203,7 +203,7 @@ export function InspectorApplicationsPage() {
                     <th className="px-4 py-3">{t("inspector.applicant")}</th>
                     <th className="px-4 py-3">{t("common.submitted", { date: "" })}</th>
                     <th className="px-4 py-3">{t("inspector.due")}</th>
-                    <th className="px-4 py-3">{t("attention.title")}</th>
+                    <th className="px-4 py-3">{t("attention.columnLabel")}</th>
                     <th className="px-4 py-3">{t("status.submitted")}</th>
                     <th className="px-5 py-3"><span className="sr-only">{t("common.open")}</span></th>
                   </tr>

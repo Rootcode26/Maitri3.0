@@ -11,6 +11,16 @@ const keySchema = (max: number) =>
 export const uploadDocumentSchema = z.object({
   approvalKey: keySchema(60),
   documentKey: keySchema(100),
+  // Optional expiry for documents that carry one (licences, certificates). An
+  // empty value is treated as "no expiry".
+  expiresOn: z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+    z
+      .string()
+      .trim()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Enter the expiry date as YYYY-MM-DD.')
+      .optional(),
+  ),
 });
 
 export type UploadDocumentInput = z.infer<typeof uploadDocumentSchema>;
