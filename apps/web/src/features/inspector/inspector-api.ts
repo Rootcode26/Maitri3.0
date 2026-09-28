@@ -1,3 +1,5 @@
+import { localPreviewEnabled } from "@/lib/local-preview";
+
 export type ReviewStatus =
   "pending" | "under_review" | "correction_required" | "approved" | "rejected";
 
@@ -197,6 +199,13 @@ export interface InspectorQueueFilters {
 }
 
 export async function listInspectorApplications(filters: InspectorQueueFilters = {}) {
+  if (localPreviewEnabled) {
+    return {
+      applications: [],
+      pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
+    };
+  }
+
   const params = new URLSearchParams();
   if (filters.status) params.set("status", filters.status);
   if (filters.q?.trim()) params.set("q", filters.q.trim());
@@ -310,11 +319,31 @@ export interface InspectorReport {
 }
 
 export async function getInspectorReport() {
+  if (localPreviewEnabled) {
+    return {
+      totals: {
+        assigned: 0,
+        pending: 0,
+        underReview: 0,
+        correctionRequired: 0,
+        approved: 0,
+        rejected: 0,
+        decided: 0,
+      },
+      averageDecisionDays: null,
+      byApproval: [],
+      inspections: { scheduled: 0, completed: 0, cancelled: 0 },
+      clarifications: { open: 0, responded: 0, resolved: 0 },
+    } satisfies InspectorReport;
+  }
+
   const response = await request<{ data: { report: InspectorReport } }>("/reports");
   return response.data.report;
 }
 
 export async function listInspectorInspections() {
+  if (localPreviewEnabled) return [];
+
   const response = await request<{
     data: { inspections: InspectionSummary[] };
   }>("/inspections");
@@ -351,6 +380,8 @@ export async function updateInspection(
 }
 
 export async function listInspectorClarifications() {
+  if (localPreviewEnabled) return [];
+
   const response = await request<{
     data: { clarifications: InspectorClarificationSummary[] };
   }>("/clarifications");
@@ -358,6 +389,8 @@ export async function listInspectorClarifications() {
 }
 
 export async function listInspectorDecisions() {
+  if (localPreviewEnabled) return [];
+
   const response = await request<{
     data: { decisions: InspectorDecisionSummary[] };
   }>("/decisions");

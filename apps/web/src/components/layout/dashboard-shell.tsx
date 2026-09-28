@@ -11,6 +11,7 @@ import { NotificationBell } from "@/features/notifications/notification-bell";
 import { useLanguage } from "@/components/providers/language-provider";
 import { Button } from "@/components/ui/button";
 import { getCurrentSession, logoutSession } from "@/lib/auth-api";
+import { localPreviewEnabled } from "@/lib/local-preview";
 
 type Workspace = "applicant" | "inspector";
 
@@ -31,6 +32,7 @@ function UserMenu({ workspace }: { workspace: Workspace }) {
     queryKey: ["session"],
     queryFn: getCurrentSession,
     staleTime: 60_000,
+    enabled: !localPreviewEnabled,
   });
   const logout = useMutation({
     mutationFn: logoutSession,
@@ -40,7 +42,12 @@ function UserMenu({ workspace }: { workspace: Workspace }) {
     },
   });
 
-  const user = session.data ?? null;
+  const user = session.data ?? (localPreviewEnabled
+    ? {
+        name: workspace === "inspector" ? "Preview Inspector" : "Preview Applicant",
+        role: workspace,
+      }
+    : null);
   const roleLabel =
     user?.role === "inspector"
       ? text("Inspector")
@@ -103,20 +110,20 @@ export function DashboardTopbar({
 }) {
   const { t, text } = useLanguage();
   return (
-    <header className="flex min-h-16 items-center justify-between gap-6 border-b border-[#e4e0d6] bg-[#f7f6f2] px-6 py-3">
-      <div className="flex items-center gap-4">
+    <header className="flex min-h-16 items-center justify-between gap-3 border-b border-[#e4e0d6] bg-[#f7f6f2] px-4 py-3 sm:gap-6 sm:px-6">
+      <div className="flex min-w-0 items-center gap-3 sm:gap-4">
         <button
           type="button"
           aria-label={t("dashboard.toggleNavigation")}
           aria-expanded={navigationOpen}
           aria-controls="mobile-workspace-navigation"
           onClick={onToggleNavigation}
-          className="grid size-10 place-items-center rounded-full border border-[#e4e0d6] text-slate-600 transition-colors hover:bg-white focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="grid size-10 shrink-0 place-items-center rounded-full border border-[#e4e0d6] text-slate-600 transition-colors hover:bg-white focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary lg:hidden"
         >
           <Menu className="size-5" aria-hidden="true" />
         </button>
-        <nav aria-label={t("dashboard.breadcrumb")}>
-          <ol className="flex items-center gap-2 text-sm text-slate-500">
+        <nav className="min-w-0" aria-label={t("dashboard.breadcrumb")}>
+          <ol className="flex min-w-0 items-center gap-2 text-sm text-slate-500">
             {breadcrumb.map((crumb, i) => {
               const last = i === breadcrumb.length - 1;
               const breadcrumbKey = ({
@@ -136,7 +143,9 @@ export function DashboardTopbar({
                 <Fragment key={crumb}>
                   <li
                     className={
-                      last ? "font-semibold text-[#142b45]" : undefined
+                      last
+                        ? "min-w-0 truncate font-semibold text-[#142b45]"
+                        : "hidden sm:block"
                     }
                     aria-current={last ? "page" : undefined}
                   >
@@ -144,7 +153,7 @@ export function DashboardTopbar({
                   </li>
                   {!last && (
                     <ChevronRight
-                      className="size-4 text-slate-400"
+                      className="hidden size-4 shrink-0 text-slate-400 sm:block"
                       aria-hidden="true"
                     />
                   )}
@@ -155,7 +164,7 @@ export function DashboardTopbar({
         </nav>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-4">
         <LanguageSelector />
         <NotificationBell workspace={workspace} />
         <UserMenu workspace={workspace} />
@@ -186,7 +195,13 @@ export function DashboardShell({
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [navigationOpen]);
   return (
-    <div className="flex min-h-svh bg-[#f7f6f2]">
+    <div className="flex min-h-svh overflow-x-hidden bg-[#f7f6f2]">
+      <a
+        href="#main-content"
+        className="sr-only z-[60] rounded-md bg-white px-4 py-3 font-semibold text-[#17345a] shadow-lg focus:fixed focus:top-4 focus:left-4 focus:not-sr-only focus-visible:outline-3 focus-visible:outline-primary"
+      >
+        {t("home.skip")}
+      </a>
       <DashboardSidebar
         activeHref={activeHref}
         workspace={workspace}
@@ -205,7 +220,7 @@ export function DashboardShell({
             activeHref={activeHref}
             workspace={workspace}
             onClose={() => setNavigationOpen(false)}
-            className="fixed inset-y-0 left-0 z-50 flex max-w-[85vw] shadow-xl lg:hidden"
+            className="fixed inset-y-0 left-0 z-50 flex max-w-[85vw] overscroll-contain shadow-xl lg:hidden"
           />
         </>
       ) : null}

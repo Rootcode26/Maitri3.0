@@ -172,7 +172,7 @@ export function InspectorApplicationsPage() {
                 key={item.value ?? "all"}
                 type="button"
                 onClick={() => setFilter(item.value)}
-                className={`h-10 rounded-md px-4 text-sm font-semibold transition-all duration-150 focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary ${active ? "bg-primary text-primary-foreground shadow-sm" : "border border-[#cfd4dc] bg-white text-[#142b45] hover:bg-[#f7f6f2] hover:shadow-sm"}`}
+                className={`h-10 rounded-md px-4 text-sm font-semibold transition-[color,background-color,border-color,box-shadow] duration-150 motion-reduce:transition-none focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary ${active ? "bg-primary text-primary-foreground shadow-sm" : "border border-[#cfd4dc] bg-white text-[#142b45] hover:bg-[#f7f6f2] hover:shadow-sm"}`}
               >
                 {t(item.label as "status.all")}
               </button>
@@ -194,7 +194,7 @@ export function InspectorApplicationsPage() {
                 key={value}
                 type="button"
                 onClick={() => setAssignment(value)}
-                className={`h-9 rounded-full px-4 text-sm font-medium transition-all duration-150 focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary ${active ? "bg-[#142b45] text-white shadow-sm" : "border border-[#cfd4dc] bg-white text-[#142b45] hover:bg-[#f7f6f2] hover:shadow-sm"}`}
+                className={`h-9 rounded-full px-4 text-sm font-medium transition-[color,background-color,border-color,box-shadow] duration-150 motion-reduce:transition-none focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary ${active ? "bg-[#142b45] text-white shadow-sm" : "border border-[#cfd4dc] bg-white text-[#142b45] hover:bg-[#f7f6f2] hover:shadow-sm"}`}
               >
                 {t(label)}
               </button>

@@ -15,6 +15,9 @@ const ACCESS_TOKEN_COOKIE = "access_token";
 
 const APPLICANT_LOGIN = "/auth/login";
 const INSPECTOR_LOGIN = "/inspector/login";
+const localPreviewBypass =
+  process.env.NODE_ENV === "development" &&
+  process.env.NEXT_PUBLIC_LOCAL_PREVIEW === "true";
 
 type Role = "applicant" | "inspector";
 
@@ -34,6 +37,9 @@ function readRole(token: string): Role | null {
 }
 
 export function proxy(request: NextRequest) {
+  // Local UI preview only. Production builds always use the real auth gate.
+  if (localPreviewBypass) return NextResponse.next();
+
   const { pathname, search } = request.nextUrl;
   const isInspectorArea = pathname.startsWith("/inspector");
   const token = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value ?? null;

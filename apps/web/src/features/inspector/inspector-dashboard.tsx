@@ -120,7 +120,7 @@ export function InspectorDashboard() {
           </Button>
         </div>
       ) : query.data.applications.length === 0 ? (
-        <div className="mt-8 border border-[#e4e0d6] bg-[#faf9f6] p-10 text-center">
+        <div className="mt-8 rounded-md border border-dashed border-[#cbd2dc] bg-[#faf9f6] p-8 text-center sm:p-10">
           <ClipboardCheck className="mx-auto size-10 text-slate-400" aria-hidden="true" />
           <h2 className="mt-4 text-xl font-semibold text-[#142b45]">{t("inspector.noApplications")}</h2>
           <p className="mt-2 text-sm text-slate-500">{t("inspector.emptyQueue")}</p>

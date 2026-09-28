@@ -212,6 +212,7 @@ export function ApplicantDashboard() {
         </div>
         <Button
           render={<Link href="/applicant/projects/new" />}
+          nativeButton={false}
           size="lg"
           className="h-11 rounded-md px-6"
         >
@@ -281,9 +282,19 @@ export function ApplicantDashboard() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-500">
-              {t("applicant.noApplications")}
-            </p>
+            <div className="flex flex-col items-start justify-between gap-4 rounded-md border border-dashed border-[#cbd2dc] bg-[#faf9f6] px-5 py-5 sm:flex-row sm:items-center">
+              <p className="text-sm leading-6 text-slate-600">
+                {t("applicant.noApplications")}
+              </p>
+              <Button
+                render={<Link href="/applicant/projects/new" />}
+                nativeButton={false}
+                variant="outline"
+                className="h-10 shrink-0 bg-white"
+              >
+                {t("applicant.createProject")}
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>

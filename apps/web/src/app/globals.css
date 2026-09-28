@@ -86,6 +86,26 @@
 body {
   min-width: 320px;
   font-family: var(--font-geist-sans), "Noto Sans Devanagari", "Nirmala UI", sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+a,
+select,
+input,
+textarea {
+  -webkit-tap-highlight-color: oklch(0.48 0.105 250 / 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 ::selection {

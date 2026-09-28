@@ -122,7 +122,7 @@ export function DashboardSidebar({
     <aside
       id={id}
       className={cn(
-        "flex w-72 shrink-0 flex-col border-r border-[#e4e0d6] bg-[#f7f6f2]",
+        "flex h-svh w-72 shrink-0 flex-col overflow-hidden border-r border-[#e4e0d6] bg-[#f7f6f2] lg:sticky lg:top-0",
         className,
       )}
     >

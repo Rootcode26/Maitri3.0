@@ -126,7 +126,7 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
           </p>
 
           <ol
-            className="mt-9 max-w-xl space-y-1"
+            className="mt-7 grid max-w-xl grid-cols-3 gap-2 lg:mt-9 lg:block lg:space-y-1"
             aria-label={t("registration.process")}
           >
             {page.steps.map((step, index) => {
@@ -134,22 +134,22 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
               return (
                 <li
                   key={step.title}
-                  className="relative grid grid-cols-[2.75rem_1fr] gap-4 pb-6 last:pb-0"
+                  className="relative flex min-w-0 flex-col items-center gap-2 rounded-md border border-slate-200 bg-white p-3 text-center lg:grid lg:grid-cols-[2.75rem_1fr] lg:gap-4 lg:border-0 lg:bg-transparent lg:p-0 lg:pb-6 lg:text-left lg:last:pb-0"
                 >
                   {index < page.steps.length - 1 && (
                     <span
-                      className="absolute top-11 bottom-0 left-[1.35rem] w-px bg-slate-200"
+                      className="absolute top-11 bottom-0 left-[1.35rem] hidden w-px bg-slate-200 lg:block"
                       aria-hidden="true"
                     />
                   )}
-                  <span className="relative z-10 grid size-11 place-items-center rounded-full border border-slate-200 bg-white text-primary">
-                    <Icon className="size-5" aria-hidden="true" />
+                  <span className="relative z-10 grid size-9 place-items-center rounded-full bg-blue-50 text-primary lg:size-11 lg:border lg:border-slate-200 lg:bg-white">
+                    <Icon className="size-4 lg:size-5" aria-hidden="true" />
                   </span>
-                  <div className="pt-1">
-                    <h2 className="font-semibold text-[#142b45]">
+                  <div className="min-w-0 lg:pt-1">
+                    <h2 className="text-xs leading-4 font-semibold text-[#142b45] sm:text-sm lg:text-base lg:leading-normal">
                       {index + 1}. {t(stepKeys[index])}
                     </h2>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                    <p className="mt-1 hidden text-sm leading-6 text-slate-600 lg:block">
                       {t(descriptionKeys[index])}
                     </p>
                   </div>

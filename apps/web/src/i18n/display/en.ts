@@ -1,8 +1,8 @@
 export const displayPhrases = [
-  "Applicant Access", "Continue Your Approval Journey", "Sign in to manage your steel plant project, documents and approval applications.", "Applicant", "For registered businesses and project applicants.",
-  "Inspector Access", "Review Department Applications", "Sign in with your authorised inspector account to review applications assigned to your department.", "Inspector", "Inspector accounts are issued and managed by departments.",
-  "About UdyogSetu", "Modern integrated steel manufacturing campus at dusk", "Single-Window Clearance", "Maharashtra industrial approvals", "National Emblem of India", "Government of India",
-  "Industrial Approvals, Connected", "Move Your Steel Project From Plan to Approval", "Manage submissions, respond to inspections and follow every departmental decision through one secure service.",
+  "Applicant Access", "Continue Your Approval Journey", "Sign in to manage your industrial project, documents and approval applications.", "Applicant", "For registered businesses and project applicants.",
+  "Inspector Access", "Review Applications", "Sign in with your authorised inspector account to review applications assigned to your department.", "Inspector", "Inspector accounts are issued and managed by departments.",
+  "About UdyogSetu", "Modern integrated steel manufacturing campus at dusk", "Single-Window Clearance", "Maharashtra industrial approvals", "National Emblem of India", "Government of Maharashtra",
+  "Industrial Approvals, Connected", "Move Your Industrial Project From Plan to Approval", "Manage submissions, respond to inspections and follow every departmental decision through one secure service.",
   "Transparent, time-bound industrial approvals", "Maharashtra industrial approval portal", "Choose a sign-in workspace", "Applicant Workspace", "Inspector Workspace", "Back to Workspaces",
   "Account recovery", "Reset your password", "Choose a new password", "Mobile verification", "Enter the verification code", "Loading recovery form", "Loading password form", "Loading verification form",
   "Current session", "Signed in as {{name}} · {{role}}", "Signing out…", "Sign out", "Sign out failed. Please try again.", "We could not check your session. You can still choose a workspace and sign in.", "Close navigation",

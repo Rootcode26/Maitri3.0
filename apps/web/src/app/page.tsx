@@ -18,31 +18,31 @@ export default function Home() {
     <div className="min-h-svh bg-background">
       <a href="#main-content" className="sr-only z-50 bg-white p-3 text-[#142b45] focus:fixed focus:top-4 focus:left-4 focus:not-sr-only">{t("home.skip")}</a>
       <SiteHeader actionLabel={t("home.about")} actionHref="#portal-note" />
-      <main id="main-content" className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-8 md:py-16 lg:px-10">
+      <main id="main-content" className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 md:py-14 lg:px-10">
         <SessionPanel />
         <section className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-semibold text-primary">{t("home.secureAccess")}</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#142b45] sm:text-4xl">{t("home.chooseWorkspace")}</h1>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">{t("home.workspaceDescription")}</p>
         </section>
-        <section aria-label={t("home.availableWorkspaces")} className="mx-auto mt-10 grid max-w-4xl gap-5 md:grid-cols-2">
+        <section aria-label={t("home.availableWorkspaces")} className="mx-auto mt-9 grid max-w-4xl gap-5 md:grid-cols-2">
           {workspaces.map((workspace) => {
             const Icon = workspace.icon;
             return (
-              <Card key={workspace.title} className={`rounded-md border border-t-4 border-slate-200 bg-white py-0 shadow-[0_10px_30px_rgba(20,43,69,0.06)] ring-0 transition-transform duration-200 hover:-translate-y-0.5 ${workspace.accent}`}>
-                <CardHeader className="flex-row items-start justify-between gap-5 px-6 pt-7 sm:px-8">
+              <Card key={workspace.title} className={`flex rounded-md border border-t-4 border-slate-200 bg-white py-0 shadow-[0_10px_30px_rgba(20,43,69,0.06)] ring-0 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_38px_rgba(20,43,69,0.1)] motion-reduce:transform-none motion-reduce:transition-none ${workspace.accent}`}>
+                <CardHeader className="flex-row items-center justify-between gap-5 px-6 pt-7 sm:px-8">
                   <span className={`grid size-12 place-items-center rounded-md ${workspace.iconStyle}`}><Icon className="size-6" aria-hidden="true" /></span>
-                  <Link href={workspace.href} className="flex min-h-11 items-center gap-2 rounded-sm px-1 text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-primary">{t("common.continue")} <ArrowRight aria-hidden="true" /></Link>
-                </CardHeader>
-                <CardContent className="space-y-4 px-6 pb-7 sm:px-8">
-                  <div><h2 className="text-xl font-semibold text-[#142b45] sm:text-2xl">{workspace.title}</h2><p className="mt-2 max-w-lg leading-7 text-slate-600">{workspace.description}</p></div>
                   <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${workspace.badgeStyle}`}>{workspace.badge}</span>
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col px-6 pb-7 sm:px-8">
+                  <div><h2 className="text-xl font-semibold text-[#142b45] sm:text-2xl">{workspace.title}</h2><p className="mt-2 max-w-lg leading-7 text-slate-600">{workspace.description}</p></div>
+                  <Link href={workspace.href} className="mt-6 flex min-h-11 items-center justify-between gap-3 border-t border-slate-200 pt-4 text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-primary">{t("common.continue")} <ArrowRight className="size-5" aria-hidden="true" /></Link>
                 </CardContent>
               </Card>
             );
           })}
         </section>
-        <aside id="portal-note" className="mt-8 flex gap-3 border border-blue-200 bg-blue-50 p-5 text-sm leading-6 text-blue-950">
+        <aside id="portal-note" className="mx-auto mt-8 flex max-w-4xl gap-3 rounded-md border border-blue-200 bg-blue-50 p-5 text-sm leading-6 text-blue-950">
           <ShieldCheck className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
           <p><strong>{t("home.secureAccess")}:</strong> {t("home.secureNote")}</p>
         </aside>

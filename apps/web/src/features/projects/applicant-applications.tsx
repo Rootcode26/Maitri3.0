@@ -57,6 +57,7 @@ export function ApplicantApplications() {
         </div>
         <Button
           render={<Link href="/applicant/projects/new" />}
+          nativeButton={false}
           className="h-11 rounded-md px-5"
         >
           {text("Create new project")}
@@ -145,7 +146,7 @@ export function ApplicantApplications() {
           ))}
         </ul>
       ) : (
-        <div className="mt-8 border border-dashed border-[#aeb7c4] p-10 text-center">
+        <div className="mt-8 rounded-md border border-dashed border-[#aeb7c4] bg-[#faf9f6] p-8 text-center sm:p-10">
           <FileText
             className="mx-auto size-8 text-slate-400"
             aria-hidden="true"
@@ -160,6 +161,15 @@ export function ApplicantApplications() {
               ? text("Change the search or status filter.")
               : text("Create your first project to begin the approval journey.")}
           </p>
+          {!query.data?.length ? (
+            <Button
+              render={<Link href="/applicant/projects/new" />}
+              nativeButton={false}
+              className="mt-5 h-10 px-5"
+            >
+              {text("Create new project")}
+            </Button>
+          ) : null}
         </div>
       )}
     </div>
