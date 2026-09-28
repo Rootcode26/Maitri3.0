@@ -74,7 +74,13 @@ const envSchema = z
     }
   });
 
-const parsedEnv = envSchema.safeParse(process.env);
+// Treat an empty-string environment variable as unset. Container orchestrators
+// (docker compose `${VAR:-}`, empty lines in an env file) inject "" rather than
+// omitting the key, which would otherwise fail the `.min(1).optional()` fields
+// (e.g. unused TWILIO_* or a blank CLAMAV_HOST used to disable scanning).
+const rawEnv = Object.fromEntries(Object.entries(process.env).filter(([, value]) => value !== ''));
+
+const parsedEnv = envSchema.safeParse(rawEnv);
 
 if (!parsedEnv.success) {
   console.error('Invalid environment configuration', z.flattenError(parsedEnv.error));
