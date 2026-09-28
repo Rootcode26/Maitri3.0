@@ -70,14 +70,16 @@ describe("DashboardSidebar", () => {
     }
   });
 
-  it("shows unbuilt sections as disabled and not as links", () => {
+  it("renders the notifications and verify sections as navigable links", () => {
     render(<DashboardSidebar activeHref="/applicant/dashboard" />);
-    for (const label of ["Notifications", "Verify certificate"]) {
-      expect(
-        screen.queryByRole("link", { name: new RegExp(label, "i") }),
-      ).toBeNull();
-    }
-    expect(screen.getAllByText("Soon")).toHaveLength(2);
+    expect(
+      screen.getByRole("link", { name: /notifications/i }),
+    ).toHaveAttribute("href", "/applicant/notifications");
+    expect(
+      screen.getByRole("link", { name: /verify certificate/i }),
+    ).toHaveAttribute("href", "/applicant/verify");
+    // No sections are marked "Soon" any more — the applicant workspace is complete.
+    expect(screen.queryByText("Soon")).toBeNull();
   });
 
   it("marks only the active route with aria-current=page", () => {
