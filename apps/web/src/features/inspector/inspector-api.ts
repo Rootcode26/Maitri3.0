@@ -1,4 +1,5 @@
 import { localPreviewEnabled } from "@/lib/local-preview";
+import { apiFetch } from "@/lib/api-fetch";
 
 export type ReviewStatus =
   "pending" | "under_review" | "correction_required" | "approved" | "rejected";
@@ -170,7 +171,7 @@ export class InspectorApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`/api/v1/inspector${path}`, {
+  const response = await apiFetch(`/api/v1/inspector${path}`, {
     ...init,
     credentials: "include",
     headers: init?.body
@@ -539,7 +540,7 @@ export async function revokeInspectorCertificate(
 export async function verifyCertificate(
   verificationCode: string,
 ): Promise<PublicCertificate | null> {
-  const response = await fetch(`/api/v1/verify/${verificationCode}`, {
+  const response = await apiFetch(`/api/v1/verify/${verificationCode}`, {
     credentials: "include",
   });
   if (response.status === 404) return null;

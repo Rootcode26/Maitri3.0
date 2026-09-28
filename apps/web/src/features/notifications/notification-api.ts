@@ -1,4 +1,5 @@
 import { localPreviewEnabled } from "@/lib/local-preview";
+import { apiFetch } from "@/lib/api-fetch";
 
 export type NotificationType =
   | "submission_received"
@@ -22,7 +23,7 @@ export interface NotificationFeed {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`/api/v1/notifications${path}`, {
+  const response = await apiFetch(`/api/v1/notifications${path}`, {
     ...init,
     credentials: "include",
     headers: init?.body ? { "Content-Type": "application/json" } : undefined,

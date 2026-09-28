@@ -1,4 +1,5 @@
 import { localPreviewEnabled } from "@/lib/local-preview";
+import { apiFetch } from "@/lib/api-fetch";
 
 export type ApprovalStatus = "required" | "recommended";
 
@@ -86,7 +87,7 @@ export interface ApplicantClarification {
 export async function listProjects(): Promise<ProjectSummary[]> {
   if (localPreviewEnabled) return [];
 
-  const response = await fetch("/api/v1/projects", { credentials: "include" });
+  const response = await apiFetch("/api/v1/projects", { credentials: "include" });
   const body = (await response.json().catch(() => ({}))) as {
     message?: string;
     data?: { projects: ProjectSummary[] };
@@ -103,7 +104,7 @@ export async function listProjects(): Promise<ProjectSummary[]> {
 export async function listProjectClarifications(projectId: string) {
   if (localPreviewEnabled) return [];
 
-  const response = await fetch(`/api/v1/projects/${projectId}/clarifications`, {
+  const response = await apiFetch(`/api/v1/projects/${projectId}/clarifications`, {
     credentials: "include",
   });
   const body = (await response.json().catch(() => ({}))) as {
@@ -124,7 +125,7 @@ export async function respondToProjectClarification(
   clarificationId: string,
   message: string,
 ) {
-  const response = await fetch(
+  const response = await apiFetch(
     `/api/v1/projects/${projectId}/clarifications/${clarificationId}/responses`,
     {
       method: "POST",
@@ -147,7 +148,7 @@ export async function respondToProjectClarification(
 }
 
 export async function submitProject(projectId: string): Promise<Project> {
-  const response = await fetch(`/api/v1/projects/${projectId}/submit`, {
+  const response = await apiFetch(`/api/v1/projects/${projectId}/submit`, {
     method: "POST",
     credentials: "include",
   });
@@ -289,7 +290,7 @@ export async function createProject(
 ): Promise<Project> {
   let response: Response;
   try {
-    response = await fetch("/api/v1/projects", {
+    response = await apiFetch("/api/v1/projects", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -353,7 +354,7 @@ export async function createProject(
 }
 
 export async function listDepartments(): Promise<Department[]> {
-  const response = await fetch("/api/v1/departments", {
+  const response = await apiFetch("/api/v1/departments", {
     credentials: "include",
   });
   const body = (await response.json().catch(() => ({}))) as {
@@ -369,7 +370,7 @@ export async function updateApprovalDepartment(
   approvalId: string,
   departmentKey: string,
 ): Promise<ProjectApproval> {
-  const response = await fetch(
+  const response = await apiFetch(
     `/api/v1/projects/${projectId}/approvals/${approvalId}`,
     {
       method: "PATCH",
@@ -435,7 +436,7 @@ export interface ApplicantApplication extends Project {
 }
 
 export async function getApplicantApplication(projectId: string) {
-  const response = await fetch(`/api/v1/projects/${projectId}/application`, {
+  const response = await apiFetch(`/api/v1/projects/${projectId}/application`, {
     credentials: "include",
   });
   const body = (await response.json().catch(() => ({}))) as {
@@ -454,7 +455,7 @@ export async function getApplicantApplication(projectId: string) {
 export async function listApplicantDocuments() {
   if (localPreviewEnabled) return [];
 
-  const response = await fetch("/api/v1/projects/documents", {
+  const response = await apiFetch("/api/v1/projects/documents", {
     credentials: "include",
   });
   const body = (await response.json().catch(() => ({}))) as {
@@ -474,7 +475,7 @@ export async function getProjectDocumentDownload(
   projectId: string,
   documentId: string,
 ) {
-  const response = await fetch(
+  const response = await apiFetch(
     `/api/v1/projects/${projectId}/documents/${documentId}/download`,
     {
       credentials: "include",
@@ -496,7 +497,7 @@ export async function getProjectDocumentDownload(
 export async function listProjectDocuments(
   projectId: string,
 ): Promise<ProjectDocument[]> {
-  const response = await fetch(`/api/v1/projects/${projectId}/documents`, {
+  const response = await apiFetch(`/api/v1/projects/${projectId}/documents`, {
     credentials: "include",
   });
   const body = (await response.json().catch(() => ({}))) as {
@@ -525,7 +526,7 @@ export async function uploadProjectDocument(
 
   let response: Response;
   try {
-    response = await fetch(`/api/v1/projects/${projectId}/documents`, {
+    response = await apiFetch(`/api/v1/projects/${projectId}/documents`, {
       method: "POST",
       credentials: "include",
       body: form,
@@ -581,7 +582,7 @@ export async function deleteProjectDocument(
   projectId: string,
   documentId: string,
 ): Promise<void> {
-  const response = await fetch(
+  const response = await apiFetch(
     `/api/v1/projects/${projectId}/documents/${documentId}`,
     {
       method: "DELETE",
@@ -627,7 +628,7 @@ export async function validateProjectDocuments(
 ): Promise<ValidationResult> {
   let response: Response;
   try {
-    response = await fetch(`/api/v1/projects/${projectId}/validate`, {
+    response = await apiFetch(`/api/v1/projects/${projectId}/validate`, {
       method: "POST",
       credentials: "include",
     });
@@ -688,7 +689,7 @@ export interface CertificateSummary {
 export async function getApplicantCertificate(
   projectId: string,
 ): Promise<CertificateSummary | null> {
-  const response = await fetch(`/api/v1/projects/${projectId}/certificate`, {
+  const response = await apiFetch(`/api/v1/projects/${projectId}/certificate`, {
     credentials: "include",
   });
   if (response.status === 404) return null;
@@ -708,7 +709,7 @@ export async function getApplicantCertificate(
 export async function getApplicantCertificateDownloadUrl(
   projectId: string,
 ): Promise<string> {
-  const response = await fetch(
+  const response = await apiFetch(
     `/api/v1/projects/${projectId}/certificate/download`,
     { credentials: "include" },
   );
