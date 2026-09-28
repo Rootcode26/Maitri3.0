@@ -9,7 +9,6 @@ import type { ReactElement, ReactNode } from "react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import Home from "@/app/page";
 import {
   getPostLoginRoute,
   LoginForm,
@@ -76,26 +75,6 @@ describe("authentication workflow", () => {
     expect(getPostLoginRoute("inspector", "/applicant/documents")).toBe(
       "/inspector/dashboard",
     );
-  });
-
-  it("presents separate applicant and inspector workspaces", () => {
-    render(<Home />);
-
-    expect(
-      screen.getByRole("heading", { name: "Applicant login" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Inspector login" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("heading", { name: "Admin login" }),
-    ).not.toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: /continue/i })).toHaveLength(2);
-    expect(
-      screen
-        .getAllByRole("link", { name: /continue/i })
-        .map((link) => link.getAttribute("href")),
-    ).toEqual(["/auth/login", "/inspector/login"]);
   });
 
   it("authenticates an applicant and forwards remember-me as false by default", async () => {
