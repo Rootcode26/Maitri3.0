@@ -169,7 +169,10 @@ export interface InspectorDecisionSummary {
   submittedAt: string;
 }
 
-export interface InspectorDocument extends Omit<ProjectDocumentRecord, 'storageKey'> {
+export interface InspectorDocument extends Omit<
+  ProjectDocumentRecord,
+  'storageKey' | 'storageStatus'
+> {
   review: {
     status: DocumentReviewStatus;
     comment: string | null;

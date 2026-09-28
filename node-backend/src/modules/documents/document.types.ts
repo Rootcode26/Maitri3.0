@@ -2,6 +2,8 @@ export type DocumentReadStatus = 'not_checked' | 'readable' | 'unreadable' | 'pa
 
 export type DocumentExtractionStatus = 'not_run' | 'succeeded' | 'failed' | 'review_required';
 
+export type DocumentStorageStatus = 'pending' | 'stored' | 'failed';
+
 export interface ProjectDocumentRecord {
   id: string;
   projectId: string;
@@ -15,6 +17,7 @@ export interface ProjectDocumentRecord {
   storageKey: string;
   fileReadStatus: DocumentReadStatus;
   extractionStatus: DocumentExtractionStatus;
+  storageStatus: DocumentStorageStatus;
   expiresOn: string | null;
   createdAt: string;
   updatedAt: string;

@@ -61,6 +61,8 @@ const envSchema = z
     UPLOAD_RATE_LIMIT: z.coerce.number().int().positive().default(60),
     UPLOAD_RATE_WINDOW_SECONDS: z.coerce.number().int().positive().default(60),
     VALIDATION_INCLUDE_DOCUMENT_BYTES: z.stringbool().default(false),
+    ASYNC_DOCUMENT_STORAGE: z.stringbool().default(false),
+    DOCUMENT_STORAGE_CONCURRENCY: z.coerce.number().int().positive().max(20).default(3),
   })
   .superRefine((value, ctx) => {
     if (value.NODE_ENV === 'production' && value.OTP_DEVELOPMENT_CODE !== undefined) {

@@ -92,7 +92,7 @@ describe('authentication routes', () => {
     expect(service.register).toHaveBeenCalledOnce();
   });
 
-  it('accepts an inspector registration with an explicit department', async () => {
+  it('rejects inspector registration — inspectors are provisioned, not self-registered', async () => {
     const { app, service } = createTestApp();
     const response = await request(app).post('/api/v1/auth/register').send({
       name: 'Inspector One',
@@ -102,17 +102,9 @@ describe('authentication routes', () => {
       departmentKey: 'mpcb',
     });
 
-    expect(response.status).toBe(201);
-    expect(service.register).toHaveBeenCalledWith(
-      {
-        name: 'Inspector One',
-        phoneNumber: '+919876543211',
-        password: 'strong-password',
-        role: 'inspector',
-        departmentKey: 'mpcb',
-      },
-      expect.any(String),
-    );
+    expect(response.status).toBe(400);
+    expect(response.body.code).toBe('VALIDATION_ERROR');
+    expect(service.register).not.toHaveBeenCalled();
   });
 
   it('verifies an OTP and issues HTTP-only development cookies', async () => {

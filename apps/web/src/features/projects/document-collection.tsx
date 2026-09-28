@@ -1,12 +1,13 @@
 "use client";
 
 import { ArrowLeft, Check, Loader2, Upload, X } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/providers/language-provider";
 import {
   deleteProjectDocument,
+  listApplicantDocuments,
   ProjectApiError,
   uploadProjectDocument,
   type ApprovalDocument,
@@ -413,6 +414,42 @@ export function DocumentCollection({
   const [uploadedByKey, setUploadedByKey] =
     useState<Record<string, ProjectDocument>>(initialByKey);
   const [current, setCurrent] = useState(0);
+
+  // With background storage, a freshly uploaded document is 'pending' until a
+  // worker stores it. Poll for the stored state while any document is pending.
+  const hasPending = Object.values(uploadedByKey).some(
+    (document) => document.storageStatus === "pending",
+  );
+  useEffect(() => {
+    if (!hasPending) return;
+    let cancelled = false;
+    const timer = setInterval(async () => {
+      try {
+        const fresh = await listApplicantDocuments();
+        if (cancelled) return;
+        setUploadedByKey((previous) => {
+          let changed = false;
+          const next = { ...previous };
+          for (const key of Object.keys(next)) {
+            const record = next[key]!;
+            if (record.storageStatus !== "pending") continue;
+            const updated = fresh.find((item) => item.id === record.id);
+            if (updated && updated.storageStatus !== "pending") {
+              next[key] = updated;
+              changed = true;
+            }
+          }
+          return changed ? next : previous;
+        });
+      } catch {
+        // transient; the next tick retries
+      }
+    }, 3_000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [hasPending]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [expiresOnByKey, setExpiresOnByKey] = useState<Record<string, string>>(
     {},
@@ -762,6 +799,16 @@ export function DocumentCollection({
                   <span className="block text-xs text-slate-500">
                     {t("documents.uploadedVersion", { version: currentUploaded.version })}
                   </span>
+                  {currentUploaded.storageStatus === "pending" ? (
+                    <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-amber-700">
+                      <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                      {t("documents.saving")}
+                    </span>
+                  ) : currentUploaded.storageStatus === "failed" ? (
+                    <span className="mt-1 block text-xs font-medium text-destructive">
+                      {t("documents.saveFailed")}
+                    </span>
+                  ) : null}
                 </span>
               </span>
               <div className="flex shrink-0 items-center gap-3">

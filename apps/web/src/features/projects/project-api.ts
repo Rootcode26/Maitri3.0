@@ -404,6 +404,7 @@ export interface ProjectDocument {
   sizeBytes: number;
   fileReadStatus: string;
   extractionStatus: string;
+  storageStatus?: "pending" | "stored" | "failed";
   expiresOn: string | null;
   createdAt: string;
   review?: {

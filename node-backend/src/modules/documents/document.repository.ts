@@ -2,6 +2,7 @@ import { databasePool, query } from '../../database/database.js';
 import type {
   DocumentExtractionStatus,
   DocumentReadStatus,
+  DocumentStorageStatus,
   ProjectDocumentRecord,
 } from './document.types.js';
 
@@ -18,6 +19,7 @@ interface DocumentRow {
   storage_key: string;
   file_read_status: DocumentReadStatus;
   extraction_status: DocumentExtractionStatus;
+  storage_status: DocumentStorageStatus;
   expires_on: Date | null;
   created_at: Date;
   updated_at: Date;
@@ -45,6 +47,7 @@ const mapRow = (row: DocumentRow): ProjectDocumentRecord => ({
   storageKey: row.storage_key,
   fileReadStatus: row.file_read_status,
   extractionStatus: row.extraction_status,
+  storageStatus: row.storage_status,
   expiresOn: row.expires_on ? toDateString(row.expires_on) : null,
   createdAt: row.created_at.toISOString(),
   updatedAt: row.updated_at.toISOString(),
@@ -61,6 +64,7 @@ export interface CreateDocumentInput {
   sizeBytes: number;
   storageKey: string;
   fileReadStatus: DocumentReadStatus;
+  storageStatus?: DocumentStorageStatus;
   uploadedBy: string;
   expiresOn?: string | null;
 }
@@ -97,10 +101,11 @@ export class DocumentRepository {
     const result = await query<DocumentRow>(
       `INSERT INTO project_documents
          (project_id, approval_key, document_key, version, file_name, mime_type,
-          detected_mime_type, size_bytes, storage_key, file_read_status, uploaded_by, expires_on)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          detected_mime_type, size_bytes, storage_key, file_read_status, storage_status,
+          uploaded_by, expires_on)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING id, project_id, approval_key, document_key, version, file_name, mime_type,
-                 detected_mime_type, size_bytes, storage_key, file_read_status, extraction_status,
+                 detected_mime_type, size_bytes, storage_key, file_read_status, extraction_status, storage_status,
                  expires_on, created_at, updated_at`,
       [
         input.projectId,
@@ -113,6 +118,7 @@ export class DocumentRepository {
         input.sizeBytes,
         input.storageKey,
         input.fileReadStatus,
+        input.storageStatus ?? 'stored',
         input.uploadedBy,
         input.expiresOn ?? null,
       ],
@@ -120,10 +126,17 @@ export class DocumentRepository {
     return mapRow(result.rows[0]!);
   }
 
+  async markStorageStatus(documentId: string, status: DocumentStorageStatus): Promise<void> {
+    await query(`UPDATE project_documents SET storage_status = $2 WHERE id = $1`, [
+      documentId,
+      status,
+    ]);
+  }
+
   async findByProject(projectId: string): Promise<ProjectDocumentRecord[]> {
     const result = await query<DocumentRow>(
       `SELECT id, project_id, approval_key, document_key, version, file_name, mime_type,
-              detected_mime_type, size_bytes, storage_key, file_read_status, extraction_status,
+              detected_mime_type, size_bytes, storage_key, file_read_status, extraction_status, storage_status,
               expires_on, created_at, updated_at
        FROM project_documents
        WHERE project_id = $1
@@ -136,7 +149,7 @@ export class DocumentRepository {
   async findById(projectId: string, documentId: string): Promise<ProjectDocumentRecord | null> {
     const result = await query<DocumentRow>(
       `SELECT id, project_id, approval_key, document_key, version, file_name, mime_type,
-              detected_mime_type, size_bytes, storage_key, file_read_status, extraction_status,
+              detected_mime_type, size_bytes, storage_key, file_read_status, extraction_status, storage_status,
               expires_on, created_at, updated_at
        FROM project_documents
        WHERE project_id = $1 AND id = $2`,

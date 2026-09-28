@@ -2,7 +2,7 @@
 
 <img src="apps/web/public/images/udyogsetu-logo.svg" alt="UdyogSetu" width="260" />
 
-# Maitri 3.0
+
 
 ### A guided, transparent approval journey for industrial projects
 
@@ -175,6 +175,51 @@ flowchart TB
 - Redacted structured logging and fail-closed validation paths
 
 ## Architecture
+
+### Integrated system architecture and data flow
+
+The diagram below shows the current UdyogSetu services and the end-to-end flow
+from project intake through rules evaluation, document validation, inspector
+review and decision.
+
+```mermaid
+flowchart TB
+    subgraph UX[User experience]
+        A[Applicant workspace]
+        I[Inspector workspace]
+        W[Next.js web application<br/>Multilingual user interface]
+        A --> W
+        I --> W
+    end
+
+    subgraph APP[Application services]
+        N[Node.js / Express API<br/>Authentication · workflow · orchestration]
+        P[FastAPI decision service<br/>Versioned rules · recommendations · validation]
+        C[Shared versioned JSON contracts]
+    end
+
+    subgraph DATA[Data and trust layer]
+        DB[(PostgreSQL<br/>Users · projects · workflow · audit)]
+        R[(Redis<br/>Cache · rate limiting)]
+        S[(Private S3-compatible storage<br/>Document objects)]
+        AV[ClamAV<br/>Upload malware scan]
+    end
+
+    W <-->|Project data · status · review actions| N
+    N <-->|Evaluation request · findings| P
+    N <-.->|Contract boundary| C
+    P <-.->|Contract boundary| C
+    N <--> DB
+    N <--> R
+    N -->|Store and retrieve document versions| S
+    N -->|Scan uploaded files| AV
+    AV -->|Scan result| N
+
+    A -.->|1. Create project and upload evidence| W
+    N -.->|2. Return recommendations and checklist| W
+    I -.->|3. Review · clarify · decide| W
+    N -.->|4. Persist decision and audit timeline| DB
+```
 
 ```mermaid
 flowchart LR

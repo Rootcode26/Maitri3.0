@@ -51,8 +51,13 @@ const applicantNavItems: NavItem[] = [
     icon: ScrollText,
     ready: true,
   },
-  { label: "Notifications", href: "/applicant/notifications", icon: Bell },
-  { label: "Verify certificate", href: "/applicant/verify", icon: ShieldCheck },
+  { label: "Notifications", href: "/applicant/notifications", icon: Bell, ready: true },
+  {
+    label: "Verify certificate",
+    href: "/applicant/verify",
+    icon: ShieldCheck,
+    ready: true,
+  },
 ];
 
 const inspectorNavItems: NavItem[] = [

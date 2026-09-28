@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppError } from '../src/errors/app-error.js';
 import type { AuthRepository } from '../src/modules/auth/auth.repository.js';
 import { AuthService } from '../src/modules/auth/auth.service.js';
+import { registerSchema } from '../src/modules/auth/auth.schemas.js';
 import type { AuthUser } from '../src/modules/auth/auth.types.js';
 import type { OtpService } from '../src/modules/auth/otp.service.js';
 import { hashRefreshToken, verifyAccessToken } from '../src/modules/auth/token.service.js';
@@ -94,30 +95,15 @@ describe('AuthService', () => {
     ).rejects.toMatchObject({ statusCode: 409, code: 'PHONE_ALREADY_REGISTERED' });
   });
 
-  it('registers an inspector with a department and never assigns applicant industry', async () => {
-    repository.findUserByPhone.mockResolvedValue(null);
-    repository.createPendingUser.mockResolvedValue(inspector);
-    otpService.sendRegistrationOtp.mockResolvedValue(undefined);
-
-    const result = await service.register(
-      {
-        name: inspector.name,
-        phoneNumber: inspector.phoneNumber!,
-        password: 'strong-password',
-        role: 'inspector',
-        departmentKey: 'mpcb',
-      },
-      '127.0.0.1',
-    );
-
-    expect(result.user).toEqual(inspector);
-    expect(repository.createPendingUser).toHaveBeenCalledWith(
-      expect.objectContaining({
-        role: 'inspector',
-        departmentKey: 'mpcb',
-      }),
-    );
-    expect(repository.createPendingUser.mock.calls[0]?.[0]).not.toHaveProperty('industry');
+  it('rejects inspector self-registration (inspectors are provisioned, not registered)', () => {
+    const result = registerSchema.safeParse({
+      name: inspector.name,
+      phoneNumber: inspector.phoneNumber,
+      password: 'strong-password',
+      role: 'inspector',
+      departmentKey: 'mpcb',
+    });
+    expect(result.success).toBe(false);
   });
 
   it('does not create a session when OTP delivery cannot be initiated', async () => {
