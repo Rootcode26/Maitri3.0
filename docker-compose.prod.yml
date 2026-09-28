@@ -1,0 +1,252 @@
+name: maitri-prod
+
+# ---------------------------------------------------------------------------
+# Single-box production stack for Maitri 3.0.
+#
+#   caddy ──┬─ https://${SITE_HOST}            → web (UI) + /api/v1/* → api
+#           └─ https://s3.${SITE_HOST}         → minio (presigned uploads/downloads)
+#
+#   api   (Express)   ── rules (FastAPI, internal) ── postgres / redis / minio
+#   worker(BullMQ)    ── background S3 storage puts
+#   migrate (one-shot) runs DB migrations before api/worker start
+#
+# Bring up:   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+# See docs/DEPLOYMENT.md for the full EC2 runbook.
+# ---------------------------------------------------------------------------
+
+x-app-env: &app-env
+  # NODE_ENV=development is deliberate for the hackathon demo: it unlocks the
+  # console OTP provider + fixed OTP_DEVELOPMENT_CODE (production forbids both,
+  # requiring Twilio). Trade-off: auth cookies are not marked Secure. To run a
+  # true production posture instead, set NODE_ENV=production, OTP_PROVIDER=twilio
+  # and the TWILIO_* vars, and drop OTP_DEVELOPMENT_CODE.
+  NODE_ENV: ${NODE_ENV:-development}
+  PORT: "4000"
+  TRUST_PROXY_HOPS: "1"
+  LOG_LEVEL: info
+  PUBLIC_BASE_URL: https://${SITE_HOST:?set SITE_HOST in .env.prod}
+  DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+  REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+  JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET}
+  OTP_SECRET: ${OTP_SECRET:?set OTP_SECRET}
+  OTP_PROVIDER: ${OTP_PROVIDER:-console}
+  # Fixed OTP for the demo (applicants verify with this code). Empty vars are
+  # treated as unset by the app, so leaving TWILIO_* blank is fine.
+  OTP_DEVELOPMENT_CODE: ${OTP_DEVELOPMENT_CODE:-123456}
+  TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+  TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+  TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
+  # Internal Python decision service. Token must match rules' INTERNAL_API_TOKEN.
+  RULES_SERVICE_URL: http://rules:8000
+  RULES_SERVICE_TOKEN: ${INTERNAL_API_TOKEN:?set INTERNAL_API_TOKEN}
+  # Object storage (MinIO, exposed publicly for presigned URLs via Caddy).
+  S3_REGION: us-east-1
+  S3_BUCKET: ${S3_BUCKET:-maitri-documents}
+  S3_ENDPOINT: https://s3.${SITE_HOST}
+  S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?set S3_ACCESS_KEY_ID}
+  S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?set S3_SECRET_ACCESS_KEY}
+  S3_FORCE_PATH_STYLE: "true"
+  # Malware scanning disabled for this deployment (leave CLAMAV_HOST blank).
+  CLAMAV_HOST: ""
+  # Background the S3 put via the worker process.
+  ASYNC_DOCUMENT_STORAGE: "true"
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:17-alpine}
+    restart: unless-stopped
+    init: true
+    environment:
+      POSTGRES_USER: ${DB_USER:?set DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:?set DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    networks: [maitri]
+
+  redis:
+    image: ${REDIS_IMAGE:-redis:8-alpine}
+    restart: unless-stopped
+    init: true
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD}"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks: [maitri]
+
+  minio:
+    image: ${MINIO_IMAGE:-quay.io/minio/minio:RELEASE.2025-04-08T15-41-24Z}
+    restart: unless-stopped
+    init: true
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:?set S3_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:?set S3_SECRET_ACCESS_KEY}
+    command: ["server", "/data", "--console-address", ":9001"]
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks: [maitri]
+
+  minio-setup:
+    image: ${MINIO_MC_IMAGE:-quay.io/minio/mc:RELEASE.2025-04-08T15-39-49Z}
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - >-
+        mc alias set local http://minio:9000 "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY" &&
+        mc mb --ignore-existing "local/$$S3_BUCKET"
+    environment:
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_BUCKET: ${S3_BUCKET:-maitri-documents}
+    networks: [maitri]
+
+  rules:
+    build:
+      context: ./python-backend
+    restart: unless-stopped
+    init: true
+    environment:
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?set INTERNAL_API_TOKEN}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health').status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+    networks: [maitri]
+
+  # Runs migrations on `up`, and is also the image used for one-off seeding:
+  #   docker compose ... run --rm -v "$PWD/inspectors.json:/app/inspectors.json" \
+  #     migrate pnpm seed:inspectors /app/inspectors.json
+  # It carries the full app env because seed:inspectors imports the app config,
+  # which validates every required variable (node-pg-migrate ignores the extras).
+  migrate:
+    build:
+      context: ./node-backend
+      target: migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment: *app-env
+    restart: "no"
+    networks: [maitri]
+
+  api:
+    build:
+      context: ./node-backend
+      target: runtime
+    command: ["node", "--enable-source-maps", "dist/server.js"]
+    restart: unless-stopped
+    init: true
+    environment: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      rules:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:4000/api/v1/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+    networks: [maitri]
+
+  worker:
+    build:
+      context: ./node-backend
+      target: runtime
+    command: ["node", "--enable-source-maps", "dist/worker.js"]
+    restart: unless-stopped
+    init: true
+    environment: *app-env
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks: [maitri]
+
+  web:
+    build:
+      context: ./apps/web
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      # Dev-time fallback only; in prod Caddy routes /api/v1/* directly to api.
+      BACKEND_URL: http://api:4000
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [maitri]
+
+  caddy:
+    image: ${CADDY_IMAGE:-caddy:2-alpine}
+    restart: unless-stopped
+    init: true
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_HOST: ${SITE_HOST:?set SITE_HOST}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./infra/docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - api
+      - minio
+    networks: [maitri]
+
+volumes:
+  postgres_data:
+    name: maitri-prod-postgres-data
+  redis_data:
+    name: maitri-prod-redis-data
+  minio_data:
+    name: maitri-prod-minio-data
+  caddy_data:
+    name: maitri-prod-caddy-data
+  caddy_config:
+    name: maitri-prod-caddy-config
+
+networks:
+  maitri:
+    name: maitri-prod
+    driver: bridge

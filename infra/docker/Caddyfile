@@ -1,0 +1,33 @@
+# Maitri 3.0 — reverse proxy with automatic HTTPS (Let's Encrypt).
+#
+# SITE_HOST must be a publicly resolvable hostname pointing at this box. For a
+# hackathon box without a domain, use sslip.io: if the EC2 public IP is
+# 13.201.45.6, set SITE_HOST=13-201-45-6.sslip.io — it resolves to that IP and
+# s3.<host> resolves to it too, so Caddy can issue real certs for both.
+
+{
+	email {$ACME_EMAIL}
+}
+
+# --- Main site: UI + API on one origin -------------------------------------
+{$SITE_HOST} {
+	encode zstd gzip
+
+	# API calls go straight to the Node backend (bypasses Next.js).
+	handle /api/v1/* {
+		reverse_proxy api:4000
+	}
+
+	# Everything else is the Next.js UI.
+	handle {
+		reverse_proxy web:3000
+	}
+}
+
+# --- Object storage: presigned upload/download URLs point here -------------
+# Path-style S3 (https://s3.<host>/<bucket>/<key>). Caddy forwards the original
+# Host header, so MinIO's SigV4 check matches the signature the SDK produced.
+s3.{$SITE_HOST} {
+	encode zstd gzip
+	reverse_proxy minio:9000
+}
