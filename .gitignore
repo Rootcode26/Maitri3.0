@@ -12,6 +12,11 @@
 credentials.json
 service-account*.json
 
+# Inspector provisioning files hold real access codes — never commit them.
+# The tracked template is node-backend/scripts/inspectors.example.json.
+inspectors.json
+**/inspectors.json
+
 # Node.js dependencies and package-manager state
 node_modules/
 .pnpm-store/
