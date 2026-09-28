@@ -139,15 +139,18 @@ describe("authentication workflow", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("links inspectors to their account creation page", () => {
+  it("offers no self-registration for inspectors (accounts are provisioned)", () => {
     render(<LoginForm mode="inspector" />);
 
     expect(
       screen.getByRole("button", { name: /sign in to inspector workspace/i }),
     ).toBeInTheDocument();
+    // Inspectors are provisioned by the ministry — no "create account" link, and
+    // the credential field is an access code rather than a password.
     expect(
-      screen.getByRole("link", { name: /create an inspector account/i }),
-    ).toHaveAttribute("href", "/inspector/register");
+      screen.queryByRole("link", { name: /create an inspector account/i }),
+    ).toBeNull();
+    expect(screen.getByText(/access code/i)).toBeInTheDocument();
   });
 
   it("requests a 30-day session when remember me is selected", async () => {
@@ -372,7 +375,7 @@ describe("authentication workflow", () => {
       screen.getByLabelText("Registered mobile number"),
       "9876543210",
     );
-    await user.type(screen.getByLabelText("Password"), "strong-password");
+    await user.type(screen.getByLabelText("Access code"), "strong-code-123");
     await user.click(
       screen.getByRole("button", { name: /sign in to inspector/i }),
     );
@@ -732,35 +735,12 @@ describe("authentication workflow", () => {
     expect(refresh).toHaveBeenCalled();
   });
 
-  it("completes the inspector journey: register with department → OTP → login", async () => {
+  it("signs a provisioned inspector in with their access code", async () => {
     const user = userEvent.setup();
-
-    const registration = render(<RegisterForm inspector />);
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: "Department" }),
-      "Maharashtra Pollution Control Board (MPCB)",
-    );
-    await user.type(screen.getByLabelText("Full name"), "Inspector One");
-    await user.type(screen.getByLabelText("Mobile number"), "9876543211");
-    await user.type(screen.getByLabelText("Create password"), "strong-password");
-    await user.click(screen.getByRole("button", { name: /register inspector account/i }));
-    await waitFor(() =>
-      expect(push).toHaveBeenCalledWith("/auth/verify-otp?phone=%2B919876543211&role=inspector"),
-    );
-    registration.unmount();
-
-    searchValues.set("phone", "+919876543211");
-    searchValues.set("role", "inspector");
-    const otp = render(<OtpForm />);
-    await user.type(screen.getByLabelText("Verification code"), "123456");
-    await user.click(screen.getByRole("button", { name: /verify and continue/i }));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/inspector/dashboard"));
-    otp.unmount();
-    searchValues.clear();
 
     render(<LoginForm mode="inspector" />);
     await user.type(screen.getByLabelText("Registered mobile number"), "9876543211");
-    await user.type(screen.getByLabelText("Password"), "strong-password");
+    await user.type(screen.getByLabelText("Access code"), "MPCB-RK-9X4T");
     await user.click(screen.getByRole("button", { name: /sign in to inspector/i }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/inspector/dashboard"));
     expect(
