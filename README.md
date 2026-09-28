@@ -2,7 +2,7 @@
 
 <img src="apps/web/public/images/udyogsetu-logo.svg" alt="UdyogSetu" width="260" />
 
-# Maitri 3.0
+
 
 ### A guided, transparent approval journey for industrial projects
 
@@ -55,7 +55,7 @@ context.
 
 | 🏭 **For applicants** | 🧾 **For departments** | ⚙️ **For engineering teams** | 🌐 **For access** |
 | --- | --- | --- | --- |
-| Guided project intake, document checklist and status tracking | Review queue, clarifications, inspections and decisions | Contract-driven Node.js and FastAPI services | English, Hindi, Marathi and Odia catalogue support |
+| Guided project intake, document checklist and status tracking | Review queue, clarifications, inspections and decisions | Contract-driven Node.js and FastAPI services | English, Hindi and Marathi catalogue support |
 
 ```mermaid
 flowchart LR
@@ -77,7 +77,7 @@ flowchart LR
 | **Applicant** | Register and authenticate, create a project, complete a guided questionnaire, view recommended approvals, upload document versions, respond to clarifications and track department progress. |
 | **Inspector** | View assigned applications, triage the review queue, inspect documents, request clarification, record document outcomes, make approval decisions and monitor inspections, reports and workload. |
 | **Rules and validation** | Normalize project data, evaluate versioned rules, explain recommendations, identify missing or inconsistent information and preserve review-required states. |
-| **Language access** | English, Hindi, Marathi and an additional Odia translation catalogue are available in the frontend localization layer. |
+| **Language access** | English, Hindi and Marathi translation catalogue are available in the frontend localization layer. |
 
 ## Core capabilities
 
