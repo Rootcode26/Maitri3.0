@@ -13,6 +13,7 @@ const BASE_URL = 'https://portal.example';
 
 const project = (status = 'approved'): CertificateProject => ({
   projectId: PROJECT_ID,
+  applicantId: 'applicant-1',
   enterpriseName: 'Steel Works',
   industry: 'steel',
   district: 'Pune',

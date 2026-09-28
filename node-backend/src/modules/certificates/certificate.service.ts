@@ -4,6 +4,7 @@ import { AppError } from '../../errors/app-error.js';
 import { logger } from '../../config/logger.js';
 import type { ObjectStorage } from '../../integrations/s3/storage.js';
 import { renderCertificatePdf } from './certificate.pdf.js';
+import type { NotificationService } from '../notifications/notification.service.js';
 import type { CertificateRepository } from './certificate.repository.js';
 import type { Certificate, CertificateSummary, PublicCertificate } from './certificate.types.js';
 
@@ -12,6 +13,7 @@ export class CertificateService {
     private readonly repository: CertificateRepository,
     private readonly storage: ObjectStorage | null,
     private readonly publicBaseUrl: string,
+    private readonly notifications: NotificationService | null = null,
   ) {}
 
   private verifyUrl(verificationCode: string): string {
@@ -66,13 +68,21 @@ export class CertificateService {
     });
     await this.storage.put(storageKey, pdf, 'application/pdf');
 
-    return this.repository.create({
+    const certificate = await this.repository.create({
       projectId,
       certificateNumber,
       verificationCode,
       storageKey,
       issuedById,
     });
+
+    await this.notifications?.notifyCertificateIssued(
+      project.applicantId,
+      projectId,
+      certificateNumber,
+    );
+
+    return certificate;
   }
 
   /** Issue without letting a failure disrupt the caller (e.g. the decision flow). */
