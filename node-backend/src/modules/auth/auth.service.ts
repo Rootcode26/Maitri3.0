@@ -53,23 +53,13 @@ export class AuthService {
     const passwordHash = await hashPassword(input.password);
     let user: AuthUser;
     try {
-      user = await this.repository.createPendingUser(
-        input.role === 'applicant'
-          ? {
-              name: input.name,
-              phoneNumber: input.phoneNumber,
-              passwordHash,
-              role: input.role,
-              industry: input.industry,
-            }
-          : {
-              name: input.name,
-              phoneNumber: input.phoneNumber,
-              passwordHash,
-              role: input.role,
-              departmentKey: input.departmentKey,
-            },
-      );
+      user = await this.repository.createPendingUser({
+        name: input.name,
+        phoneNumber: input.phoneNumber,
+        passwordHash,
+        role: input.role,
+        industry: input.industry,
+      });
     } catch (error) {
       if (error instanceof DatabaseError && error.code === '23505') {
         throw new AppError('Phone number is already registered', {

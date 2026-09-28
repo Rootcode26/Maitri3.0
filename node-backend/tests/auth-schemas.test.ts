@@ -17,12 +17,10 @@ describe('authentication registration schemas', () => {
     });
   });
 
-  it('accepts an inspector with a supported department', () => {
-    expect(registerSchema.parse({ ...base, role: 'inspector', departmentKey: 'mpcb' })).toEqual({
-      ...base,
-      role: 'inspector',
-      departmentKey: 'mpcb',
-    });
+  it('rejects inspector registration (inspectors are provisioned, not self-registered)', () => {
+    expect(
+      registerSchema.safeParse({ ...base, role: 'inspector', departmentKey: 'mpcb' }).success,
+    ).toBe(false);
   });
 
   it.each(['food', 'textile', 'steel'] as const)('accepts applicant industry %s', (industry) => {
