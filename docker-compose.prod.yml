@@ -89,12 +89,20 @@ services:
     networks: [maitri]
 
   minio:
-    image: ${MINIO_IMAGE:-quay.io/minio/minio:RELEASE.2025-04-08T15-41-24Z}
+    # Chainguard's MinIO image. The official sources (quay.io/minio and Docker
+    # Hub minio/minio) now return 401 for anonymous pulls; Chainguard's is public
+    # and still ships the `mc` client used by the healthcheck. Distroless, runs as
+    # uid 65532 by default, so we override to root to write the named volume.
+    image: cgr.dev/chainguard/minio:latest
+    user: "0"
     restart: unless-stopped
     init: true
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:?set S3_ACCESS_KEY_ID}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:?set S3_SECRET_ACCESS_KEY}
+      # Lets the healthcheck's `mc ready local` resolve the alias from the
+      # environment (no `mc alias set` step needed).
+      MC_HOST_local: http://${S3_ACCESS_KEY_ID}:${S3_SECRET_ACCESS_KEY}@127.0.0.1:9000
     command: ["server", "/data", "--console-address", ":9001"]
     volumes:
       - minio_data:/data
@@ -107,20 +115,16 @@ services:
     networks: [maitri]
 
   minio-setup:
-    image: ${MINIO_MC_IMAGE:-quay.io/minio/mc:RELEASE.2025-04-08T15-39-49Z}
+    # Chainguard's mc client is distroless (no shell), so we call mc directly and
+    # let it read the alias from MC_HOST_local to create the bucket.
+    image: cgr.dev/chainguard/minio-client:latest
     depends_on:
       minio:
         condition: service_healthy
-    entrypoint:
-      - /bin/sh
-      - -ec
-      - >-
-        mc alias set local http://minio:9000 "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY" &&
-        mc mb --ignore-existing "local/$$S3_BUCKET"
+    entrypoint: ["/usr/bin/mc"]
+    command: ["mb", "--ignore-existing", "local/${S3_BUCKET:-maitri-documents}"]
     environment:
-      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
-      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
-      S3_BUCKET: ${S3_BUCKET:-maitri-documents}
+      MC_HOST_local: http://${S3_ACCESS_KEY_ID}:${S3_SECRET_ACCESS_KEY}@minio:9000
     networks: [maitri]
 
   rules:
