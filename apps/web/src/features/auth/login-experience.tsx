@@ -16,14 +16,14 @@ const workspaceContent = {
     eyebrow: "Applicant Access",
     title: "Continue Your Approval Journey",
     description:
-      "Sign in to manage your steel plant project, documents and approval applications.",
+      "Sign in to manage your industrial project, documents and approval applications.",
     label: "Applicant",
     icon: UserRound,
     note: "For registered businesses and project applicants.",
   },
   inspector: {
     eyebrow: "Inspector Access",
-    title: "Review Department Applications",
+    title: "Review Applications",
     description:
       "Sign in with your authorised inspector account to review applications assigned to your department.",
     label: "Inspector",
@@ -56,7 +56,7 @@ export function LoginExperience({ mode }: { mode: LoginMode }) {
   const Icon = content.icon;
 
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-[#fbfaf6] text-[#18263d] lg:grid lg:grid-cols-[minmax(0,1.45fr)_minmax(34rem,0.9fr)]">
+    <div className="min-h-dvh overflow-x-hidden bg-[#fbfaf6] text-[#18263d] lg:grid lg:h-dvh lg:min-h-0 lg:grid-cols-[minmax(0,1.45fr)_minmax(34rem,0.9fr)] lg:overflow-hidden">
       <a
         href="#login-content"
         className="sr-only z-50 bg-white px-4 py-3 font-semibold text-[#17345a] focus:fixed focus:top-4 focus:left-4 focus:not-sr-only"
@@ -64,7 +64,7 @@ export function LoginExperience({ mode }: { mode: LoginMode }) {
         {t("auth.signIn")}
       </a>
       <aside
-        className="relative hidden bg-[#102849] lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col"
+        className="relative hidden bg-[#102849] lg:flex lg:h-dvh lg:min-h-0 lg:flex-col"
         aria-label={text("About UdyogSetu")}
       >
         <div className="relative min-h-[34rem] flex-1 overflow-hidden">
@@ -101,12 +101,12 @@ export function LoginExperience({ mode }: { mode: LoginMode }) {
             <Image
               src="/images/emblem-india.svg"
               alt={text("National Emblem of India")}
-              width={56}
-              height={56}
-              className="brightness-0 invert xl:size-16"
+              width={146}
+              height={232}
+              className="h-[70px] w-auto brightness-0 invert xl:h-20"
             />
             <p className="text-[9px] font-semibold tracking-[0.12em] text-white/90 uppercase">
-              {text("Government of India")}
+              {text("Government of Maharashtra")}
             </p>
           </div>
           <div className="absolute inset-0 flex flex-col justify-center p-10 text-white xl:p-14">
@@ -114,7 +114,7 @@ export function LoginExperience({ mode }: { mode: LoginMode }) {
               {text("Industrial Approvals, Connected")}
             </p>
             <h2 className="mt-4 max-w-3xl text-pretty text-5xl leading-[1.05] font-semibold tracking-[-0.04em] xl:text-6xl">
-              {text("Move Your Steel Project From Plan to Approval")}
+              {text("Move Your Industrial Project From Plan to Approval")}
             </h2>
             <p className="mt-5 max-w-2xl text-pretty text-base leading-7 text-slate-100 xl:text-lg">
               {text(
@@ -129,15 +129,18 @@ export function LoginExperience({ mode }: { mode: LoginMode }) {
         </div>
       </aside>
 
-      <main id="login-content" className="flex min-h-dvh flex-col bg-[#fbfaf6]">
-        <header className="flex min-h-14 items-center justify-between border-b border-[#e4e0d6] bg-[#fbfaf6] px-5 sm:px-8 lg:h-16 lg:justify-end lg:px-12">
+      <main
+        id="login-content"
+        className="flex min-h-dvh flex-col bg-[#fbfaf6] lg:h-dvh lg:min-h-0 lg:overflow-y-auto"
+      >
+        <header className="flex min-h-14 items-center justify-between gap-2 border-b border-[#e4e0d6] bg-[#fbfaf6] px-4 sm:gap-4 sm:px-8 lg:h-16 lg:justify-end lg:px-12">
           <div className="lg:hidden">
             <Brand tone="dark" />
           </div>
           <LanguageSelector />
           <Link
             href="/"
-            className="inline-flex min-h-11 items-center rounded-sm px-2 text-base font-semibold text-[#315f9f] underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-[#315f9f]"
+            className="inline-flex min-h-11 shrink-0 items-center rounded-sm px-1 text-sm font-semibold whitespace-nowrap text-[#315f9f] underline-offset-4 hover:underline focus-visible:outline-3 focus-visible:outline-[#315f9f] sm:px-2 sm:text-base"
           >
             {t("auth.portalHome")}
           </Link>

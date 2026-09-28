@@ -1,3 +1,5 @@
+import { localPreviewEnabled } from "@/lib/local-preview";
+
 export type ApprovalStatus = "required" | "recommended";
 
 export interface Department {
@@ -82,6 +84,8 @@ export interface ApplicantClarification {
 }
 
 export async function listProjects(): Promise<ProjectSummary[]> {
+  if (localPreviewEnabled) return [];
+
   const response = await fetch("/api/v1/projects", { credentials: "include" });
   const body = (await response.json().catch(() => ({}))) as {
     message?: string;
@@ -97,6 +101,8 @@ export async function listProjects(): Promise<ProjectSummary[]> {
 }
 
 export async function listProjectClarifications(projectId: string) {
+  if (localPreviewEnabled) return [];
+
   const response = await fetch(`/api/v1/projects/${projectId}/clarifications`, {
     credentials: "include",
   });
@@ -446,6 +452,8 @@ export async function getApplicantApplication(projectId: string) {
 }
 
 export async function listApplicantDocuments() {
+  if (localPreviewEnabled) return [];
+
   const response = await fetch("/api/v1/projects/documents", {
     credentials: "include",
   });

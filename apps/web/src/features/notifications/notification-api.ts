@@ -1,3 +1,5 @@
+import { localPreviewEnabled } from "@/lib/local-preview";
+
 export type NotificationType =
   | "submission_received"
   | "clarification_requested"
@@ -33,6 +35,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export function listNotifications() {
+  if (localPreviewEnabled) {
+    return Promise.resolve({ notifications: [], unreadCount: 0 });
+  }
   return request<NotificationFeed>("/");
 }
 

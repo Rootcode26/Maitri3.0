@@ -192,7 +192,7 @@ export function ApplicantDocuments() {
           </ul>
         </div>
       ) : (
-        <div className="mt-8 border border-dashed border-[#aeb7c4] p-10 text-center">
+        <div className="mt-8 rounded-md border border-dashed border-[#aeb7c4] bg-[#faf9f6] p-8 text-center sm:p-10">
           <FileSearch
             className="mx-auto size-8 text-slate-400"
             aria-hidden="true"
@@ -203,6 +203,14 @@ export function ApplicantDocuments() {
           <p className="mt-2 text-sm text-slate-600">
             {t("documents.emptyHint")}
           </p>
+          <Button
+            render={<Link href="/applicant/projects/new" />}
+            nativeButton={false}
+            variant="outline"
+            className="mt-5 h-10 bg-white px-5"
+          >
+            {text("Create new project")}
+          </Button>
         </div>
       )}
     </div>
