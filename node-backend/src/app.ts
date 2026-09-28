@@ -32,6 +32,7 @@ import { NotificationRepository } from './modules/notifications/notification.rep
 import { NotificationService } from './modules/notifications/notification.service.js';
 import { createMalwareScanner } from './integrations/clamav/scanner.js';
 import { createObjectStorage } from './integrations/s3/storage.js';
+import { enqueueDocumentStorage } from './jobs/document-storage.queue.js';
 import { localizationMiddleware } from './i18n/index.js';
 import { env } from './config/env.js';
 import { notFoundHandler } from './middleware/not-found.js';
@@ -70,7 +71,9 @@ export const createApp = ({
       defaultMaxSizeMb: env.UPLOAD_MAX_SIZE_MB,
       rulesVersion: env.RULES_VERSION,
       includeDocumentBytes: env.VALIDATION_INCLUDE_DOCUMENT_BYTES,
+      asyncStorage: env.ASYNC_DOCUMENT_STORAGE,
     },
+    env.ASYNC_DOCUMENT_STORAGE ? enqueueDocumentStorage : null,
   );
   const documentController = new DocumentController(documentService);
   const notificationService = new NotificationService(new NotificationRepository());

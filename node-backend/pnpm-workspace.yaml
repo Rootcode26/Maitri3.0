@@ -4,6 +4,7 @@ packages:
 allowBuilds:
   argon2: true
   esbuild: true
+  msgpackr-extract: false
 
 minimumReleaseAgeExclude:
   - zod@4.6.5

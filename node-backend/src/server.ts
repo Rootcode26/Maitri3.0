@@ -5,12 +5,14 @@ import { closeRedis, connectRedis } from './cache/redis.js';
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { closeDatabase, connectDatabase } from './database/database.js';
+import { startDocumentStorageWorker } from './jobs/document-storage.bootstrap.js';
 
 let ready = false;
 let shuttingDown = false;
 
 const app = createApp({ isReady: () => ready });
 const server = createServer(app);
+const documentStorageWorker = startDocumentStorageWorker();
 
 const startServer = async (): Promise<void> => {
   try {
@@ -61,6 +63,7 @@ const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
   try {
     server.closeIdleConnections();
     await closeHttpServer();
+    if (documentStorageWorker) await documentStorageWorker.close();
     const closeResults = await Promise.allSettled([closeRedis(), closeDatabase()]);
     const failedClose = closeResults.find((result) => result.status === 'rejected');
     if (failedClose?.status === 'rejected') throw failedClose.reason;
