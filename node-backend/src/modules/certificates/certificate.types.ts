@@ -37,6 +37,7 @@ export interface PublicCertificate {
 /** Project facts needed to render a certificate PDF. */
 export interface CertificateProject {
   projectId: string;
+  applicantId: string;
   enterpriseName: string;
   industry: string;
   district: string;

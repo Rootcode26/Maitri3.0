@@ -111,7 +111,7 @@ function ApplicantCertificateCard({ projectId }: { projectId: string }) {
   const certificate = query.data;
 
   return (
-    <Card className="mt-6 rounded-md border-emerald-300 bg-emerald-50/60">
+    <Card className="mt-6 rounded-md border-emerald-300 bg-emerald-50/60 duration-500 animate-in fade-in slide-in-from-bottom-1">
       <CardHeader className="flex-row items-center gap-2 space-y-0">
         <Award className="size-5 text-emerald-600" aria-hidden="true" />
         <CardTitle className="text-xl text-[#142b45]">

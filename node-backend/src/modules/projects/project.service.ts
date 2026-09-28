@@ -10,6 +10,7 @@ import type {
   ValidationResult,
 } from '../documents/document.validation-client.js';
 import type { CertificateService } from '../certificates/certificate.service.js';
+import type { NotificationService } from '../notifications/notification.service.js';
 import type { ProjectRepository } from './project.repository.js';
 import { RulesEngineError, type RulesEngineClient } from './project.rules-client.js';
 import { deriveApprovals, type RecommendedApproval } from './project.rules.js';
@@ -50,6 +51,7 @@ export class ProjectService {
     private readonly rulesEngine: RulesEngineClient | null = null,
     private readonly validator: ProjectValidator | null = null,
     private readonly certificates: CertificateService | null = null,
+    private readonly notifications: NotificationService | null = null,
   ) {}
 
   private requireCertificates(): CertificateService {
@@ -194,6 +196,7 @@ export class ProjectService {
     if (!result.project) {
       throw new AppError('Project not found', { statusCode: 404, code: 'PROJECT_NOT_FOUND' });
     }
+    await this.notifications?.notifySubmission(projectId, result.project.enterpriseName);
     return result.project;
   }
 
@@ -238,6 +241,7 @@ export class ProjectService {
         code: 'CLARIFICATION_NOT_FOUND',
       });
     }
+    await this.notifications?.notifyClarificationAnswered(clarificationId);
     return this.listClarifications(applicantId, projectId);
   }
 

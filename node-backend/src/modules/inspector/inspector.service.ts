@@ -1,5 +1,6 @@
 import { AppError } from '../../errors/app-error.js';
 import type { CertificateService } from '../certificates/certificate.service.js';
+import type { NotificationService } from '../notifications/notification.service.js';
 import type { ObjectStorage } from '../../integrations/s3/storage.js';
 import type {
   ApprovalDecisionInput,
@@ -16,6 +17,7 @@ export class InspectorService {
     private readonly repository: InspectorRepository,
     private readonly storage: ObjectStorage | null,
     private readonly certificates: CertificateService | null = null,
+    private readonly notifications: NotificationService | null = null,
   ) {}
 
   private requireCertificates(): CertificateService {
@@ -278,6 +280,11 @@ export class InspectorService {
         code: 'CLARIFICATION_CONFLICT',
       });
     }
+    await this.notifications?.notifyClarificationRequested(
+      application.applicant.id,
+      projectId,
+      approval.title,
+    );
     return this.getApplication(resolvedDepartmentId, projectId);
   }
 
@@ -411,6 +418,11 @@ export class InspectorService {
         code: 'INVALID_REVIEW_TRANSITION',
       });
     }
+
+    await this.notifications?.notifyApprovalDecided(updated.applicant.id, projectId, {
+      approvalTitle: approval.title,
+      decision: input.decision,
+    });
 
     // When this decision clears the last outstanding approval, the project
     // becomes fully approved — issue the clearance certificate automatically.

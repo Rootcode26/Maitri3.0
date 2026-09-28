@@ -34,13 +34,14 @@ export class CertificateRepository {
   /** Project facts needed to render and issue a certificate. */
   async getProject(projectId: string): Promise<CertificateProject | null> {
     const projectResult = await query<{
+      applicant_id: string;
       enterprise_name: string;
       industry: string;
       district: string;
       status: string;
       applicant_name: string;
     }>(
-      `SELECT p.enterprise_name, p.industry, p.district, p.status,
+      `SELECT p.applicant_id, p.enterprise_name, p.industry, p.district, p.status,
               COALESCE(u.name, u.phone_number) AS applicant_name
          FROM projects p
          JOIN users u ON u.id = p.applicant_id
@@ -64,6 +65,7 @@ export class CertificateRepository {
 
     return {
       projectId,
+      applicantId: project.applicant_id,
       enterpriseName: project.enterprise_name,
       industry: project.industry,
       district: project.district,

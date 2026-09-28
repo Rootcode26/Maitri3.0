@@ -28,6 +28,7 @@ const en = {
   "certificate.verifyTitle": "Certificate verification", "certificate.verifySubtitle": "Confirm the authenticity of a clearance certificate.", "certificate.verifyChecking": "Verifying…", "certificate.verifyError": "Could not verify this certificate. Please try again.", "certificate.verifyNotFound": "No certificate matches this code.", "certificate.verifyValid": "Valid certificate", "certificate.verifyRevoked": "This certificate has been revoked",
   "activity.title": "Activity trail", "activity.byInspector": "(department)", "activity.byApplicant": "(applicant)",
   "assignment.filter": "Filter by assignment", "assignment.all": "All", "assignment.mine": "Assigned to me", "assignment.unassigned": "Unassigned", "assignment.column": "Assigned to", "assignment.assignedTo": "Assigned to",
+  "notification.title": "Notifications", "notification.markAllRead": "Mark all read", "notification.empty": "You have no notifications yet.", "notification.submission_received": "New application from {{enterpriseName}}", "notification.clarification_requested": "A clarification was requested on {{approvalTitle}}", "notification.clarification_answered": "{{enterpriseName}} responded on {{approvalTitle}}", "notification.approval_decided": "A decision was recorded on {{approvalTitle}}", "notification.certificate_issued": "Your clearance certificate {{certificateNumber}} is ready",
 } as const;
 
 export type TranslationKey = keyof typeof en;

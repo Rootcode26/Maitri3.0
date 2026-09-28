@@ -1,12 +1,13 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, ChevronRight, LogOut, Menu } from "lucide-react";
+import { ChevronRight, LogOut, Menu } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Fragment, type ReactNode, useEffect, useState } from "react";
 
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { LanguageSelector } from "@/components/layout/language-selector";
+import { NotificationBell } from "@/features/notifications/notification-bell";
 import { useLanguage } from "@/components/providers/language-provider";
 import { Button } from "@/components/ui/button";
 import { getCurrentSession, logoutSession } from "@/lib/auth-api";
@@ -156,13 +157,7 @@ export function DashboardTopbar({
 
       <div className="flex items-center gap-4">
         <LanguageSelector />
-        <button
-          type="button"
-          aria-label={t("dashboard.notifications")}
-          className="hidden size-10 place-items-center rounded-full border border-[#e4e0d6] text-slate-600 transition-colors hover:bg-white focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary sm:grid"
-        >
-          <Bell className="size-5" aria-hidden="true" />
-        </button>
+        <NotificationBell workspace={workspace} />
         <UserMenu workspace={workspace} />
       </div>
     </header>

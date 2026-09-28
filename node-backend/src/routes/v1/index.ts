@@ -11,6 +11,8 @@ import type { InspectorController } from '../../modules/inspector/inspector.cont
 import { createInspectorRouter } from '../../modules/inspector/inspector.routes.js';
 import type { CertificateController } from '../../modules/certificates/certificate.controller.js';
 import { createCertificateVerifyRouter } from '../../modules/certificates/certificate.routes.js';
+import type { NotificationController } from '../../modules/notifications/notification.controller.js';
+import { createNotificationRouter } from '../../modules/notifications/notification.routes.js';
 import { createHealthRouter } from './health.routes.js';
 
 export const createV1Router = (
@@ -20,12 +22,14 @@ export const createV1Router = (
   documentController: DocumentController,
   inspectorController: InspectorController,
   certificateController: CertificateController,
+  notificationController: NotificationController,
 ): Router => {
   const router = Router();
 
   router.use('/health', createHealthRouter(healthController));
   router.use('/auth', createAuthRouter(authController));
   router.use('/verify', createCertificateVerifyRouter(certificateController));
+  router.use('/notifications', createNotificationRouter(notificationController));
   router.use('/projects', createProjectRouter(projectController, documentController));
   router.use('/inspector', createInspectorRouter(inspectorController));
   router.get('/departments', requireAuthentication, projectController.listDepartments);

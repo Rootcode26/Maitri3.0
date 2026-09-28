@@ -27,6 +27,9 @@ import { InspectorService } from './modules/inspector/inspector.service.js';
 import { CertificateController } from './modules/certificates/certificate.controller.js';
 import { CertificateRepository } from './modules/certificates/certificate.repository.js';
 import { CertificateService } from './modules/certificates/certificate.service.js';
+import { NotificationController } from './modules/notifications/notification.controller.js';
+import { NotificationRepository } from './modules/notifications/notification.repository.js';
+import { NotificationService } from './modules/notifications/notification.service.js';
 import { createMalwareScanner } from './integrations/clamav/scanner.js';
 import { createObjectStorage } from './integrations/s3/storage.js';
 import { localizationMiddleware } from './i18n/index.js';
@@ -70,10 +73,13 @@ export const createApp = ({
     },
   );
   const documentController = new DocumentController(documentService);
+  const notificationService = new NotificationService(new NotificationRepository());
+  const notificationController = new NotificationController(notificationService);
   const certificateService = new CertificateService(
     new CertificateRepository(),
     objectStorage,
     env.PUBLIC_BASE_URL,
+    notificationService,
   );
   const certificateController = new CertificateController(certificateService);
   // The document service doubles as the submission validator, but only when the
@@ -85,10 +91,16 @@ export const createApp = ({
       createRulesEngineClient(env),
       validationClient ? documentService : null,
       certificateService,
+      notificationService,
     ),
   );
   const inspectorController = new InspectorController(
-    new InspectorService(new InspectorRepository(), objectStorage, certificateService),
+    new InspectorService(
+      new InspectorRepository(),
+      objectStorage,
+      certificateService,
+      notificationService,
+    ),
   );
 
   app.disable('x-powered-by');
@@ -109,6 +121,7 @@ export const createApp = ({
       documentController,
       inspectorController,
       certificateController,
+      notificationController,
     ),
   );
 

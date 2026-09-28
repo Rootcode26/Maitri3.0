@@ -31,6 +31,7 @@ const mr = {
   "certificate.verifyTitle": "प्रमाणपत्र पडताळणी", "certificate.verifySubtitle": "क्लिअरन्स प्रमाणपत्राची सत्यता तपासा.", "certificate.verifyChecking": "पडताळणी करत आहे…", "certificate.verifyError": "हे प्रमाणपत्र पडताळता आले नाही. कृपया पुन्हा प्रयत्न करा.", "certificate.verifyNotFound": "या कोडशी कोणतेही प्रमाणपत्र जुळत नाही.", "certificate.verifyValid": "वैध प्रमाणपत्र", "certificate.verifyRevoked": "हे प्रमाणपत्र रद्द करण्यात आले आहे",
   "activity.title": "क्रियाकलाप नोंद", "activity.byInspector": "(विभाग)", "activity.byApplicant": "(अर्जदार)",
   "assignment.filter": "नियुक्तीनुसार फिल्टर करा", "assignment.all": "सर्व", "assignment.mine": "मला नियुक्त", "assignment.unassigned": "अनियुक्त", "assignment.column": "नियुक्त", "assignment.assignedTo": "नियुक्त",
+  "notification.title": "सूचना", "notification.markAllRead": "सर्व वाचले म्हणून चिन्हांकित करा", "notification.empty": "अद्याप कोणतीही सूचना नाही.", "notification.submission_received": "{{enterpriseName}} कडून नवीन अर्ज", "notification.clarification_requested": "{{approvalTitle}} वर स्पष्टीकरण मागवले", "notification.clarification_answered": "{{enterpriseName}} यांनी {{approvalTitle}} वर उत्तर दिले", "notification.approval_decided": "{{approvalTitle}} वर निर्णय नोंदवला", "notification.certificate_issued": "तुमचे क्लिअरन्स प्रमाणपत्र {{certificateNumber}} तयार आहे",
 } satisfies Record<TranslationKey, string>;
 
 export default mr;

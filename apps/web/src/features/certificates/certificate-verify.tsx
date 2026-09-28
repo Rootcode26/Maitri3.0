@@ -22,7 +22,7 @@ export function CertificateVerify({ code }: { code: string }) {
         <p className="mt-1 text-sm text-slate-600">{t("certificate.verifySubtitle")}</p>
       </div>
 
-      <div className="rounded-lg border border-[#d8d3c8] bg-white p-6 shadow-sm">
+      <div className="rounded-lg border border-[#d8d3c8] bg-white p-6 shadow-sm transition-shadow duration-300 hover:shadow-md">
         {query.isLoading ? (
           <div className="flex items-center justify-center gap-2 py-8 text-slate-500">
             <Loader2 className="size-5 animate-spin" aria-hidden="true" />
@@ -39,7 +39,7 @@ export function CertificateVerify({ code }: { code: string }) {
             <p className="font-semibold">{t("certificate.verifyNotFound")}</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 duration-500 animate-in fade-in">
             {query.data.valid ? (
               <div className="flex flex-col items-center gap-2 rounded-md border border-emerald-300 bg-emerald-50 py-6 text-center text-emerald-800">
                 <BadgeCheck className="size-12" aria-hidden="true" />

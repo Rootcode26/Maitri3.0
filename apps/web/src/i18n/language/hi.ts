@@ -31,6 +31,7 @@ const hi = {
   "certificate.verifyTitle": "प्रमाणपत्र सत्यापन", "certificate.verifySubtitle": "क्लियरेंस प्रमाणपत्र की प्रामाणिकता की पुष्टि करें।", "certificate.verifyChecking": "सत्यापित किया जा रहा है…", "certificate.verifyError": "इस प्रमाणपत्र को सत्यापित नहीं किया जा सका। कृपया पुनः प्रयास करें।", "certificate.verifyNotFound": "इस कोड से कोई प्रमाणपत्र मेल नहीं खाता।", "certificate.verifyValid": "वैध प्रमाणपत्र", "certificate.verifyRevoked": "यह प्रमाणपत्र रद्द कर दिया गया है",
   "activity.title": "गतिविधि इतिहास", "activity.byInspector": "(विभाग)", "activity.byApplicant": "(आवेदक)",
   "assignment.filter": "आवंटन अनुसार फ़िल्टर करें", "assignment.all": "सभी", "assignment.mine": "मुझे आवंटित", "assignment.unassigned": "अनावंटित", "assignment.column": "आवंटित", "assignment.assignedTo": "आवंटित",
+  "notification.title": "सूचनाएँ", "notification.markAllRead": "सभी पढ़ी हुई चिह्नित करें", "notification.empty": "अभी तक कोई सूचना नहीं है।", "notification.submission_received": "{{enterpriseName}} से नया आवेदन", "notification.clarification_requested": "{{approvalTitle}} पर स्पष्टीकरण माँगा गया", "notification.clarification_answered": "{{enterpriseName}} ने {{approvalTitle}} पर उत्तर दिया", "notification.approval_decided": "{{approvalTitle}} पर निर्णय दर्ज किया गया", "notification.certificate_issued": "आपका क्लियरेंस प्रमाणपत्र {{certificateNumber}} तैयार है",
 } satisfies Record<TranslationKey, string>;
 
 export default hi;

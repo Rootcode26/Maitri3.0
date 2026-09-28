@@ -160,7 +160,7 @@ export function InspectorApplicationsPage() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t("inspector.searchPlaceholder")}
-            className="h-11 w-full rounded-md border border-[#cfd4dc] bg-white pr-3 pl-10 text-sm text-[#142b45] focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
+            className="h-11 w-full rounded-md border border-[#cfd4dc] bg-white pr-3 pl-10 text-sm text-[#142b45] transition-colors hover:border-[#94a3b8] focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
           />
         </label>
 
@@ -172,7 +172,7 @@ export function InspectorApplicationsPage() {
                 key={item.value ?? "all"}
                 type="button"
                 onClick={() => setFilter(item.value)}
-                className={`h-10 rounded-md px-4 text-sm font-semibold ${active ? "bg-primary text-primary-foreground" : "border border-[#cfd4dc] bg-white text-[#142b45] hover:bg-[#f7f6f2]"}`}
+                className={`h-10 rounded-md px-4 text-sm font-semibold transition-all duration-150 focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary ${active ? "bg-primary text-primary-foreground shadow-sm" : "border border-[#cfd4dc] bg-white text-[#142b45] hover:bg-[#f7f6f2] hover:shadow-sm"}`}
               >
                 {t(item.label as "status.all")}
               </button>
@@ -194,7 +194,7 @@ export function InspectorApplicationsPage() {
                 key={value}
                 type="button"
                 onClick={() => setAssignment(value)}
-                className={`h-9 rounded-full px-4 text-sm font-medium ${active ? "bg-[#142b45] text-white" : "border border-[#cfd4dc] bg-white text-[#142b45] hover:bg-[#f7f6f2]"}`}
+                className={`h-9 rounded-full px-4 text-sm font-medium transition-all duration-150 focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary ${active ? "bg-[#142b45] text-white shadow-sm" : "border border-[#cfd4dc] bg-white text-[#142b45] hover:bg-[#f7f6f2] hover:shadow-sm"}`}
               >
                 {t(label)}
               </button>
@@ -242,7 +242,10 @@ export function InspectorApplicationsPage() {
                 </thead>
                 <tbody className="divide-y divide-[#e4e0d6]">
                   {rows.map((item) => (
-                    <tr key={item.approvalId} className="align-top hover:bg-[#fcfbf8]">
+                    <tr
+                      key={item.approvalId}
+                      className="align-top transition-colors duration-150 hover:bg-[#fcfbf8]"
+                    >
                       <td className="px-5 py-4">
                         <p className="font-semibold text-[#142b45]">{item.enterpriseName}</p>
                         <p className="mt-1 text-xs text-slate-500 capitalize">

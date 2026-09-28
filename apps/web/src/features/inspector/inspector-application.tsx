@@ -598,7 +598,7 @@ function ApprovalAssignControl({
         value={assignedTo ?? ""}
         disabled={assign.isPending || officers.isPending}
         onChange={(event) => assign.mutate(event.target.value || null)}
-        className="h-9 rounded-md border border-[#cfd4dc] bg-white px-2 text-sm text-[#142b45]"
+        className="h-9 cursor-pointer rounded-md border border-[#cfd4dc] bg-white px-2 text-sm text-[#142b45] transition-colors hover:border-[#94a3b8] focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
       >
         <option value="">{t("assignment.unassigned")}</option>
         {(officers.data ?? []).map((officer) => (
@@ -702,7 +702,7 @@ function InspectorCertificateCard({ projectId }: { projectId: string }) {
   const certificate = query.data;
 
   return (
-    <Card className="rounded-md border-[#d8d3c8]">
+    <Card className="rounded-md border-[#d8d3c8] duration-500 animate-in fade-in">
       <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
         <CardTitle className="flex items-center gap-2 text-xl text-[#142b45]">
           <Award className="size-5 text-emerald-600" aria-hidden="true" />
@@ -792,7 +792,7 @@ function InspectorCertificateCard({ projectId }: { projectId: string }) {
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
                   rows={3}
-                  className="w-full rounded-md border border-[#d8d3c8] px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-[#d8d3c8] px-3 py-2 text-sm transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
                 />
                 <Button
                   type="button"
