@@ -1,5 +1,7 @@
-import { RegistrationExperience } from "@/features/auth/registration-experience";
+import { redirect } from "next/navigation";
 
+// Inspector accounts are provisioned by the ministry, not self-registered.
+// Anyone reaching the old registration route is sent to the login page.
 export default function InspectorRegistrationPage() {
-  return <RegistrationExperience mode="inspector" />;
+  redirect("/inspector/login");
 }

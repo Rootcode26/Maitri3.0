@@ -143,20 +143,26 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
       </div>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-4">
-          <Label htmlFor="password">{t("auth.password")}</Label>
-          <Link
-            href={`/auth/forgot-password?mode=${mode}`}
-            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {t("auth.forgotPassword")}
-          </Link>
+          <Label htmlFor="password">
+            {t(mode === "inspector" ? "auth.accessCode" : "auth.password")}
+          </Label>
+          {mode === "applicant" ? (
+            <Link
+              href={`/auth/forgot-password?mode=${mode}`}
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {t("auth.forgotPassword")}
+            </Link>
+          ) : null}
         </div>
         <div className="relative">
           <Input
             id="password"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
-            placeholder={t("auth.passwordPlaceholder")}
+            placeholder={t(
+              mode === "inspector" ? "auth.accessCodePlaceholder" : "auth.passwordPlaceholder",
+            )}
             className="h-12 border-[#aeb7c4] bg-white pr-11 text-base focus-visible:border-[#315f9f] focus-visible:ring-[#315f9f]/25"
             aria-invalid={Boolean(errors.password)}
             aria-describedby={errors.password ? "password-error" : undefined}
@@ -224,13 +230,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
         <>
           <Separator />
           <p className="text-center text-sm text-slate-600">
-            {t("auth.newInspector")}{" "}
-            <Link
-              href="/inspector/register"
-              className="font-semibold text-[#315f9f] underline-offset-4 hover:underline"
-            >
-              {t("auth.createInspector")}
-            </Link>
+            {t("auth.inspectorProvisioned")}
           </p>
         </>
       )}

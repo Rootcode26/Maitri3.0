@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { closeRedis, connectRedis, redisClient } from '../../src/cache/redis.js';
 import { closeDatabase, connectDatabase, query } from '../../src/database/database.js';
+import { hashPassword } from '../../src/modules/auth/password.service.js';
 import { verifyAccessToken } from '../../src/modules/auth/token.service.js';
 
 const runE2e = process.env.RUN_E2E === 'true';
@@ -226,8 +227,10 @@ describe.runIf(runE2e)('authentication end-to-end', () => {
     expect(response.body.message).not.toContain('+919876540098');
   });
 
-  it('completes inspector registration, OTP verification, department-scoped login, and logout', async () => {
+  it('rejects inspector self-registration, then provisions and logs in with an access code', async () => {
     const inspectorAgent = request.agent(app);
+
+    // Inspectors can no longer self-register — the endpoint rejects the role.
     const registration = await inspectorAgent
       .post('/api/v1/auth/register')
       .set('X-Forwarded-For', forwardedIp)
@@ -238,32 +241,40 @@ describe.runIf(runE2e)('authentication end-to-end', () => {
         role: 'inspector',
         departmentKey: 'mpcb',
       });
+    expect(registration.status).toBe(400);
+    expect(registration.body.code).toBe('VALIDATION_ERROR');
 
-    expect(registration.status).toBe(201);
-    expect(registration.body.data.user).toMatchObject({
-      phoneNumber: inspectorPhoneNumber,
-      role: 'inspector',
-      status: 'pending_verification',
-    });
-
-    const verification = await inspectorAgent
-      .post('/api/v1/auth/otp/verify')
-      .set('X-Forwarded-For', forwardedIp)
-      .send({ phoneNumber: inspectorPhoneNumber, otp });
-    expect(verification.status).toBe(200);
-    expect(verification.body.data.user).toMatchObject({ role: 'inspector' });
-    expect(verification.body.data.user.departmentId).toEqual(expect.any(String));
+    // Provision the inspector the way the ministry seed does: active, phone
+    // verified, with the access code stored hashed.
+    const accessCode = 'MPCB-E2E-9X4T';
+    const department = await query<{ id: string }>(`SELECT id FROM departments WHERE "key" = $1`, [
+      'mpcb',
+    ]);
+    const departmentId = department.rows[0]!.id;
+    await query(
+      `INSERT INTO users
+         (name, phone_number, password_hash, role, status, industry, department_id, phone_verified_at)
+       VALUES ($1, $2, $3, 'inspector', 'active', NULL, $4, NOW())`,
+      ['E2E Inspector', inspectorPhoneNumber, await hashPassword(accessCode), departmentId],
+    );
 
     const login = await request(app).post('/api/v1/auth/login').send({
       phoneNumber: inspectorPhoneNumber,
-      password: 'e2e-inspector-password',
+      password: accessCode,
       expectedRole: 'inspector',
     });
     expect(login.status).toBe(200);
     expect(login.body.data.user).toMatchObject({ role: 'inspector' });
-    expect(login.body.data.user.departmentId).toBe(verification.body.data.user.departmentId);
+    expect(login.body.data.user.departmentId).toBe(departmentId);
+    expect(login.headers['set-cookie']).toHaveLength(2);
 
-    expect((await inspectorAgent.post('/api/v1/auth/logout')).status).toBe(204);
+    // A wrong code is rejected.
+    const wrongCode = await request(app).post('/api/v1/auth/login').send({
+      phoneNumber: inspectorPhoneNumber,
+      password: 'wrong-code',
+      expectedRole: 'inspector',
+    });
+    expect(wrongCode.status).toBe(401);
   });
 
   it('completes forgot-password and reset-password with session revocation', async () => {

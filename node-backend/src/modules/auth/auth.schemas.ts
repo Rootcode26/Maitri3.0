@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { userRoles } from './auth.types.js';
-import { departmentKeys, industries } from './auth.constants.js';
+import { industries } from './auth.constants.js';
 
 const indianPhoneNumberSchema = z
   .string()
@@ -19,18 +19,12 @@ const registrationBase = {
   password: passwordSchema,
 };
 
-export const registerSchema = z.discriminatedUnion('role', [
-  z
-    .object({ ...registrationBase, role: z.literal('applicant'), industry: z.enum(industries) })
-    .strict(),
-  z
-    .object({
-      ...registrationBase,
-      role: z.literal('inspector'),
-      departmentKey: z.enum(departmentKeys),
-    })
-    .strict(),
-]);
+// Only applicants self-register. Inspector accounts are provisioned from the
+// ministry-provided list (see scripts/seed-inspectors.ts) and cannot be created
+// through this endpoint.
+export const registerSchema = z
+  .object({ ...registrationBase, role: z.literal('applicant'), industry: z.enum(industries) })
+  .strict();
 
 export const loginSchema = z.object({
   phoneNumber: indianPhoneNumberSchema,
