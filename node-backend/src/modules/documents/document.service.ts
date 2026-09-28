@@ -14,6 +14,7 @@ import {
 } from './document.content-inspection.js';
 import type { DocumentRepository } from './document.repository.js';
 import type { UploadDocumentInput } from './document.schemas.js';
+import type { DocumentStorageJob } from '../../jobs/document-storage.queue.js';
 import type { ProjectDocumentRecord } from './document.types.js';
 import {
   ValidationEngineError,
@@ -48,8 +49,28 @@ export class DocumentService {
       defaultMaxSizeMb: number;
       rulesVersion: string;
       includeDocumentBytes: boolean;
+      asyncStorage?: boolean;
     },
+    private readonly enqueueStorage: ((job: DocumentStorageJob) => Promise<void>) | null = null,
   ) {}
+
+  private get asyncStorageEnabled(): boolean {
+    return Boolean(this.options.asyncStorage) && this.enqueueStorage !== null;
+  }
+
+  /**
+   * Worker entrypoint: push a staged upload's bytes to object storage and flip
+   * the document to 'stored'. Throws on failure so the queue can retry.
+   */
+  async processStorageJob(job: DocumentStorageJob): Promise<void> {
+    if (!this.storage) throw new Error('Object storage is not configured');
+    await this.storage.put(job.storageKey, Buffer.from(job.bytesBase64, 'base64'), job.contentType);
+    await this.documentRepository.markStorageStatus(job.documentId, 'stored');
+  }
+
+  async markStorageFailed(documentId: string): Promise<void> {
+    await this.documentRepository.markStorageStatus(documentId, 'failed');
+  }
 
   private async ownedProject(applicantId: string, projectId: string) {
     const project = await this.projectRepository.findProjectById(projectId);
@@ -161,8 +182,14 @@ export class DocumentService {
       input.documentKey,
     );
     const storageKey = `projects/${projectId}/${input.approvalKey}/${input.documentKey}/${randomUUID()}-${sanitizeFileName(file.originalName)}`;
+    const useAsyncStorage = this.asyncStorageEnabled;
 
-    await this.storage.put(storageKey, file.buffer, detectedMimeType);
+    // Synchronous path (default): store first, so a storage failure fails the
+    // upload before a row is created. Async path: create a 'pending' row and let
+    // a worker push the bytes to storage, so the request returns immediately.
+    if (!useAsyncStorage) {
+      await this.storage.put(storageKey, file.buffer, detectedMimeType);
+    }
     let document: ProjectDocumentRecord;
     try {
       document = await this.documentRepository.create({
@@ -176,13 +203,16 @@ export class DocumentService {
         sizeBytes: file.size,
         storageKey,
         fileReadStatus,
+        storageStatus: useAsyncStorage ? 'pending' : 'stored',
         uploadedBy: applicantId,
         expiresOn: input.expiresOn ?? null,
       });
     } catch (error) {
-      await this.storage.delete(storageKey).catch((cleanupError) => {
-        logger.warn({ err: cleanupError, storageKey }, 'Failed to clean up orphaned upload');
-      });
+      if (!useAsyncStorage) {
+        await this.storage.delete(storageKey).catch((cleanupError) => {
+          logger.warn({ err: cleanupError, storageKey }, 'Failed to clean up orphaned upload');
+        });
+      }
       if (error instanceof DatabaseError && error.code === '23505') {
         throw new AppError('This document was updated at the same time. Please try again.', {
           statusCode: 409,
@@ -190,6 +220,26 @@ export class DocumentService {
         });
       }
       throw error;
+    }
+
+    if (useAsyncStorage) {
+      try {
+        await this.enqueueStorage!({
+          documentId: document.id,
+          storageKey,
+          contentType: detectedMimeType,
+          bytesBase64: file.buffer.toString('base64'),
+        });
+      } catch (error) {
+        // Could not stage the job — mark the row failed so the UI can prompt a retry.
+        await this.documentRepository.markStorageStatus(document.id, 'failed').catch(() => {});
+        logger.error({ err: error, documentId: document.id }, 'Failed to enqueue document storage');
+        throw new AppError('Could not queue the upload for storage. Please try again.', {
+          statusCode: 503,
+          code: 'STORAGE_ENQUEUE_FAILED',
+        });
+      }
+      document = { ...document, storageStatus: 'pending' };
     }
     if (project.status === 'correction_required') {
       await this.documentRepository.markCorrectionResubmitted({
@@ -245,6 +295,12 @@ export class DocumentService {
     if (!document) {
       throw new AppError('Document not found', { statusCode: 404, code: 'DOCUMENT_NOT_FOUND' });
     }
+    if (document.storageStatus && document.storageStatus !== 'stored') {
+      throw new AppError('This document is still being saved. Please try again shortly.', {
+        statusCode: 409,
+        code: 'DOCUMENT_STORAGE_PENDING',
+      });
+    }
     return this.storage.signedGetUrl(document.storageKey, document.fileName);
   }
 
@@ -265,6 +321,19 @@ export class DocumentService {
       if (!existing || document.version > existing.version) latest.set(key, document);
     }
     const current = [...latest.values()];
+
+    // A document whose bytes have not reached storage yet cannot be validated —
+    // fail closed so submission never slips past on a not-yet-stored file.
+    const pending = current.filter(
+      (document) => document.storageStatus && document.storageStatus !== 'stored',
+    );
+    if (pending.length > 0) {
+      throw new AppError('Some documents are still being saved. Please try again shortly.', {
+        statusCode: 409,
+        code: 'DOCUMENT_STORAGE_PENDING',
+        details: { documents: pending.map((document) => document.documentKey) },
+      });
+    }
 
     const includeBytes = this.options.includeDocumentBytes && this.storage !== null;
 
