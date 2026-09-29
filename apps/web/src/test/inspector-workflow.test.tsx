@@ -230,6 +230,36 @@ describe("inspector workflow", () => {
     expect(startCall).toBeTruthy();
   });
 
+  it("shows document review completion and marks reviewed documents", async () => {
+    const reviewedApplication = application("under_review");
+    reviewedApplication.documents[0].review = {
+      status: "accepted",
+      comment: null,
+      inspectorId: "inspector-1",
+      reviewedAt: "2026-09-22T10:30:00.000Z",
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (String(url).includes("/officers")) {
+          return { ok: true, json: async () => ({ data: { officers: [] } }) };
+        }
+        return {
+          ok: true,
+          json: async () => ({ data: { application: reviewedApplication } }),
+        };
+      }),
+    );
+
+    renderWithQuery(<InspectorApplicationView projectId={projectId} />);
+
+    expect(await screen.findByText("Reviewed")).toBeInTheDocument();
+    expect(screen.getByText("1 of 1 documents reviewed")).toBeInTheDocument();
+    expect(
+      screen.getByRole("progressbar", { name: "Document review progress" }),
+    ).toHaveAttribute("aria-valuenow", "1");
+  });
+
   it("protects every inspector workspace route", async () => {
     const { config } = await import("@/proxy");
     expect(config.matcher).toEqual(
