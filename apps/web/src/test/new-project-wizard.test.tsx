@@ -7,12 +7,6 @@ import { NewProjectWizard } from "@/features/projects/new-project-wizard";
 // Stand-in for the backend rules engine: builds the approvals a real
 // POST /api/v1/projects would return, from the mapped payload.
 type MockPayload = { industry: string; boiler?: string; wetProcessing?: string; [k: string]: unknown };
-const departmentsList = [
-  { id: "d-mpcb", key: "mpcb", name: "Maharashtra Pollution Control Board (MPCB)" },
-  { id: "d-dish", key: "dish", name: "Directorate of Industrial Safety and Health (DISH)" },
-  { id: "d-fssai", key: "fssai", name: "Food Safety and Standards Authority of India (FSSAI)" },
-  { id: "d-fire", key: "fire-emergency-services", name: "Maharashtra Fire and Emergency Services" },
-];
 
 const approval = (
   approvalKey: string,
@@ -48,9 +42,6 @@ function mockApprovals(p: MockPayload) {
 }
 
 const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
-  if (url === "/api/v1/departments") {
-    return { ok: true, status: 200, json: async () => ({ data: { departments: departmentsList } }) } as Response;
-  }
   if (url.endsWith("/documents") && (init?.method ?? "GET") === "GET") {
     return { ok: true, status: 200, json: async () => ({ data: { documents: [] } }) } as Response;
   }
@@ -107,15 +98,6 @@ const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
           },
         },
       }),
-    } as Response;
-  }
-  if (init?.method === "PATCH") {
-    const { departmentKey } = JSON.parse(init.body as string) as { departmentKey: string };
-    const department = departmentsList.find((d) => d.key === departmentKey)!;
-    return {
-      ok: true,
-      status: 200,
-      json: async () => ({ data: { approval: { id: "a", approvalKey: "consent-to-operate", title: "Consent to operate", status: "recommended", documents: [], processingDays: 60, department } } }),
     } as Response;
   }
   const p = JSON.parse(init!.body as string) as MockPayload;
@@ -567,6 +549,8 @@ describe("NewProjectWizard — generated checklist result", () => {
     expect(screen.getByRole("heading", { name: /fire safety NOC/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /consent to operate/i })).toBeInTheDocument();
     expect(screen.getByText(/why these approvals/i)).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: /department for/i })).not.toBeInTheDocument();
+    expect(screen.getAllByText("Assigned department")).toHaveLength(4);
 
     // The wizard (stepper/progress) is gone once the result is shown.
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
@@ -799,20 +783,17 @@ describe("NewProjectWizard — API submission", () => {
     expect(screen.getByText(/step 2 of 6/i)).toBeInTheDocument();
   });
 
-  it("lets the applicant re-target an approval to a chosen department", async () => {
+  it("keeps the evaluator-assigned department read-only", async () => {
     const u = userEvent.setup();
     render(<NewProjectWizard />);
     await completeFoodToChecklist(u);
     await generate(u);
 
-    // Departments load into a per-approval selector.
-    const consentSelect = await screen.findByRole("combobox", { name: /department for consent to operate/i });
-    await u.selectOptions(consentSelect, "Directorate of Industrial Safety and Health (DISH)");
-
-    const patchCall = fetchMock.mock.calls.find((call) => call[1]?.method === "PATCH");
-    expect(patchCall).toBeTruthy();
-    const [patchUrl, patchInit] = patchCall as [string, RequestInit];
-    expect(patchUrl).toContain("/api/v1/projects/p1/approvals/");
-    expect(JSON.parse(patchInit.body as string)).toMatchObject({ departmentKey: "dish" });
+    const consentCard = screen
+      .getByRole("heading", { name: /consent to operate/i })
+      .closest("article") as HTMLElement;
+    expect(within(consentCard).getByText("MPCB")).toBeInTheDocument();
+    expect(within(consentCard).queryByRole("combobox")).not.toBeInTheDocument();
+    expect(fetchMock.mock.calls.some((call) => call[1]?.method === "PATCH")).toBe(false);
   });
 });

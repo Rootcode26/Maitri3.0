@@ -187,33 +187,12 @@ describe("authentication workflow", () => {
     );
   });
 
-  it("sends the selected applicant industry to registration", async () => {
-    const user = userEvent.setup();
+  it("does not ask applicants for their industry during account creation", () => {
     render(<RegisterForm />);
-    const industry = screen.getByRole("combobox", { name: "Industry" });
-    await user.selectOptions(industry, "Food");
-    await user.type(screen.getByLabelText("Full name"), "Food Applicant");
-    await user.type(screen.getByLabelText("Mobile number"), "9876543210");
-    await user.type(
-      screen.getByLabelText("Create password"),
-      "strong-password",
-    );
-    await user.click(screen.getByRole("button", { name: /create account/i }));
 
-    await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith(
-        "/api/v1/auth/register",
-        expect.objectContaining({
-          body: JSON.stringify({
-            name: "Food Applicant",
-            phoneNumber: "+919876543210",
-            password: "strong-password",
-            role: "applicant",
-            industry: "food",
-          }),
-        }),
-      ),
-    );
+    expect(
+      screen.queryByRole("combobox", { name: "Industry" }),
+    ).not.toBeInTheDocument();
   });
 
   it("requires a department when registering an inspector", () => {

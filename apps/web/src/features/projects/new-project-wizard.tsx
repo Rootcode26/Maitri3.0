@@ -25,13 +25,10 @@ import { useLanguage } from "@/components/providers/language-provider";
 import { DocumentCollection } from "@/features/projects/document-collection";
 import {
   createProject,
-  listDepartments,
   listProjectDocuments,
   ProjectApiError,
-  updateApprovalDepartment,
   validateProjectDocuments,
   submitProject,
-  type Department,
   type Project,
   type ProjectApproval,
   type ProjectDocument,
@@ -628,16 +625,10 @@ function FieldControl({
 function ApprovalCard({
   approval,
   index,
-  departments,
-  departmentsLoading,
-  onChangeDepartment,
   onOpen,
 }: {
   approval: ProjectApproval;
   index: number;
-  departments: Department[];
-  departmentsLoading: boolean;
-  onChangeDepartment: (departmentKey: string) => void;
   onOpen: () => void;
 }) {
   const { text } = useLanguage();
@@ -661,41 +652,15 @@ function ApprovalCard({
       <h3 className="mt-4 font-heading text-xl font-semibold text-[#142b45]">
         {text(approval.title)}
       </h3>
-      {departmentsLoading ? (
-        <div className="mt-2">
-          <div
-            className="h-3 w-24 animate-pulse rounded bg-slate-200 motion-reduce:animate-none"
-            aria-hidden="true"
-          />
-          <div
-            className="mt-1 h-9 w-full animate-pulse rounded-md bg-slate-100 motion-reduce:animate-none"
-            aria-hidden="true"
-          />
-          <span className="sr-only">{text("Loading departments…")}</span>
-        </div>
-      ) : departments.length > 0 ? (
-        <label className="mt-2 block">
-          <span className="text-xs font-medium text-slate-500">
-            {text("Send documents to")}
-          </span>
-          <select
-            value={approval.department.key}
-            onChange={(event) => onChangeDepartment(event.target.value)}
-            aria-label={text("Department for {{approval}}", { approval: text(approval.title) })}
-            className="mt-1 w-full rounded-md border border-[#e4e0d6] bg-white px-2.5 py-2 text-sm text-[#142b45] outline-none focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/30"
-          >
-            {departments.map((department) => (
-              <option key={department.key} value={department.key}>
-                {text(department.name)}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : (
-        <p className="mt-1 text-sm text-slate-500">
-          {text(approval.department.name)}
+      <div className="mt-2">
+        <p className="text-xs font-medium text-slate-500">
+          {text("Assigned department")}
         </p>
-      )}
+        <div className="mt-1 flex min-h-10 items-center gap-2 rounded-md border border-[#e4e0d6] bg-[#faf9f6] px-3 py-2 text-sm font-medium text-[#142b45]">
+          <Building2 className="size-4 shrink-0 text-primary" aria-hidden="true" />
+          <span>{text(approval.department.name)}</span>
+        </div>
+      </div>
       {approval.reason ? (
         <p className="mt-2 text-sm text-slate-500">{text(approval.reason)}</p>
       ) : null}
@@ -944,11 +909,7 @@ function ValidationReport({
 function ChecklistResult({ project }: { project: Project }) {
   const { t, text } = useLanguage();
   const [savedProject, setSavedProject] = useState(project);
-  const [approvals, setApprovals] = useState<ProjectApproval[]>(
-    project.approvals,
-  );
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [departmentsLoading, setDepartmentsLoading] = useState(true);
+  const approvals = project.approvals;
   const [openApproval, setOpenApproval] = useState<ProjectApproval | null>(
     null,
   );
@@ -960,42 +921,10 @@ function ChecklistResult({ project }: { project: Project }) {
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   useEffect(() => {
-    listDepartments()
-      .then(setDepartments)
-      .catch(() => setDepartments([]))
-      .finally(() => setDepartmentsLoading(false));
     listProjectDocuments(project.id)
       .then(setDocuments)
       .catch(() => setDocuments([]));
   }, [project.id]);
-
-  async function changeDepartment(approvalId: string, departmentKey: string) {
-    const previous = approvals;
-    setApprovals((current) =>
-      current.map((a) =>
-        a.id === approvalId
-          ? {
-              ...a,
-              department:
-                departments.find((d) => d.key === departmentKey) ??
-                a.department,
-            }
-          : a,
-      ),
-    );
-    try {
-      const updated = await updateApprovalDepartment(
-        project.id,
-        approvalId,
-        departmentKey,
-      );
-      setApprovals((current) =>
-        current.map((a) => (a.id === approvalId ? updated : a)),
-      );
-    } catch {
-      setApprovals(previous);
-    }
-  }
 
   async function runValidation() {
     setValidating(true);
@@ -1086,11 +1015,6 @@ function ChecklistResult({ project }: { project: Project }) {
             key={approval.approvalKey}
             approval={approval}
             index={index}
-            departments={departments}
-            departmentsLoading={departmentsLoading}
-            onChangeDepartment={(departmentKey) =>
-              changeDepartment(approval.id, departmentKey)
-            }
             onOpen={() => setOpenApproval(approval)}
           />
         ))}
