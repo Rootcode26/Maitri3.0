@@ -353,6 +353,29 @@ export async function createProject(
   return body.data!.project;
 }
 
+/**
+ * Load a saved project (with its persisted approvals and document requirements)
+ * by id. Used to resume a draft checklist — it never mutates or submits.
+ */
+export async function getProject(projectId: string): Promise<Project> {
+  const response = await apiFetch(`/api/v1/projects/${projectId}`, {
+    credentials: "include",
+  });
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string;
+    data?: { project: Project };
+  };
+  if (!response.ok || !body.data) {
+    throw new ProjectApiError(
+      response.status === 404
+        ? "This application could not be found."
+        : (body.message ?? "Could not load this application."),
+      response.status,
+    );
+  }
+  return body.data.project;
+}
+
 export async function listDepartments(): Promise<Department[]> {
   const response = await apiFetch("/api/v1/departments", {
     credentials: "include",

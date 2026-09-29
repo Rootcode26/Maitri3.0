@@ -116,7 +116,11 @@ export function ApplicantApplications() {
           {projects.map((project) => (
             <li key={project.id}>
               <Link
-                href={`/applicant/applications/${project.id}`}
+                href={
+                  project.status === "draft"
+                    ? `/applicant/projects/${project.id}/checklist`
+                    : `/applicant/applications/${project.id}`
+                }
                 className="group grid min-h-28 gap-4 px-2 py-5 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary sm:grid-cols-[1fr_auto] sm:items-center"
               >
                 <div className="min-w-0">
@@ -138,7 +142,9 @@ export function ApplicantApplications() {
                   </p>
                 </div>
                 <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
-                  {text("Open application")}{" "}
+                  {project.status === "draft"
+                    ? text("Continue application")
+                    : text("Open application")}{" "}
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </span>
               </Link>

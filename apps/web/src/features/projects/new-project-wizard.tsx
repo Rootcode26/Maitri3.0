@@ -927,7 +927,7 @@ function ValidationReport({
   );
 }
 
-function ChecklistResult({ project }: { project: Project }) {
+export function ChecklistResult({ project }: { project: Project }) {
   const { t, text } = useLanguage();
   const [savedProject, setSavedProject] = useState(project);
   const approvals = project.approvals;

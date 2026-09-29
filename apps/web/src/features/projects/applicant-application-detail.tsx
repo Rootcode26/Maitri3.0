@@ -255,6 +255,28 @@ export function ApplicantApplicationDetail({
           className="min-h-9 px-3 text-sm"
         />
       </header>
+      {application.status === "draft" ? (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-l-4 border-primary bg-primary/5 px-5 py-4">
+          <div>
+            <h2 className="font-semibold text-[#142b45]">
+              {text("This application is still a draft")}
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              {text(
+                "Reopen the checklist to upload the remaining documents and submit when ready.",
+              )}
+            </p>
+          </div>
+          <Button
+            render={<Link href={`/applicant/projects/${projectId}/checklist`} />}
+            nativeButton={false}
+            className="h-11 shrink-0 rounded-md px-5"
+          >
+            {text("Continue application")}
+          </Button>
+        </div>
+      ) : null}
+
       {application.status === "correction_required" ? (
         <div className="mt-6 border-l-4 border-amber-500 bg-amber-50 px-5 py-4">
           <h2 className="font-semibold text-amber-950">

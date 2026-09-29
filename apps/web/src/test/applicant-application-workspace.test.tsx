@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApplicantApplicationDetail } from "@/features/projects/applicant-application-detail";
 import { ApplicantApplications } from "@/features/projects/applicant-applications";
 import { ApplicantDocuments } from "@/features/projects/applicant-documents";
+import { ResumeChecklist } from "@/features/projects/resume-checklist";
 
 const projectId = "11111111-1111-4111-8111-111111111111";
 const documentId = "33333333-3333-4333-8333-333333333333";
@@ -130,6 +131,62 @@ describe("applicant application workspace", () => {
       "href",
       "/applicant/applications/other",
     );
+  });
+
+  it("routes a draft to the resumable checklist with a Continue action", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: { projects: [{ ...summary, status: "draft" }] },
+        }),
+      }),
+    );
+    renderWithQuery(<ApplicantApplications />);
+    const link = (
+      await screen.findByText(summary.enterpriseName)
+    ).closest("a");
+    expect(link).toHaveAttribute(
+      "href",
+      `/applicant/projects/${projectId}/checklist`,
+    );
+    expect(screen.getByText(/continue application/i)).toBeInTheDocument();
+  });
+
+  it("resumes a saved draft checklist and never submits just by opening it", async () => {
+    const draftProject = {
+      id: projectId,
+      enterpriseName: summary.enterpriseName,
+      industry: summary.industry,
+      district: summary.district,
+      primaryActivity: summary.primaryActivity,
+      status: "draft",
+      approvals: application.approvals,
+      createdAt: summary.createdAt,
+    };
+    const fetchMock = vi.fn(async (url: string, _init?: RequestInit) => {
+      if (String(url).endsWith("/documents"))
+        return { ok: true, json: async () => ({ data: { documents: [] } }) };
+      return { ok: true, json: async () => ({ data: { project: draftProject } }) };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithQuery(<ResumeChecklist projectId={projectId} />);
+
+    // The saved checklist (its persisted approvals) is rendered from the API.
+    expect(await screen.findByText(/checklist generated/i)).toBeInTheDocument();
+    expect(screen.getByText(/factory registration/i)).toBeInTheDocument();
+    // Loading the project must never submit it, and must not create a new one.
+    expect(
+      fetchMock.mock.calls.some(([u]) => String(u).endsWith("/submit")),
+    ).toBe(false);
+    expect(
+      fetchMock.mock.calls.some(
+        ([u, init]) =>
+          String(u).endsWith("/api/v1/projects") &&
+          (init as RequestInit | undefined)?.method === "POST",
+      ),
+    ).toBe(false);
   });
 
   it("shows correction details and uploads a replacement version", async () => {
