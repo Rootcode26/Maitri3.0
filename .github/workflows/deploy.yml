@@ -1,0 +1,35 @@
+name: Deploy to EC2
+
+# Continuous deployment: every push to main SSHes into the single EC2 box,
+# pulls the latest code and rebuilds/restarts the stack. Only changed images are
+# rebuilt (Docker layer cache), and the one-shot migrate job re-applies any new
+# migrations idempotently.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {} # allow manual "Run workflow" from the Actions tab
+
+# Never let two deploys run at once; cancel an in-progress one on a newer push.
+concurrency:
+  group: deploy-ec2
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 20m
+          script: |
+            set -e
+            cd ~/maitri
+            git pull origin main
+            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+            docker image prune -f
