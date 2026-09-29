@@ -277,9 +277,9 @@ describe("inspector workflow", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
     renderWithQuery(<InspectorApplicationView projectId={projectId} />);
-    const input = await screen.findByRole("textbox", {
-      name: /your message to the applicant/i,
-    });
+    const input = await screen.findByPlaceholderText(
+      /information or correction|PAN on the uploaded certificate/i,
+    );
     await userEvent.type(
       input,
       "Please confirm the furnace capacity shown in the plan.",
