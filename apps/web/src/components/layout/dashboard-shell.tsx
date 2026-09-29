@@ -7,6 +7,7 @@ import { Fragment, type ReactNode, useEffect, useState } from "react";
 
 import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { LanguageSelector } from "@/components/layout/language-selector";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/features/notifications/notification-bell";
 import { useLanguage } from "@/components/providers/language-provider";
 import { Button } from "@/components/ui/button";
@@ -60,13 +61,13 @@ function UserMenu({ workspace }: { workspace: Workspace }) {
       {user ? (
         <>
           <span className="hidden text-right leading-tight sm:block">
-            <span className="block text-sm font-semibold text-[#142b45]">
+            <span className="block text-sm font-semibold text-foreground">
               {user.name}
             </span>
-            <span className="block text-xs text-slate-500">{roleLabel}</span>
+            <span className="block text-xs text-muted-foreground">{roleLabel}</span>
           </span>
           <span
-            className="grid size-10 shrink-0 place-items-center rounded-full border border-[#e4e0d6] bg-white text-sm font-semibold text-[#142b45]"
+            className="grid size-10 shrink-0 place-items-center rounded-full border border-border bg-card text-sm font-semibold text-foreground"
             aria-hidden="true"
           >
             {initialsOf(user.name)}
@@ -88,7 +89,7 @@ function UserMenu({ workspace }: { workspace: Workspace }) {
         </>
       ) : (
         <span
-          className="grid size-10 shrink-0 place-items-center rounded-full border border-[#e4e0d6] bg-white text-sm font-semibold text-slate-300"
+          className="grid size-10 shrink-0 place-items-center rounded-full border border-border bg-card text-sm font-semibold text-slate-300"
           aria-hidden="true"
         >
           …
@@ -110,7 +111,7 @@ export function DashboardTopbar({
 }) {
   const { t, text } = useLanguage();
   return (
-    <header className="flex min-h-16 items-center justify-between gap-3 border-b border-[#e4e0d6] bg-[#f7f6f2] px-4 py-3 sm:gap-6 sm:px-6">
+    <header className="flex min-h-16 items-center justify-between gap-3 border-b border-border bg-muted px-4 py-3 sm:gap-6 sm:px-6">
       <div className="flex min-w-0 items-center gap-3 sm:gap-4">
         <button
           type="button"
@@ -118,12 +119,12 @@ export function DashboardTopbar({
           aria-expanded={navigationOpen}
           aria-controls="mobile-workspace-navigation"
           onClick={onToggleNavigation}
-          className="grid size-10 shrink-0 place-items-center rounded-full border border-[#e4e0d6] text-slate-600 transition-colors hover:bg-white focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary lg:hidden"
+          className="grid size-10 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-card focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary lg:hidden"
         >
           <Menu className="size-5" aria-hidden="true" />
         </button>
         <nav className="min-w-0" aria-label={t("dashboard.breadcrumb")}>
-          <ol className="flex min-w-0 items-center gap-2 text-sm text-slate-500">
+          <ol className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
             {breadcrumb.map((crumb, i) => {
               const last = i === breadcrumb.length - 1;
               const breadcrumbKey = ({
@@ -144,7 +145,7 @@ export function DashboardTopbar({
                   <li
                     className={
                       last
-                        ? "min-w-0 truncate font-semibold text-[#142b45]"
+                        ? "min-w-0 truncate font-semibold text-foreground"
                         : "hidden sm:block"
                     }
                     aria-current={last ? "page" : undefined}
@@ -153,7 +154,7 @@ export function DashboardTopbar({
                   </li>
                   {!last && (
                     <ChevronRight
-                      className="hidden size-4 shrink-0 text-slate-400 sm:block"
+                      className="hidden size-4 shrink-0 text-muted-foreground sm:block"
                       aria-hidden="true"
                     />
                   )}
@@ -166,6 +167,7 @@ export function DashboardTopbar({
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-4">
         <LanguageSelector />
+        <ThemeToggle />
         <NotificationBell workspace={workspace} />
         <UserMenu workspace={workspace} />
       </div>
@@ -195,10 +197,10 @@ export function DashboardShell({
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [navigationOpen]);
   return (
-    <div className="flex min-h-svh overflow-x-clip bg-[#f7f6f2]">
+    <div className="flex min-h-svh overflow-x-clip bg-muted">
       <a
         href="#main-content"
-        className="sr-only z-[60] rounded-md bg-white px-4 py-3 font-semibold text-[#17345a] shadow-lg focus:fixed focus:top-4 focus:left-4 focus:not-sr-only focus-visible:outline-3 focus-visible:outline-primary"
+        className="sr-only z-[60] rounded-md bg-card px-4 py-3 font-semibold text-foreground shadow-lg focus:fixed focus:top-4 focus:left-4 focus:not-sr-only focus-visible:outline-3 focus-visible:outline-primary"
       >
         {t("home.skip")}
       </a>
@@ -224,7 +226,7 @@ export function DashboardShell({
           />
         </>
       ) : null}
-      <div className="flex min-w-0 flex-1 flex-col bg-white">
+      <div className="flex min-w-0 flex-1 flex-col bg-card">
         <DashboardTopbar
           breadcrumb={breadcrumb}
           navigationOpen={navigationOpen}

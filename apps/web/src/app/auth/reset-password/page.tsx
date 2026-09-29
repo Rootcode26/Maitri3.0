@@ -11,7 +11,7 @@ export default function ResetPasswordPage() {
       <SiteHeader actionLabel="Change workspace" />
       <main className="mx-auto flex w-full max-w-2xl justify-center px-5 py-10 sm:px-8 md:py-14">
         <AuthCard eyebrow="Account recovery" title="Choose a new password">
-          <Suspense fallback={<LocalizedLoading className="h-64 animate-pulse rounded-md bg-slate-100" label="Loading password form" />}><ResetPasswordForm /></Suspense>
+          <Suspense fallback={<LocalizedLoading className="h-64 animate-pulse rounded-md bg-muted" label="Loading password form" />}><ResetPasswordForm /></Suspense>
         </AuthCard>
       </main>
     </div>

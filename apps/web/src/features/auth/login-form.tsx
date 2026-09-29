@@ -117,7 +117,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
         <Label htmlFor="phone">{t("auth.mobile")}</Label>
         <div className="flex">
           <span
-            className="flex h-12 items-center rounded-l-md border border-r-0 border-[#aeb7c4] bg-slate-50 px-3 text-sm text-slate-600"
+            className="flex h-12 items-center rounded-l-md border border-r-0 border-input bg-muted px-3 text-sm text-muted-foreground"
             aria-hidden="true"
           >
             +91
@@ -130,7 +130,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
             spellCheck={false}
             maxLength={10}
             placeholder="98765 43210"
-            className="h-12 rounded-l-none border-[#aeb7c4] bg-white px-3 text-base focus-visible:border-[#315f9f] focus-visible:ring-[#315f9f]/25"
+            className="h-12 rounded-l-none border-input bg-card px-3 text-base focus-visible:border-[#315f9f] focus-visible:ring-[#315f9f]/25"
             aria-invalid={Boolean(errors.phone)}
             aria-describedby={errors.phone ? "phone-error" : "phone-hint"}
             {...register("phone")}
@@ -163,7 +163,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
             placeholder={t(
               mode === "inspector" ? "auth.accessCodePlaceholder" : "auth.passwordPlaceholder",
             )}
-            className="h-12 border-[#aeb7c4] bg-white pr-11 text-base focus-visible:border-[#315f9f] focus-visible:ring-[#315f9f]/25"
+            className="h-12 border-input bg-card pr-11 text-base focus-visible:border-[#315f9f] focus-visible:ring-[#315f9f]/25"
             aria-invalid={Boolean(errors.password)}
             aria-describedby={errors.password ? "password-error" : undefined}
             {...register("password")}
@@ -171,7 +171,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
           <button
             type="button"
             onClick={() => setShowPassword((value) => !value)}
-            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-slate-500 hover:text-slate-800 focus-visible:outline-3 focus-visible:outline-primary"
+            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-muted-foreground hover:text-foreground focus-visible:outline-3 focus-visible:outline-primary"
             aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
           >
             {showPassword ? (
@@ -183,7 +183,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
         </div>
         <FieldError id="password-error" message={errors.password?.message} />
       </div>
-      <div className="flex min-h-11 items-center gap-3 text-sm text-slate-600">
+      <div className="flex min-h-11 items-center gap-3 text-sm text-muted-foreground">
         <Controller
           name="rememberMe"
           control={control}
@@ -197,7 +197,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
         />
         <Label
           htmlFor="remember"
-          className="cursor-pointer font-normal text-slate-600"
+          className="cursor-pointer font-normal text-muted-foreground"
         >
           {t("auth.rememberDevice")}
         </Label>
@@ -215,11 +215,11 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
       {mode === "applicant" && (
         <>
           <Separator />
-          <p className="text-center text-sm text-slate-600">
+          <p className="text-center text-sm text-muted-foreground">
             {t("auth.newApplicant")}{" "}
             <Link
               href="/auth/register"
-              className="font-semibold text-[#315f9f] underline-offset-4 hover:underline"
+              className="font-semibold text-primary underline-offset-4 hover:underline"
             >
               {t("auth.createApplicant")}
             </Link>
@@ -229,7 +229,7 @@ export function LoginForm({ mode = "applicant" }: { mode?: LoginMode }) {
       {mode === "inspector" && (
         <>
           <Separator />
-          <p className="text-center text-sm text-slate-600">
+          <p className="text-center text-sm text-muted-foreground">
             {t("auth.inspectorProvisioned")}
           </p>
         </>

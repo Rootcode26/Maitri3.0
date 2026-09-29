@@ -60,17 +60,17 @@ function ClarificationCard({
   });
 
   return (
-    <article className="border border-[#d8d3c8] bg-white p-5">
+    <article className="border border-border bg-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold tracking-wide text-primary uppercase">
             {clarification.departmentName}
           </p>
-          <h3 className="mt-1 font-semibold text-[#142b45]">
+          <h3 className="mt-1 font-semibold text-foreground">
             {project.enterpriseName} · {clarification.approvalTitle}
           </h3>
-          <p className="mt-2 text-sm text-slate-700">{clarification.message}</p>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-sm text-foreground">{clarification.message}</p>
+          <p className="mt-2 text-xs text-muted-foreground">
             {t("applicant.requestedBy", { name: clarification.inspectorName })}
             {clarification.documentName
               ? ` · ${clarification.documentName}`
@@ -80,25 +80,25 @@ function ClarificationCard({
               : ""}
           </p>
         </div>
-        <span className="border border-slate-300 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-700">
+        <span className="border border-border bg-muted px-2 py-1 text-xs font-semibold text-foreground">
           {humanize(clarification.status)}
         </span>
       </div>
       {clarification.responses.map((item) => (
         <div
           key={item.id}
-          className="mt-3 border-l-4 border-primary/40 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+          className="mt-3 border-l-4 border-primary/40 bg-muted px-4 py-3 text-sm text-foreground"
         >
-          <p className="font-semibold text-[#142b45]">{t("applicant.yourResponse")}</p>
+          <p className="font-semibold text-foreground">{t("applicant.yourResponse")}</p>
           <p className="mt-1">{item.message}</p>
         </div>
       ))}
       {clarification.status !== "resolved" ? (
         <div className="mt-4">
-          <label className="text-sm font-semibold text-[#142b45]">
+          <label className="text-sm font-semibold text-foreground">
             {t("applicant.response")}
             <textarea
-              className="mt-2 min-h-24 w-full rounded-md border border-[#aeb7c4] bg-white p-3 font-normal"
+              className="mt-2 min-h-24 w-full rounded-md border border-input bg-card p-3 font-normal"
               maxLength={2000}
               value={response}
               onChange={(event) => setResponse(event.target.value)}
@@ -158,7 +158,7 @@ export function ApplicantDashboard() {
 
   if (projects.isPending)
     return (
-      <div className="flex items-center gap-3 p-8 text-slate-600">
+      <div className="flex items-center gap-3 p-8 text-muted-foreground">
         <Loader2 className="size-5 animate-spin" /> {t("applicant.loading")}
       </div>
     );
@@ -203,10 +203,10 @@ export function ApplicantDashboard() {
     <div className="mx-auto w-full max-w-6xl px-6 py-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight text-[#142b45] sm:text-5xl">
+          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             {t("applicant.welcome")}
           </h1>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-muted-foreground">
             {t("applicant.dashboardDescription")}
           </p>
         </div>
@@ -223,12 +223,12 @@ export function ApplicantDashboard() {
         {stats.map((stat) => (
           <Card
             key={stat.label}
-            className="rounded-md border-l-4 border-amber-500 bg-white"
+            className="rounded-md border-l-4 border-amber-500 bg-card"
           >
             <CardContent className="space-y-2 px-5 py-5">
-              <p className="text-sm font-medium text-slate-500">{t(stat.label as TranslationKey)}</p>
-              <p className="text-4xl font-bold text-[#142b45]">{stat.value}</p>
-              <p className="text-sm text-slate-500">{t(stat.note as TranslationKey)}</p>
+              <p className="text-sm font-medium text-muted-foreground">{t(stat.label as TranslationKey)}</p>
+              <p className="text-4xl font-bold text-foreground">{stat.value}</p>
+              <p className="text-sm text-muted-foreground">{t(stat.note as TranslationKey)}</p>
             </CardContent>
           </Card>
         ))}
@@ -237,7 +237,7 @@ export function ApplicantDashboard() {
         <section className="mt-7">
           <div className="flex items-center gap-3">
             <AlertCircle className="size-5 text-amber-700" />
-            <h2 className="text-2xl font-bold text-[#142b45]">{t("applicant.actionNeeded")}</h2>
+            <h2 className="text-2xl font-bold text-foreground">{t("applicant.actionNeeded")}</h2>
           </div>
           <div className="mt-4 space-y-4">
             {clarifications
@@ -254,15 +254,15 @@ export function ApplicantDashboard() {
           </div>
         </section>
       ) : null}
-      <Card className="mt-7 rounded-md bg-white">
+      <Card className="mt-7 rounded-md bg-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl text-[#142b45]">
+          <CardTitle className="flex items-center gap-2 text-xl text-foreground">
             <MessageSquareText className="size-5" /> {t("applicant.currentApplications")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {projects.data.length ? (
-            <div className="divide-y divide-[#e4e0d6]">
+            <div className="divide-y divide-border">
               {projects.data.map((project) => (
                 <Link
                   key={project.id}
@@ -270,10 +270,10 @@ export function ApplicantDashboard() {
                   className="flex flex-wrap items-center justify-between gap-3 py-4"
                 >
                   <div>
-                    <p className="font-semibold text-[#142b45]">
+                    <p className="font-semibold text-foreground">
                       {project.enterpriseName}
                     </p>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {humanize(project.industry)} · {project.district}
                     </p>
                   </div>
@@ -282,15 +282,15 @@ export function ApplicantDashboard() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-start justify-between gap-4 rounded-md border border-dashed border-[#cbd2dc] bg-[#faf9f6] px-5 py-5 sm:flex-row sm:items-center">
-              <p className="text-sm leading-6 text-slate-600">
+            <div className="flex flex-col items-start justify-between gap-4 rounded-md border border-dashed border-border bg-muted px-5 py-5 sm:flex-row sm:items-center">
+              <p className="text-sm leading-6 text-muted-foreground">
                 {t("applicant.noApplications")}
               </p>
               <Button
                 render={<Link href="/applicant/projects/new" />}
                 nativeButton={false}
                 variant="outline"
-                className="h-10 shrink-0 bg-white"
+                className="h-10 shrink-0 bg-card"
               >
                 {t("applicant.createProject")}
               </Button>

@@ -20,11 +20,11 @@ export function AuthShell({ children }: { children: ReactNode }) {
           <p className="mb-3 text-sm font-semibold text-primary">{t("auth.applicantServices")}</p>
           <h1
             id="journey-heading"
-            className="max-w-sm text-3xl leading-tight font-semibold tracking-tight text-[#142b45] sm:text-4xl"
+            className="max-w-sm text-3xl leading-tight font-semibold tracking-tight text-foreground sm:text-4xl"
           >
             {t("auth.journey")}
           </h1>
-          <ul className="mt-7 space-y-4 text-sm text-slate-600 sm:text-base">
+          <ul className="mt-7 space-y-4 text-sm text-muted-foreground sm:text-base">
             {benefits.map((benefit) => (
               <li key={benefit} className="flex items-start gap-3">
                 <Check

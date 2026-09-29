@@ -48,10 +48,10 @@ export function ApplicantApplications() {
           <p className="text-sm font-semibold text-primary">
             {text("Applicant workspace")}
           </p>
-          <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-[#142b45] sm:text-4xl">
+          <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             {text("Applications")}
           </h1>
-          <p className="mt-2 max-w-2xl text-slate-600">
+          <p className="mt-2 max-w-2xl text-muted-foreground">
             {text("Review every project, follow departmental progress and address requests that need your attention.")}
           </p>
         </div>
@@ -63,17 +63,17 @@ export function ApplicantApplications() {
           {text("Create new project")}
         </Button>
       </header>
-      <div className="mt-7 grid gap-3 border-y border-[#e4e0d6] py-4 md:grid-cols-[1fr_15rem]">
+      <div className="mt-7 grid gap-3 border-y border-border py-4 md:grid-cols-[1fr_15rem]">
         <label className="relative block">
           <span className="sr-only">{text("Search applications")}</span>
           <Search
-            className="pointer-events-none absolute top-3 left-3 size-5 text-slate-400"
+            className="pointer-events-none absolute top-3 left-3 size-5 text-muted-foreground"
             aria-hidden="true"
           />
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            className="h-11 w-full rounded-md border border-[#aeb7c4] bg-white pr-3 pl-10 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="h-11 w-full rounded-md border border-input bg-card pr-3 pl-10 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
             placeholder={text("Search by enterprise, district or industry")}
           />
         </label>
@@ -82,7 +82,7 @@ export function ApplicantApplications() {
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value as typeof status)}
-            className="h-11 w-full rounded-md border border-[#aeb7c4] bg-white px-3 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="h-11 w-full rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             {statuses.map((item) => (
               <option key={item} value={item}>
@@ -93,7 +93,7 @@ export function ApplicantApplications() {
         </label>
       </div>
       {query.isPending ? (
-        <div className="mt-8 flex items-center gap-3 border border-[#e4e0d6] p-8 text-slate-600">
+        <div className="mt-8 flex items-center gap-3 border border-border p-8 text-muted-foreground">
           <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {text("Loading applications…")}
         </div>
       ) : query.isError ? (
@@ -112,7 +112,7 @@ export function ApplicantApplications() {
           </Button>
         </div>
       ) : projects.length ? (
-        <ul className="mt-6 divide-y divide-[#e4e0d6] border-y border-[#e4e0d6]">
+        <ul className="mt-6 divide-y divide-border border-y border-border">
           {projects.map((project) => (
             <li key={project.id}>
               <Link
@@ -125,16 +125,16 @@ export function ApplicantApplications() {
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-3">
-                    <h2 className="truncate text-lg font-semibold text-[#142b45] group-hover:text-primary">
+                    <h2 className="truncate text-lg font-semibold text-foreground group-hover:text-primary">
                       {project.enterpriseName}
                     </h2>
                     <StatusBadge status={project.status} />
                   </div>
-                  <p className="mt-2 text-sm text-slate-600">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {text(humanizeStatus(project.industry))} · {text(project.district)} ·{" "}
                     {text(project.primaryActivity)}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {t("common.created", { date: formatDate(project.createdAt, language) })}
                     {project.submittedAt
                       ? ` · ${t("common.submitted", { date: formatDate(project.submittedAt, language) })}`
@@ -152,17 +152,17 @@ export function ApplicantApplications() {
           ))}
         </ul>
       ) : (
-        <div className="mt-8 rounded-md border border-dashed border-[#aeb7c4] bg-[#faf9f6] p-8 text-center sm:p-10">
+        <div className="mt-8 rounded-md border border-dashed border-input bg-muted p-8 text-center sm:p-10">
           <FileText
-            className="mx-auto size-8 text-slate-400"
+            className="mx-auto size-8 text-muted-foreground"
             aria-hidden="true"
           />
-          <h2 className="mt-3 text-lg font-semibold text-[#142b45]">
+          <h2 className="mt-3 text-lg font-semibold text-foreground">
             {query.data?.length
               ? text("No matching applications")
               : text("No applications yet")}
           </h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             {query.data?.length
               ? text("Change the search or status filter.")
               : text("Create your first project to begin the approval journey.")}

@@ -43,7 +43,7 @@ const attentionTone: Record<AttentionLevel, "green" | "amber" | "red"> = {
 const primaryAction =
   "inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const secondaryAction =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#cfd4dc] bg-white px-4 text-sm font-semibold text-[#142b45] transition-colors hover:bg-[#f7f6f2] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary";
+  "inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 function PageIntro({
   section,
@@ -57,13 +57,13 @@ function PageIntro({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-5 border-b border-[#d8d3c8] pb-7 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex flex-col gap-5 border-b border-border pb-7 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-3xl">
         <p className="text-sm font-semibold text-primary">{section}</p>
-        <h1 className="mt-1 font-heading text-4xl font-bold tracking-tight text-[#142b45]">
+        <h1 className="mt-1 font-heading text-4xl font-bold tracking-tight text-foreground">
           {title}
         </h1>
-        <p className="mt-2 max-w-2xl text-slate-600">{description}</p>
+        <p className="mt-2 max-w-2xl text-muted-foreground">{description}</p>
       </div>
       {action}
     </div>
@@ -82,7 +82,7 @@ function StatusPill({
     amber: "border-amber-200 bg-amber-50 text-amber-900",
     green: "border-emerald-200 bg-emerald-50 text-emerald-800",
     red: "border-red-200 bg-red-50 text-red-800",
-    slate: "border-slate-200 bg-slate-50 text-slate-700",
+    slate: "border-border bg-muted text-foreground",
   };
   return (
     <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${tones[tone]}`}>
@@ -97,17 +97,17 @@ function MetricStrip({
   items: { label: string; value: string; note: string; tone?: string }[];
 }) {
   return (
-    <section className="grid border border-[#d8d3c8] bg-white sm:grid-cols-2 xl:grid-cols-4" aria-label="Queue summary">
+    <section className="grid border border-border bg-card sm:grid-cols-2 xl:grid-cols-4" aria-label="Queue summary">
       {items.map((item, index) => (
         <div
           key={item.label}
-          className={`p-5 ${index ? "border-t border-[#e4e0d6] sm:border-l sm:border-t-0" : ""} ${index === 2 ? "sm:border-l-0 xl:border-l" : ""}`}
+          className={`p-5 ${index ? "border-t border-border sm:border-l sm:border-t-0" : ""} ${index === 2 ? "sm:border-l-0 xl:border-l" : ""}`}
         >
-          <p className="text-sm font-medium text-slate-500">{item.label}</p>
-          <p className={`mt-2 text-3xl font-bold tracking-tight ${item.tone ?? "text-[#142b45]"}`}>
+          <p className="text-sm font-medium text-muted-foreground">{item.label}</p>
+          <p className={`mt-2 text-3xl font-bold tracking-tight ${item.tone ?? "text-foreground"}`}>
             {item.value}
           </p>
-          <p className="mt-1 text-xs text-slate-500">{item.note}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{item.note}</p>
         </div>
       ))}
     </section>
@@ -154,13 +154,13 @@ export function InspectorApplicationsPage() {
       <div className="mt-7 space-y-5">
         <label className="relative block max-w-md">
           <span className="sr-only">{t("inspector.search")}</span>
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <input
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t("inspector.searchPlaceholder")}
-            className="h-11 w-full rounded-md border border-[#cfd4dc] bg-white pr-3 pl-10 text-sm text-[#142b45] transition-colors hover:border-[#94a3b8] focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
+            className="h-11 w-full rounded-md border border-border bg-card pr-3 pl-10 text-sm text-foreground transition-colors hover:border-[#94a3b8] focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
           />
         </label>
 
@@ -172,7 +172,7 @@ export function InspectorApplicationsPage() {
                 key={item.value ?? "all"}
                 type="button"
                 onClick={() => setFilter(item.value)}
-                className={`h-10 rounded-md px-4 text-sm font-semibold transition-[color,background-color,border-color,box-shadow] duration-150 motion-reduce:transition-none focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary ${active ? "bg-primary text-primary-foreground shadow-sm" : "border border-[#cfd4dc] bg-white text-[#142b45] hover:bg-[#f7f6f2] hover:shadow-sm"}`}
+                className={`h-10 rounded-md px-4 text-sm font-semibold transition-[color,background-color,border-color,box-shadow] duration-150 motion-reduce:transition-none focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary ${active ? "bg-primary text-primary-foreground shadow-sm" : "border border-border bg-card text-foreground hover:bg-muted hover:shadow-sm"}`}
               >
                 {t(item.label as "status.all")}
               </button>
@@ -194,7 +194,7 @@ export function InspectorApplicationsPage() {
                 key={value}
                 type="button"
                 onClick={() => setAssignment(value)}
-                className={`h-9 rounded-full px-4 text-sm font-medium transition-[color,background-color,border-color,box-shadow] duration-150 motion-reduce:transition-none focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary ${active ? "bg-[#142b45] text-white shadow-sm" : "border border-[#cfd4dc] bg-white text-[#142b45] hover:bg-[#f7f6f2] hover:shadow-sm"}`}
+                className={`h-9 rounded-full px-4 text-sm font-medium transition-[color,background-color,border-color,box-shadow] duration-150 motion-reduce:transition-none focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary ${active ? "bg-[#142b45] text-white shadow-sm" : "border border-border bg-card text-foreground hover:bg-muted hover:shadow-sm"}`}
               >
                 {t(label)}
               </button>
@@ -203,7 +203,7 @@ export function InspectorApplicationsPage() {
         </div>
 
         {query.isPending ? (
-          <div className="flex items-center gap-3 border border-[#e4e0d6] bg-white p-6 text-slate-600">
+          <div className="flex items-center gap-3 border border-border bg-card p-6 text-muted-foreground">
             <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loading")}
           </div>
         ) : query.isError ? (
@@ -211,23 +211,23 @@ export function InspectorApplicationsPage() {
             {t("inspector.loadError")}
           </div>
         ) : rows.length === 0 ? (
-          <div className="border border-[#e4e0d6] bg-[#faf9f6] p-10 text-center">
-            <h2 className="text-xl font-semibold text-[#142b45]">{t("inspector.noApplications")}</h2>
-            <p className="mt-2 text-sm text-slate-500">{t("inspector.emptyQueue")}</p>
+          <div className="border border-border bg-muted p-10 text-center">
+            <h2 className="text-xl font-semibold text-foreground">{t("inspector.noApplications")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t("inspector.emptyQueue")}</p>
           </div>
         ) : (
-          <section className="overflow-hidden border border-[#d8d3c8] bg-white" aria-labelledby="applications-table-title">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e4e0d6] px-5 py-4">
-              <h2 id="applications-table-title" className="font-semibold text-[#142b45]">
+          <section className="overflow-hidden border border-border bg-card" aria-labelledby="applications-table-title">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+              <h2 id="applications-table-title" className="font-semibold text-foreground">
                 {t("inspector.queue")}
               </h2>
-              <span className="text-xs font-medium text-slate-500">
+              <span className="text-xs font-medium text-muted-foreground">
                 {t("common.assigned", { count: total })}
               </span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[960px] border-collapse text-left">
-                <thead className="bg-[#f7f6f2] text-xs font-semibold text-slate-500">
+                <thead className="bg-muted text-xs font-semibold text-muted-foreground">
                   <tr>
                     <th className="px-5 py-3">{t("inspector.applicantProject")}</th>
                     <th className="px-4 py-3">{t("inspector.reviewResult")}</th>
@@ -240,27 +240,27 @@ export function InspectorApplicationsPage() {
                     <th className="px-5 py-3"><span className="sr-only">{t("common.open")}</span></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#e4e0d6]">
+                <tbody className="divide-y divide-border">
                   {rows.map((item) => (
                     <tr
                       key={item.approvalId}
-                      className="align-top transition-colors duration-150 hover:bg-[#fcfbf8]"
+                      className="align-top transition-colors duration-150 hover:bg-muted"
                     >
                       <td className="px-5 py-4">
-                        <p className="font-semibold text-[#142b45]">{item.enterpriseName}</p>
-                        <p className="mt-1 text-xs text-slate-500 capitalize">
+                        <p className="font-semibold text-foreground">{item.enterpriseName}</p>
+                        <p className="mt-1 text-xs text-muted-foreground capitalize">
                           {text(item.industry)} · {text(item.district)}
                         </p>
                       </td>
-                      <td className="px-4 py-4 text-sm text-slate-700">{item.approvalTitle}</td>
-                      <td className="px-4 py-4 text-sm text-slate-700">{item.applicantName}</td>
-                      <td className="px-4 py-4 text-sm text-slate-600">
+                      <td className="px-4 py-4 text-sm text-foreground">{item.approvalTitle}</td>
+                      <td className="px-4 py-4 text-sm text-foreground">{item.applicantName}</td>
+                      <td className="px-4 py-4 text-sm text-muted-foreground">
                         {formatDate(item.submittedAt, language)}
                       </td>
                       <td className="px-4 py-4 text-sm">
                         {item.dueAt ? (
                           <span className="flex flex-col gap-1">
-                            <span className={item.overdue ? "font-semibold text-red-700" : "text-slate-600"}>
+                            <span className={item.overdue ? "font-semibold text-red-700" : "text-muted-foreground"}>
                               {formatDate(item.dueAt, language)}
                             </span>
                             {item.overdue ? (
@@ -268,7 +268,7 @@ export function InspectorApplicationsPage() {
                             ) : null}
                           </span>
                         ) : (
-                          <span className="text-xs text-slate-400">—</span>
+                          <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </td>
                       <td className="px-4 py-4">
@@ -278,12 +278,12 @@ export function InspectorApplicationsPage() {
                             {item.attentionScore !== null ? ` · ${item.attentionScore}` : ""}
                           </StatusPill>
                         ) : (
-                          <span className="text-xs text-slate-400">—</span>
+                          <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-4 text-sm text-slate-700">
+                      <td className="px-4 py-4 text-sm text-foreground">
                         {item.assigneeName ?? (
-                          <span className="text-slate-400">{t("assignment.unassigned")}</span>
+                          <span className="text-muted-foreground">{t("assignment.unassigned")}</span>
                         )}
                       </td>
                       <td className="px-4 py-4">
@@ -390,15 +390,15 @@ export function InspectorInspectionsPage() {
       />
 
       <div className="mt-7 space-y-6">
-        <section className="border border-[#d8d3c8] bg-white p-5">
-          <h2 className="font-semibold text-[#142b45]">{t("inspections.scheduleHeading")}</h2>
+        <section className="border border-border bg-card p-5">
+          <h2 className="font-semibold text-foreground">{t("inspections.scheduleHeading")}</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
-              <span className="font-medium text-[#142b45]">{t("inspections.selectApplication")}</span>
+              <span className="font-medium text-foreground">{t("inspections.selectApplication")}</span>
               <select
                 value={approvalId}
                 onChange={(event) => setApprovalId(event.target.value)}
-                className="mt-1 h-11 w-full rounded-md border border-[#cfd4dc] bg-white px-3 text-sm"
+                className="mt-1 h-11 w-full rounded-md border border-border bg-card px-3 text-sm"
               >
                 <option value="">—</option>
                 {openApplications.map((app) => (
@@ -409,20 +409,20 @@ export function InspectorInspectionsPage() {
               </select>
             </label>
             <label className="block text-sm">
-              <span className="font-medium text-[#142b45]">{t("inspections.date")}</span>
+              <span className="font-medium text-foreground">{t("inspections.date")}</span>
               <input
                 type="datetime-local"
                 value={scheduledAt}
                 onChange={(event) => setScheduledAt(event.target.value)}
-                className="mt-1 h-11 w-full rounded-md border border-[#cfd4dc] bg-white px-3 text-sm"
+                className="mt-1 h-11 w-full rounded-md border border-border bg-card px-3 text-sm"
               />
             </label>
             <label className="block text-sm sm:col-span-2">
-              <span className="font-medium text-[#142b45]">{t("inspections.notes")}</span>
+              <span className="font-medium text-foreground">{t("inspections.notes")}</span>
               <textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                className="mt-1 min-h-20 w-full rounded-md border border-[#cfd4dc] p-3 text-sm"
+                className="mt-1 min-h-20 w-full rounded-md border border-border p-3 text-sm"
               />
             </label>
           </div>
@@ -443,7 +443,7 @@ export function InspectorInspectionsPage() {
         </section>
 
         {inspections.isPending ? (
-          <div className="flex items-center gap-3 border border-[#e4e0d6] bg-white p-6 text-slate-600">
+          <div className="flex items-center gap-3 border border-border bg-card p-6 text-muted-foreground">
             <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loading")}
           </div>
         ) : inspections.isError ? (
@@ -451,14 +451,14 @@ export function InspectorInspectionsPage() {
             {t("inspector.loadError")}
           </div>
         ) : rows.length === 0 ? (
-          <div className="border border-[#e4e0d6] bg-[#faf9f6] p-10 text-center">
-            <h2 className="text-xl font-semibold text-[#142b45]">{t("inspections.empty")}</h2>
-            <p className="mt-2 text-sm text-slate-500">{t("inspections.emptyHint")}</p>
+          <div className="border border-border bg-muted p-10 text-center">
+            <h2 className="text-xl font-semibold text-foreground">{t("inspections.empty")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t("inspections.emptyHint")}</p>
           </div>
         ) : (
           <ul className="space-y-4">
             {rows.map((item) => (
-              <li key={item.id} className="border border-[#d8d3c8] bg-white p-5">
+              <li key={item.id} className="border border-border bg-card p-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -469,21 +469,21 @@ export function InspectorInspectionsPage() {
                         <StatusPill tone="slate">{t(outcomeKey[item.outcome])}</StatusPill>
                       ) : null}
                     </div>
-                    <h3 className="mt-3 text-lg font-semibold text-[#142b45]">{item.enterpriseName}</h3>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <h3 className="mt-3 text-lg font-semibold text-foreground">{item.enterpriseName}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {item.approvalTitle} · {text(item.district)}
                     </p>
-                    <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-700">
-                      <CalendarDays className="size-4 text-slate-400" aria-hidden="true" />
+                    <p className="mt-2 flex items-center gap-1.5 text-sm text-foreground">
+                      <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />
                       {formatDate(item.scheduledAt, language)}
                     </p>
                     {item.notes ? (
-                      <p className="mt-2 text-sm text-slate-600">{item.notes}</p>
+                      <p className="mt-2 text-sm text-muted-foreground">{item.notes}</p>
                     ) : null}
                   </div>
                   {item.status === "scheduled" ? (
                     <div className="flex flex-col items-end gap-2">
-                      <span className="text-xs font-medium text-slate-500">
+                      <span className="text-xs font-medium text-muted-foreground">
                         {t("inspections.completeAs")}
                       </span>
                       <div className="flex flex-wrap justify-end gap-2">
@@ -544,7 +544,7 @@ export function InspectorClarificationsPage() {
       />
       <div className="mt-7">
         {query.isPending ? (
-          <div className="flex items-center gap-3 border border-[#e4e0d6] bg-white p-6 text-slate-600">
+          <div className="flex items-center gap-3 border border-border bg-card p-6 text-muted-foreground">
             <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loading")}
           </div>
         ) : query.isError ? (
@@ -552,14 +552,14 @@ export function InspectorClarificationsPage() {
             {t("inspector.loadError")}
           </div>
         ) : rows.length === 0 ? (
-          <div className="border border-[#e4e0d6] bg-[#faf9f6] p-10 text-center">
-            <h2 className="text-xl font-semibold text-[#142b45]">{t("clarifications.empty")}</h2>
-            <p className="mt-2 text-sm text-slate-500">{t("clarifications.emptyHint")}</p>
+          <div className="border border-border bg-muted p-10 text-center">
+            <h2 className="text-xl font-semibold text-foreground">{t("clarifications.empty")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t("clarifications.emptyHint")}</p>
           </div>
         ) : (
           <ul className="space-y-4">
             {rows.map((item) => (
-              <li key={item.id} className="border border-[#d8d3c8] bg-white p-5">
+              <li key={item.id} className="border border-border bg-card p-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -567,17 +567,17 @@ export function InspectorClarificationsPage() {
                         {translateStatus(t, item.status)}
                       </StatusPill>
                       {item.dueAt ? (
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-muted-foreground">
                           {t("inspector.dateDue", { date: formatDate(item.dueAt, language) })}
                         </span>
                       ) : null}
                     </div>
-                    <h3 className="mt-3 text-lg font-semibold text-[#142b45]">{item.enterpriseName}</h3>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <h3 className="mt-3 text-lg font-semibold text-foreground">{item.enterpriseName}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {item.approvalTitle} · {text(item.district)}
                     </p>
-                    <p className="mt-3 text-sm text-slate-700">{item.message}</p>
-                    <p className="mt-3 text-xs text-slate-500">
+                    <p className="mt-3 text-sm text-foreground">{item.message}</p>
+                    <p className="mt-3 text-xs text-muted-foreground">
                       {t("clarifications.replies", { count: item.responseCount })} ·{" "}
                       {t("common.applicant", { name: item.applicantName })}
                     </p>
@@ -613,12 +613,12 @@ function DecisionRow({
           <StatusPill tone={reviewTone[item.reviewStatus]}>
             {translateStatus(t, item.reviewStatus)}
           </StatusPill>
-          <h3 className="mt-3 text-lg font-semibold text-[#142b45]">{item.enterpriseName}</h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <h3 className="mt-3 text-lg font-semibold text-foreground">{item.enterpriseName}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
             {item.approvalTitle} · {text(item.district)}
           </p>
           {item.decidedAt ? (
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-muted-foreground">
               {t("common.submitted", { date: formatDate(item.decidedAt, language) })}
               {item.decidedByName
                 ? ` · ${t("decisions.decidedBy", { name: item.decidedByName })}`
@@ -626,7 +626,7 @@ function DecisionRow({
             </p>
           ) : null}
           {item.decisionNote ? (
-            <p className="mt-2 text-sm text-slate-700">{item.decisionNote}</p>
+            <p className="mt-2 text-sm text-foreground">{item.decisionNote}</p>
           ) : null}
         </div>
         <Link href={`/inspector/applications/${item.projectId}`} className={primaryAction}>
@@ -656,7 +656,7 @@ export function InspectorDecisionsPage() {
       />
       <div className="mt-7 space-y-6">
         {query.isPending ? (
-          <div className="flex items-center gap-3 border border-[#e4e0d6] bg-white p-6 text-slate-600">
+          <div className="flex items-center gap-3 border border-border bg-card p-6 text-muted-foreground">
             <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loading")}
           </div>
         ) : query.isError ? (
@@ -665,14 +665,14 @@ export function InspectorDecisionsPage() {
           </div>
         ) : (
           <>
-            <section className="border border-[#d8d3c8] bg-white">
-              <div className="border-b border-[#e4e0d6] px-5 py-4">
-                <h2 className="font-semibold text-[#142b45]">{t("decisions.readyHeading")}</h2>
+            <section className="border border-border bg-card">
+              <div className="border-b border-border px-5 py-4">
+                <h2 className="font-semibold text-foreground">{t("decisions.readyHeading")}</h2>
               </div>
               {ready.length === 0 ? (
-                <p className="p-6 text-sm text-slate-500">{t("decisions.readyEmpty")}</p>
+                <p className="p-6 text-sm text-muted-foreground">{t("decisions.readyEmpty")}</p>
               ) : (
-                <div className="divide-y divide-[#e4e0d6]">
+                <div className="divide-y divide-border">
                   {ready.map((item) => (
                     <DecisionRow
                       key={item.approvalId}
@@ -686,14 +686,14 @@ export function InspectorDecisionsPage() {
               )}
             </section>
 
-            <section className="border border-[#d8d3c8] bg-white">
-              <div className="border-b border-[#e4e0d6] px-5 py-4">
-                <h2 className="font-semibold text-[#142b45]">{t("decisions.registerHeading")}</h2>
+            <section className="border border-border bg-card">
+              <div className="border-b border-border px-5 py-4">
+                <h2 className="font-semibold text-foreground">{t("decisions.registerHeading")}</h2>
               </div>
               {decided.length === 0 ? (
-                <p className="p-6 text-sm text-slate-500">{t("decisions.registerEmpty")}</p>
+                <p className="p-6 text-sm text-muted-foreground">{t("decisions.registerEmpty")}</p>
               ) : (
-                <div className="divide-y divide-[#e4e0d6]">
+                <div className="divide-y divide-border">
                   {decided.map((item) => (
                     <DecisionRow
                       key={item.approvalId}
@@ -714,7 +714,7 @@ export function InspectorDecisionsPage() {
 }
 
 function ProgressRow({ label, value, note, tone = "bg-primary" }: { label: string; value: number; note: string; tone?: string }) {
-  return <div><div className="flex items-end justify-between gap-4"><div><p className="text-sm font-semibold text-[#142b45]">{label}</p><p className="mt-0.5 text-xs text-slate-500">{note}</p></div><span className="text-sm font-bold text-[#142b45]">{value}%</span></div><div className="mt-2 h-2 overflow-hidden bg-slate-100"><div className={`h-full ${tone}`} style={{ width: `${value}%` }} /></div></div>;
+  return <div><div className="flex items-end justify-between gap-4"><div><p className="text-sm font-semibold text-foreground">{label}</p><p className="mt-0.5 text-xs text-muted-foreground">{note}</p></div><span className="text-sm font-bold text-foreground">{value}%</span></div><div className="mt-2 h-2 overflow-hidden bg-muted"><div className={`h-full ${tone}`} style={{ width: `${value}%` }} /></div></div>;
 }
 
 export function InspectorReportsPage() {
@@ -724,7 +724,7 @@ export function InspectorReportsPage() {
   if (query.isPending) {
     return (
       <div className="mx-auto w-full max-w-6xl px-6 py-8">
-        <div className="flex items-center gap-3 border border-[#e4e0d6] bg-white p-6 text-slate-600">
+        <div className="flex items-center gap-3 border border-border bg-card p-6 text-muted-foreground">
           <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loading")}
         </div>
       </div>
@@ -778,10 +778,10 @@ export function InspectorReportsPage() {
         />
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <section className="border border-[#d8d3c8] bg-white p-6">
-            <h2 className="font-semibold text-[#142b45]">{t("reports.byApproval")}</h2>
+          <section className="border border-border bg-card p-6">
+            <h2 className="font-semibold text-foreground">{t("reports.byApproval")}</h2>
             {report.byApproval.length === 0 ? (
-              <p className="mt-4 text-sm text-slate-500">{t("reports.noData")}</p>
+              <p className="mt-4 text-sm text-muted-foreground">{t("reports.noData")}</p>
             ) : (
               <div className="mt-6 space-y-6">
                 {report.byApproval.map((item) => {
@@ -800,41 +800,41 @@ export function InspectorReportsPage() {
             )}
           </section>
 
-          <section className="border border-[#d8d3c8] bg-white p-6">
-            <h2 className="font-semibold text-[#142b45]">{t("reports.waiting")}</h2>
-            <div className="mt-6 grid grid-cols-2 gap-px border border-[#d8d3c8] bg-[#d8d3c8]">
+          <section className="border border-border bg-card p-6">
+            <h2 className="font-semibold text-foreground">{t("reports.waiting")}</h2>
+            <div className="mt-6 grid grid-cols-2 gap-px border border-border bg-[#d8d3c8]">
               {waiting.map(([value, label]) => (
-                <div key={label} className="bg-[#faf9f6] p-5">
-                  <p className="text-3xl font-bold text-[#142b45]">{value}</p>
-                  <p className="mt-2 text-sm text-slate-600">{label}</p>
+                <div key={label} className="bg-muted p-5">
+                  <p className="text-3xl font-bold text-foreground">{value}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{label}</p>
                 </div>
               ))}
             </div>
           </section>
         </div>
 
-        <section className="border border-[#d8d3c8] bg-white p-6">
-          <h2 className="font-semibold text-[#142b45]">{t("reports.activity")}</h2>
+        <section className="border border-border bg-card p-6">
+          <h2 className="font-semibold text-foreground">{t("reports.activity")}</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
-            <div className="border border-[#e4e0d6] bg-[#faf9f6] p-5">
-              <p className="text-sm text-slate-500">{t("inspections.title")}</p>
-              <p className="mt-2 text-2xl font-bold text-[#142b45]">
+            <div className="border border-border bg-muted p-5">
+              <p className="text-sm text-muted-foreground">{t("inspections.title")}</p>
+              <p className="mt-2 text-2xl font-bold text-foreground">
                 {report.inspections.completed}/
                 {report.inspections.scheduled + report.inspections.completed + report.inspections.cancelled}
               </p>
-              <p className="mt-1 text-xs text-slate-500">{t("reports.inspectionsNote")}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t("reports.inspectionsNote")}</p>
             </div>
-            <div className="border border-[#e4e0d6] bg-[#faf9f6] p-5">
-              <p className="text-sm text-slate-500">{t("reports.openClarifications")}</p>
-              <p className="mt-2 text-2xl font-bold text-[#142b45]">{report.clarifications.open}</p>
-              <p className="mt-1 text-xs text-slate-500">{t("reports.clarificationsNote")}</p>
+            <div className="border border-border bg-muted p-5">
+              <p className="text-sm text-muted-foreground">{t("reports.openClarifications")}</p>
+              <p className="mt-2 text-2xl font-bold text-foreground">{report.clarifications.open}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t("reports.clarificationsNote")}</p>
             </div>
-            <div className="border border-[#e4e0d6] bg-[#faf9f6] p-5">
-              <p className="text-sm text-slate-500">{t("reports.approvalRate")}</p>
-              <p className="mt-2 text-2xl font-bold text-[#142b45]">
+            <div className="border border-border bg-muted p-5">
+              <p className="text-sm text-muted-foreground">{t("reports.approvalRate")}</p>
+              <p className="mt-2 text-2xl font-bold text-foreground">
                 {totals.decided ? Math.round((totals.approved / totals.decided) * 100) : 0}%
               </p>
-              <p className="mt-1 text-xs text-slate-500">{t("reports.approvalRateNote")}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t("reports.approvalRateNote")}</p>
             </div>
           </div>
         </section>

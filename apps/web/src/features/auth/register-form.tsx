@@ -22,7 +22,7 @@ import { authRequest, getAuthErrorMessage } from "@/lib/auth-api";
 import { useLanguage } from "@/components/providers/language-provider";
 
 const nativeSelectClass =
-  "h-11 w-full rounded-md border border-input bg-white px-3 text-base text-[#18263d] outline-none focus-visible:border-[#315f9f] focus-visible:ring-3 focus-visible:ring-[#315f9f]/25 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
+  "h-11 w-full rounded-md border border-input bg-card px-3 text-base text-foreground outline-none focus-visible:border-[#315f9f] focus-visible:ring-3 focus-visible:ring-[#315f9f]/25 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20";
 
 export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
   const { t } = useLanguage();
@@ -123,7 +123,7 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
           id="name"
           autoComplete="name"
           maxLength={150}
-          className="h-11 bg-white"
+          className="h-11 bg-card"
           placeholder={t("auth.fullNamePlaceholder")}
           aria-invalid={Boolean(errors.name)}
           aria-describedby={errors.name ? "name-error" : undefined}
@@ -135,7 +135,7 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
         <Label htmlFor="phone">{t("auth.mobileNumber")}</Label>
         <div className="flex">
           <span
-            className="flex h-11 items-center rounded-l-md border border-r-0 border-input bg-slate-50 px-3 text-sm text-slate-600"
+            className="flex h-11 items-center rounded-l-md border border-r-0 border-input bg-muted px-3 text-sm text-muted-foreground"
             aria-hidden="true"
           >
             +91
@@ -146,7 +146,7 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
             inputMode="numeric"
             autoComplete="tel-national"
             maxLength={10}
-            className="h-11 rounded-l-none bg-white"
+            className="h-11 rounded-l-none bg-card"
             placeholder="98765 43210"
             aria-invalid={Boolean(errors.phone)}
             aria-describedby={errors.phone ? "register-phone-error" : undefined}
@@ -162,7 +162,7 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
           type="password"
           autoComplete="new-password"
           maxLength={128}
-          className="h-11 bg-white"
+          className="h-11 bg-card"
           aria-invalid={Boolean(errors.password)}
           aria-describedby={
             errors.password ? "register-password-error" : "password-hint"
@@ -192,7 +192,7 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
         <ArrowRight aria-hidden="true" />
       </Button>
       <Separator />
-      <p className="text-center text-sm text-slate-600">
+      <p className="text-center text-sm text-muted-foreground">
         {t("auth.alreadyRegistered")}{" "}
         <Link
           href={inspector ? "/inspector/login" : "/auth/login"}

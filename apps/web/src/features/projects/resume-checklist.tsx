@@ -34,7 +34,7 @@ export function ResumeChecklist({ projectId }: { projectId: string }) {
       </Link>
       <div className="mt-6">
         {query.isPending ? (
-          <div className="flex items-center gap-3 border border-[#e4e0d6] p-8 text-slate-600">
+          <div className="flex items-center gap-3 border border-border p-8 text-muted-foreground">
             <Loader2 className="size-5 animate-spin" aria-hidden="true" />{" "}
             {text("Loading your checklist…")}
           </div>

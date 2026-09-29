@@ -10,7 +10,7 @@ export function PortalBrand({ tone = "dark" }: { tone?: "dark" | "light" }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-3 ${light ? "text-white" : "text-[#17345a]"}`}
+      className={`inline-flex items-center gap-3 ${light ? "text-white" : "text-foreground"}`}
       translate="no"
     >
       <Image
