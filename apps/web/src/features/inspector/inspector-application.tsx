@@ -416,6 +416,61 @@ function humanize(value: string) {
     .replace(/^./, (letter) => letter.toUpperCase());
 }
 
+function isDocumentReviewed(document: InspectorDocument) {
+  return document.review.status !== "pending";
+}
+
+function DocumentReviewProgress({
+  documents,
+}: {
+  documents: InspectorDocument[];
+}) {
+  const { t } = useLanguage();
+  if (!documents.length) return null;
+
+  const reviewed = documents.filter(isDocumentReviewed).length;
+  const total = documents.length;
+  const percentage = Math.round((reviewed / total) * 100);
+  const progressText = t("inspector.documentsReviewed", { reviewed, total });
+
+  return (
+    <section
+      className="rounded-md border border-[#cbd8e3] bg-white px-5 py-4"
+      aria-labelledby="document-review-progress-title"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2
+            id="document-review-progress-title"
+            className="flex items-center gap-2 font-semibold text-[#142b45]"
+          >
+            <FileCheck2 className="size-5 text-emerald-700" aria-hidden="true" />
+            {t("inspector.reviewProgress")}
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">{progressText}</p>
+        </div>
+        <span className="text-lg font-bold tabular-nums text-[#142b45]">
+          {percentage}%
+        </span>
+      </div>
+      <div
+        className="mt-3 h-3 overflow-hidden rounded-full bg-slate-200"
+        role="progressbar"
+        aria-label={t("inspector.reviewProgress")}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={reviewed}
+        aria-valuetext={progressText}
+      >
+        <div
+          className="h-full rounded-full bg-emerald-600 transition-[width] duration-300 motion-reduce:transition-none"
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+    </section>
+  );
+}
+
 function DocumentReviewCard({
   projectId,
   document,
@@ -433,6 +488,7 @@ function DocumentReviewCard({
   const [comment, setComment] = useState(document.review.comment ?? "");
   const [message, setMessage] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const reviewed = isDocumentReviewed(document);
   const review = useMutation({
     mutationFn: () =>
       reviewInspectorDocument(
@@ -484,9 +540,17 @@ function DocumentReviewCard({
     <div className="border border-[#d8d3c8] bg-[#faf9f6] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate font-semibold text-[#142b45]">
-            {document.fileName}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="min-w-0 truncate font-semibold text-[#142b45]">
+              {document.fileName}
+            </p>
+            {reviewed ? (
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+                <FileCheck2 className="size-3.5" aria-hidden="true" />
+                {t("inspector.reviewed")}
+              </span>
+            ) : null}
+          </div>
           <p className="mt-1 text-xs text-slate-500">
             {text(document.documentKey)} · {t("application.version", { version: document.version })} ·{" "}
             {(document.sizeBytes / 1_000_000).toFixed(2)} MB
@@ -961,6 +1025,8 @@ function ReviewContent({
           {actionError}
         </p>
       ) : null}
+
+      <DocumentReviewProgress documents={latestDocuments} />
 
       {application.approvals.map((approval) => {
         const reviewEnabled = ["under_review", "correction_required"].includes(
