@@ -281,7 +281,12 @@ export class ProjectRepository {
     projectId: string,
     attention: { score: number; level: string; factors?: unknown[] } | null = null,
     validationFlags: unknown | null = null,
-  ): Promise<{ project: ProjectRecord | null; missingDocuments: string[]; conflict: boolean }> {
+  ): Promise<{
+    project: ProjectRecord | null;
+    missingDocuments: string[];
+    pendingCorrections: string[];
+    conflict: boolean;
+  }> {
     const client = await databasePool.connect();
     try {
       await client.query('BEGIN');
@@ -292,11 +297,11 @@ export class ProjectRepository {
       const current = projectResult.rows[0];
       if (!current) {
         await client.query('ROLLBACK');
-        return { project: null, missingDocuments: [], conflict: false };
+        return { project: null, missingDocuments: [], pendingCorrections: [], conflict: false };
       }
-      if (current.status !== 'draft') {
+      if (!['draft', 'correction_required'].includes(current.status)) {
         await client.query('ROLLBACK');
-        return { project: null, missingDocuments: [], conflict: true };
+        return { project: null, missingDocuments: [], pendingCorrections: [], conflict: true };
       }
 
       const approvalResult = await client.query<{
@@ -320,29 +325,86 @@ export class ProjectRepository {
       );
       if (missingDocuments.length > 0) {
         await client.query('ROLLBACK');
-        return { project: null, missingDocuments, conflict: false };
+        return { project: null, missingDocuments, pendingCorrections: [], conflict: false };
       }
 
-      await client.query(
-        `UPDATE projects
-            SET status = 'submitted', submitted_at = NOW(),
-                attention_score = $2, attention_level = $3, attention_factors = $4,
-                validation_flags = $5
-          WHERE id = $1`,
-        [
-          projectId,
-          attention?.score ?? null,
-          attention?.level ?? null,
-          attention?.factors ? JSON.stringify(attention.factors) : null,
-          validationFlags ? JSON.stringify(validationFlags) : null,
-        ],
-      );
-      await client.query(
-        `INSERT INTO application_status_history
-           (project_id, actor_id, from_status, to_status, note)
-         VALUES ($1, $2, 'draft', 'submitted', 'Application submitted for departmental review')`,
-        [projectId, applicantId],
-      );
+      if (current.status === 'correction_required') {
+        const pendingResult = await client.query<{ document_name: string }>(
+          `SELECT DISTINCT COALESCE(spec.value->>'name', pd.document_key) AS document_name
+             FROM project_documents pd
+             JOIN project_approvals pa
+               ON pa.project_id = pd.project_id AND pa.approval_key = pd.approval_key
+             JOIN document_reviews dr ON dr.document_id = pd.id
+             LEFT JOIN LATERAL jsonb_array_elements(pa.documents) spec(value)
+               ON spec.value->>'key' = pd.document_key
+            WHERE pd.project_id = $1
+              AND pa.review_status = 'correction_required'
+              AND pd.version = (
+                SELECT MAX(latest.version)
+                  FROM project_documents latest
+                 WHERE latest.project_id = pd.project_id
+                   AND latest.approval_key = pd.approval_key
+                   AND latest.document_key = pd.document_key
+              )
+              AND dr.status IN ('correction_required', 'rejected')`,
+          [projectId],
+        );
+        const pendingCorrections = pendingResult.rows.map((row) => row.document_name);
+        if (pendingCorrections.length > 0) {
+          await client.query('ROLLBACK');
+          return { project: null, missingDocuments: [], pendingCorrections, conflict: false };
+        }
+
+        await client.query(
+          `UPDATE project_approvals
+              SET review_status = 'under_review', decision_note = NULL,
+                  decided_at = NULL, decided_by = NULL
+            WHERE project_id = $1 AND review_status = 'correction_required'`,
+          [projectId],
+        );
+        await client.query(
+          `UPDATE projects
+              SET status = 'under_review',
+                  attention_score = $2, attention_level = $3, attention_factors = $4,
+                  validation_flags = $5
+            WHERE id = $1`,
+          [
+            projectId,
+            attention?.score ?? null,
+            attention?.level ?? null,
+            attention?.factors ? JSON.stringify(attention.factors) : null,
+            validationFlags ? JSON.stringify(validationFlags) : null,
+          ],
+        );
+        await client.query(
+          `INSERT INTO application_status_history
+             (project_id, actor_id, from_status, to_status, note)
+           VALUES ($1, $2, 'correction_required', 'under_review',
+                   'Corrected documents validated and resubmitted for review')`,
+          [projectId, applicantId],
+        );
+      } else {
+        await client.query(
+          `UPDATE projects
+              SET status = 'submitted', submitted_at = NOW(),
+                  attention_score = $2, attention_level = $3, attention_factors = $4,
+                  validation_flags = $5
+            WHERE id = $1`,
+          [
+            projectId,
+            attention?.score ?? null,
+            attention?.level ?? null,
+            attention?.factors ? JSON.stringify(attention.factors) : null,
+            validationFlags ? JSON.stringify(validationFlags) : null,
+          ],
+        );
+        await client.query(
+          `INSERT INTO application_status_history
+             (project_id, actor_id, from_status, to_status, note)
+           VALUES ($1, $2, 'draft', 'submitted', 'Application submitted for departmental review')`,
+          [projectId, applicantId],
+        );
+      }
       await client.query('COMMIT');
     } catch (error) {
       await client.query('ROLLBACK');
@@ -353,6 +415,7 @@ export class ProjectRepository {
     return {
       project: await this.findProjectById(projectId),
       missingDocuments: [],
+      pendingCorrections: [],
       conflict: false,
     };
   }

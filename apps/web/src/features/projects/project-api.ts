@@ -157,6 +157,7 @@ export async function submitProject(projectId: string): Promise<Project> {
     code?: string;
     details?: {
       missingDocuments?: string[];
+      pendingCorrections?: string[];
       blockingIssues?: { code: string; message: string }[];
     };
     data?: { project: Project };
@@ -175,6 +176,16 @@ export async function submitProject(projectId: string): Promise<Project> {
     if (body.code === "SUBMISSION_HAS_BLOCKING_ISSUES") {
       throw new ProjectApiError(
         "Some checks must be resolved before submitting. Run “Check documents” to see what needs fixing.",
+        response.status,
+        body.code,
+      );
+    }
+    if (body.code === "CORRECTIONS_INCOMPLETE") {
+      const pending = body.details?.pendingCorrections ?? [];
+      throw new ProjectApiError(
+        pending.length
+          ? `Replace these documents before resubmitting: ${pending.join(", ")}.`
+          : "Replace every document requested for correction before resubmitting.",
         response.status,
         body.code,
       );

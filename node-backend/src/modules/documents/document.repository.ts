@@ -1,4 +1,4 @@
-import { databasePool, query } from '../../database/database.js';
+import { query } from '../../database/database.js';
 import type {
   DocumentExtractionStatus,
   DocumentReadStatus,
@@ -76,10 +76,11 @@ export class DocumentRepository {
     documentKey: string,
   ): Promise<{ documentId: string; status: string; comment: string | null } | null> {
     const result = await query<{ document_id: string; status: string; comment: string | null }>(
-      `SELECT pd.id AS document_id, COALESCE(dr.status::text, 'pending') AS status, dr.comment
+      `SELECT pd.id AS document_id, dr.status::text AS status, dr.comment
        FROM project_documents pd
-       LEFT JOIN document_reviews dr ON dr.document_id = pd.id
+       JOIN document_reviews dr ON dr.document_id = pd.id
        WHERE pd.project_id = $1 AND pd.approval_key = $2 AND pd.document_key = $3
+         AND dr.status IN ('correction_required', 'rejected')
        ORDER BY pd.version DESC LIMIT 1`,
       [projectId, approvalKey, documentKey],
     );
@@ -164,72 +165,5 @@ export class DocumentRepository {
       documentId,
     ]);
     return (result.rowCount ?? 0) > 0;
-  }
-
-  async markCorrectionResubmitted(input: {
-    projectId: string;
-    approvalKey: string;
-    applicantId: string;
-  }): Promise<void> {
-    const client = await databasePool.connect();
-    try {
-      await client.query('BEGIN');
-      const approval = await client.query<{ id: string; review_status: string }>(
-        `SELECT id, review_status FROM project_approvals
-         WHERE project_id = $1 AND approval_key = $2 FOR UPDATE`,
-        [input.projectId, input.approvalKey],
-      );
-      const current = approval.rows[0];
-      if (!current || current.review_status !== 'correction_required') {
-        await client.query('COMMIT');
-        return;
-      }
-      const outstanding = await client.query(
-        `SELECT 1
-         FROM project_documents pd
-         LEFT JOIN document_reviews dr ON dr.document_id = pd.id
-         WHERE pd.project_id = $1 AND pd.approval_key = $2
-           AND pd.version = (
-             SELECT MAX(latest.version) FROM project_documents latest
-             WHERE latest.project_id = pd.project_id
-               AND latest.approval_key = pd.approval_key
-               AND latest.document_key = pd.document_key
-           )
-           AND dr.status IN ('correction_required', 'rejected')
-         LIMIT 1`,
-        [input.projectId, input.approvalKey],
-      );
-      if (!outstanding.rowCount) {
-        await client.query(
-          `UPDATE project_approvals
-           SET review_status = 'under_review', decision_note = NULL, decided_at = NULL
-           WHERE id = $1`,
-          [current.id],
-        );
-        const remainingCorrections = await client.query(
-          `SELECT 1 FROM project_approvals
-           WHERE project_id = $1 AND review_status = 'correction_required' LIMIT 1`,
-          [input.projectId],
-        );
-        if (!remainingCorrections.rowCount) {
-          await client.query(`UPDATE projects SET status = 'under_review' WHERE id = $1`, [
-            input.projectId,
-          ]);
-        }
-        await client.query(
-          `INSERT INTO application_status_history
-             (project_id, approval_id, actor_id, from_status, to_status, note)
-           VALUES ($1, $2, $3, 'correction_required', 'under_review',
-                   'Corrected document version submitted for review')`,
-          [input.projectId, current.id, input.applicantId],
-        );
-      }
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
   }
 }

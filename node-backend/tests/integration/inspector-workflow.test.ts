@@ -4,7 +4,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { closeDatabase, connectDatabase, query } from '../../src/database/database.js';
 import { InspectorRepository } from '../../src/modules/inspector/inspector.repository.js';
-import { DocumentRepository } from '../../src/modules/documents/document.repository.js';
 import { ProjectRepository } from '../../src/modules/projects/project.repository.js';
 import type { CreateProjectInput } from '../../src/modules/projects/project.schemas.js';
 
@@ -38,7 +37,6 @@ const projectInput: CreateProjectInput = {
 describe.runIf(runDbTests)('inspector manual review workflow (integration)', () => {
   const projects = new ProjectRepository();
   const inspector = new InspectorRepository();
-  const documents = new DocumentRepository();
   let applicantId: string;
   let inspectorId: string;
   let departmentId: string;
@@ -194,11 +192,8 @@ describe.runIf(runDbTests)('inspector manual review workflow (integration)', () 
       [projectId, applicantId],
     );
     const replacementId = replacement.rows[0]!.id;
-    await documents.markCorrectionResubmitted({
-      projectId,
-      approvalKey: 'factory-registration',
-      applicantId,
-    });
+    const correctionSubmission = await projects.submitProject(applicantId, projectId);
+    expect(correctionSubmission.project?.status).toBe('under_review');
     const resubmitted = await projects.findApplicationDetailByApplicant(applicantId, projectId);
     expect(resubmitted).toMatchObject({
       status: 'under_review',

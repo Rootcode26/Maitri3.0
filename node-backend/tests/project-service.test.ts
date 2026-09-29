@@ -93,6 +93,26 @@ describe('ProjectService', () => {
     });
   });
 
+  it('keeps a correction request open until every requested document is replaced', async () => {
+    const submitProject = vi.fn().mockResolvedValue({
+      project: null,
+      missingDocuments: [],
+      pendingCorrections: ['Factory plan'],
+      conflict: false,
+    });
+    const validateProject = vi.fn().mockResolvedValue(validationResult());
+    const service = new ProjectService({ submitProject } as unknown as ProjectRepository, null, {
+      validateProject,
+    } as unknown as ProjectValidator);
+
+    await expect(service.submitProject('applicant-1', 'p1')).rejects.toMatchObject({
+      statusCode: 422,
+      code: 'CORRECTIONS_INCOMPLETE',
+      details: { pendingCorrections: ['Factory plan'] },
+    });
+    expect(validateProject).toHaveBeenCalledWith('applicant-1', 'p1');
+  });
+
   it('rejects repeat submission of a non-draft project', async () => {
     const submitProject = vi.fn().mockResolvedValue({
       project: null,

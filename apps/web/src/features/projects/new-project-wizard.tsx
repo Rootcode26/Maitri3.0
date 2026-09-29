@@ -968,6 +968,9 @@ export function ChecklistResult({ project }: { project: Project }) {
   // enforces the same rule, this just mirrors it so the button reflects intent.
   const hasBlockingIssues = (validation?.blockingIssues.length ?? 0) > 0;
   const canSubmit = validation !== null && !hasBlockingIssues;
+  const isCorrectionResubmission = savedProject.status === "correction_required";
+  const canSubmitProject =
+    savedProject.status === "draft" || isCorrectionResubmission;
 
   async function submitApplication() {
     setSubmittingApplication(true);
@@ -1105,17 +1108,21 @@ export function ChecklistResult({ project }: { project: Project }) {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h3 className="font-heading text-xl font-semibold text-foreground">
-              {savedProject.status === "draft"
-                ? t("wizard.submitForReview")
+              {canSubmitProject
+                ? isCorrectionResubmission
+                  ? t("wizard.resubmitForReview")
+                  : t("wizard.submitForReview")
                 : t("wizard.applicationSubmitted")}
             </h3>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              {savedProject.status === "draft"
-                ? t("wizard.documentsReady")
+              {canSubmitProject
+                ? isCorrectionResubmission
+                  ? t("wizard.correctionsReady")
+                  : t("wizard.documentsReady")
                 : t("wizard.departmentsCanReview")}
             </p>
           </div>
-          {savedProject.status === "draft" ? (
+          {canSubmitProject ? (
             <Button
               size="lg"
               className="h-11 rounded-md px-6"
@@ -1123,7 +1130,11 @@ export function ChecklistResult({ project }: { project: Project }) {
               disabled={submittingApplication || !canSubmit}
               aria-busy={submittingApplication}
             >
-              {submittingApplication ? t("wizard.submitting") : t("wizard.submitApplication")}
+              {submittingApplication
+                ? t("wizard.submitting")
+                : isCorrectionResubmission
+                  ? t("wizard.resubmitCorrections")
+                  : t("wizard.submitApplication")}
               {submittingApplication ? (
                 <Loader2
                   className="size-4 animate-spin motion-reduce:animate-none"
@@ -1146,7 +1157,7 @@ export function ChecklistResult({ project }: { project: Project }) {
           >
             {submissionError}
           </p>
-        ) : savedProject.status === "draft" && !canSubmit ? (
+        ) : canSubmitProject && !canSubmit ? (
           <p className="mt-4 text-sm text-muted-foreground">
             {validation === null
               ? "Run “Check documents” above before submitting."

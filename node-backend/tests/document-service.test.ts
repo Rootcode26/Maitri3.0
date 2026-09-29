@@ -226,14 +226,13 @@ describe('DocumentService.uploadDocument', () => {
     );
   });
 
-  it('accepts only explicitly corrected documents during correction resubmission', async () => {
+  it('uploads an explicitly corrected document without automatically resubmitting it', async () => {
     inspectMock.mockResolvedValue({ detectedMimeType: 'application/pdf' });
     const correctedProject = {
       ...project,
       status: 'correction_required',
       approvals: [{ ...project.approvals[0], reviewStatus: 'correction_required' }],
     };
-    const markCorrectionResubmitted = vi.fn().mockResolvedValue(undefined);
     const { service } = makeService({
       project: correctedProject,
       repo: {
@@ -242,7 +241,6 @@ describe('DocumentService.uploadDocument', () => {
           status: 'correction_required',
           comment: 'Upload a clearer scan',
         }),
-        markCorrectionResubmitted,
       },
     });
     await service.uploadDocument(
@@ -251,11 +249,6 @@ describe('DocumentService.uploadDocument', () => {
       { approvalKey: 'food-licence', documentKey: 'factory-plan' },
       file(),
     );
-    expect(markCorrectionResubmitted).toHaveBeenCalledWith({
-      projectId: 'project-1',
-      approvalKey: 'food-licence',
-      applicantId: 'applicant-1',
-    });
   });
 
   it('blocks replacement when no correction was requested for that document', async () => {

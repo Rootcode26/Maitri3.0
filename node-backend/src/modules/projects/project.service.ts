@@ -187,8 +187,16 @@ export class ProjectService {
         details: { missingDocuments: result.missingDocuments },
       });
     }
+    const pendingCorrections = result.pendingCorrections ?? [];
+    if (pendingCorrections.length > 0) {
+      throw new AppError('Replace every document requested for correction before resubmitting', {
+        statusCode: 422,
+        code: 'CORRECTIONS_INCOMPLETE',
+        details: { pendingCorrections },
+      });
+    }
     if (result.conflict) {
-      throw new AppError('Only draft projects can be submitted', {
+      throw new AppError('This application cannot be submitted in its current state', {
         statusCode: 409,
         code: 'PROJECT_NOT_DRAFT',
       });

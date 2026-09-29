@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Award, Download, FileUp, Loader2 } from "lucide-react";
+import { ArrowLeft, Award, Download, FileUp, Loader2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 
@@ -39,7 +39,7 @@ function CorrectDocument({
         file,
       ),
     onSuccess: async () => {
-      setMessage(t("application.correctedSubmitted"));
+      setMessage(t("application.correctedUploaded"));
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["applicant-application", projectId],
@@ -278,13 +278,23 @@ export function ApplicantApplicationDetail({
       ) : null}
 
       {application.status === "correction_required" ? (
-        <div className="mt-6 border-l-4 border-amber-500 bg-amber-50 px-5 py-4">
-          <h2 className="font-semibold text-amber-950">
-            {t("application.correctionsRequired")}
-          </h2>
-          <p className="mt-1 text-sm text-amber-900">
-            {t("application.correctionInstructions")}
-          </p>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-l-4 border-amber-500 bg-amber-50 px-5 py-4">
+          <div>
+            <h2 className="font-semibold text-amber-950">
+              {t("application.correctionsRequired")}
+            </h2>
+            <p className="mt-1 text-sm text-amber-900">
+              {t("application.correctionInstructions")}
+            </p>
+          </div>
+          <Button
+            render={<Link href={`/applicant/projects/${projectId}/checklist`} />}
+            nativeButton={false}
+            className="h-11 shrink-0 rounded-md px-5"
+          >
+            <ShieldCheck aria-hidden="true" />
+            {t("application.checkCorrections")}
+          </Button>
         </div>
       ) : null}
 

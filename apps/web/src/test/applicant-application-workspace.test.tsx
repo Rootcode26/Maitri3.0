@@ -221,11 +221,84 @@ describe("applicant application workspace", () => {
       new File(["%PDF-1.7"], "corrected-plan.pdf", { type: "application/pdf" }),
     );
     expect(
-      await screen.findByText("Corrected version submitted for review."),
+      await screen.findByText(
+        "Corrected version uploaded. Run Check documents before resubmitting.",
+      ),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /check and resubmit corrections/i }),
+    ).toHaveAttribute("href", `/applicant/projects/${projectId}/checklist`);
     expect(
       fetchMock.mock.calls.some(([, init]) => init?.method === "POST"),
     ).toBe(true);
+  });
+
+  it("blocks correction resubmission until the repeated document check passes", async () => {
+    const correctionProject = {
+      id: projectId,
+      enterpriseName: summary.enterpriseName,
+      industry: summary.industry,
+      district: summary.district,
+      primaryActivity: summary.primaryActivity,
+      status: "correction_required",
+      approvals: application.approvals,
+      createdAt: summary.createdAt,
+    };
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith("/documents"))
+        return {
+          ok: true,
+          json: async () => ({ data: { documents: application.documents } }),
+        };
+      if (String(url).endsWith("/validate") && init?.method === "POST")
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              validation: {
+                validationStatus: "review_required",
+                blockingIssues: [
+                  {
+                    code: "DOCUMENT_VALUE_MISMATCH",
+                    message: "The entered PAN differs from the document's PAN.",
+                    suggestedAction: "Upload the correct document.",
+                    approvalKey: "factory-registration",
+                    documentKey: "factory-plan",
+                  },
+                ],
+                warnings: [],
+                reviewItems: [],
+                documentChecks: [],
+              },
+            },
+          }),
+        };
+      return {
+        ok: true,
+        json: async () => ({ data: { project: correctionProject } }),
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithQuery(<ResumeChecklist projectId={projectId} />);
+
+    expect(
+      await screen.findByText(/resubmit corrections for review/i),
+    ).toBeInTheDocument();
+    const resubmit = screen.getByRole("button", {
+      name: /resubmit corrections/i,
+    });
+    expect(resubmit).toBeDisabled();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /check documents/i }),
+    );
+    expect(
+      await screen.findByText(/entered PAN differs from the document's PAN/i),
+    ).toBeInTheDocument();
+    expect(resubmit).toBeDisabled();
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).endsWith("/submit")),
+    ).toBe(false);
   });
 
   it("lists all document versions with their application and review state", async () => {

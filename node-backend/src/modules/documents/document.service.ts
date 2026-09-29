@@ -241,13 +241,10 @@ export class DocumentService {
       }
       document = { ...document, storageStatus: 'pending' };
     }
-    if (project.status === 'correction_required') {
-      await this.documentRepository.markCorrectionResubmitted({
-        projectId,
-        approvalKey: input.approvalKey,
-        applicantId,
-      });
-    }
+    // A corrected upload is only a new document version. The application stays
+    // in correction_required until the applicant explicitly runs the document
+    // check and resubmits through the normal submission gate. This prevents a
+    // replacement file from returning to the inspector without validation.
     return document;
   }
 
