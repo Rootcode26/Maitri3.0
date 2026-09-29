@@ -56,6 +56,10 @@ function UserMenu({ workspace }: { workspace: Workspace }) {
         ? text("Applicant")
         : "";
 
+  const signOutLabel = logout.isPending
+    ? text("Signing out…")
+    : text("Sign out");
+
   return (
     <div className="flex items-center gap-3">
       {user ? (
@@ -72,20 +76,6 @@ function UserMenu({ workspace }: { workspace: Workspace }) {
           >
             {initialsOf(user.name)}
           </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-10"
-            onClick={() => logout.mutate()}
-            disabled={logout.isPending}
-            aria-busy={logout.isPending}
-          >
-            <LogOut aria-hidden="true" />
-            <span className="hidden sm:inline">
-              {logout.isPending ? text("Signing out…") : text("Sign out")}
-            </span>
-          </Button>
         </>
       ) : (
         <span
@@ -95,6 +85,20 @@ function UserMenu({ workspace }: { workspace: Workspace }) {
           …
         </span>
       )}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-10"
+        onClick={() => logout.mutate()}
+        disabled={logout.isPending}
+        aria-busy={logout.isPending}
+        aria-label={signOutLabel}
+        title={signOutLabel}
+      >
+        <LogOut aria-hidden="true" />
+        <span className="hidden sm:inline">{signOutLabel}</span>
+      </Button>
     </div>
   );
 }

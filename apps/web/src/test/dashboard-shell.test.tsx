@@ -133,6 +133,10 @@ describe("DashboardShell", () => {
     expect(
       screen.getByRole("button", { name: /notifications/i }),
     ).toBeInTheDocument();
+    // Sign out stays available while the session details are still loading.
+    expect(
+      screen.getByRole("button", { name: /sign out/i }),
+    ).toBeInTheDocument();
     // The current user is loaded from the session and shown with a sign-out control.
     expect(await screen.findByText("Test User")).toBeInTheDocument();
     expect(
