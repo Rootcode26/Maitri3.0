@@ -1,6 +1,21 @@
 """Fail-closed bridge from a trusted processor result to existing /validate input."""
-from app.domain.api_contract_models import UploadedDocument
+from app.domain.api_contract_models import ExtractedCredentials, UploadedDocument
 from app.domain.document_models import DocumentProcessingResult
+
+# Identifier fields the reader can match by pattern in document text. These map
+# directly onto ExtractedCredentials keys.
+_CANDIDATE_KEYS = {'pan', 'gstin', 'cin', 'udyam', 'pincode'}
+
+
+def _candidate_credentials(result: DocumentProcessingResult) -> ExtractedCredentials | None:
+    """Pattern-matched identifiers from the text, ALWAYS unverified. Used only to
+    detect a mismatch against the application; a match never confirms anything."""
+    values = {
+        field.key: field.value
+        for field in result.fields
+        if field.key in _CANDIDATE_KEYS and field.value
+    }
+    return ExtractedCredentials.model_validate(values) if values else None
 
 
 def to_validation_document(result: DocumentProcessingResult) -> UploadedDocument:
@@ -29,5 +44,6 @@ def to_validation_document(result: DocumentProcessingResult) -> UploadedDocument
         'sizeBytes': result.size_bytes, 'fileReadStatus': result.file_read_status,
         'extractionStatus': extraction_status,
         'extractedData': {field.key: field.value for field in result.fields} if usable else None,
+        'candidateData': _candidate_credentials(result),
         'expiresOn': result.confirmed_expires_on,
     })

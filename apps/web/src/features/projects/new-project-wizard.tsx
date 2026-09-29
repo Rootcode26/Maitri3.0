@@ -784,9 +784,11 @@ function ValidationReport({
   onOpenApproval?: (approvalKey: string) => void;
 }) {
   const { text } = useLanguage();
-  // "Verified by our backend" simply means nothing is blocking submission.
-  // Warnings and officer-review items don't stop the applicant.
+  // "Verified" here means only that nothing is blocking submission. Uploaded
+  // documents are still read and cross-checked, and any officer-review items are
+  // shown so we never imply a document was fully authenticated automatically.
   const verified = result.blockingIssues.length === 0;
+  const hasReview = result.reviewItems.length > 0;
 
   if (!verified) {
     return (
@@ -816,6 +818,12 @@ function ValidationReport({
           tone="warning"
           onOpenApproval={onOpenApproval}
         />
+        <IssueList
+          title={text("An officer will review these")}
+          issues={result.reviewItems}
+          tone="review"
+          onOpenApproval={onOpenApproval}
+        />
       </div>
     );
   }
@@ -826,12 +834,18 @@ function ValidationReport({
         <ShieldCheck className="size-5 shrink-0" aria-hidden="true" />
         <div>
           <p className="text-sm font-semibold">
-            {text("Verified by our system")}
+            {hasReview
+              ? text("No blocking problems found")
+              : text("Verified by our system")}
           </p>
           <p className="mt-0.5 text-sm opacity-90">
-            {text(
-              "Your documents passed all automated checks. Nothing else is needed from you right now — you can submit.",
-            )}
+            {hasReview
+              ? text(
+                  "Nothing is stopping you from submitting. We read your documents and cross-checked their details against your answers; the department officer will confirm the items below.",
+                )
+              : text(
+                  "Your documents passed all automated checks. Nothing else is needed from you right now — you can submit.",
+                )}
           </p>
         </div>
       </div>
@@ -844,6 +858,13 @@ function ValidationReport({
           onOpenApproval={onOpenApproval}
         />
       )}
+
+      <IssueList
+        title={text("An officer will review these")}
+        issues={result.reviewItems}
+        tone="review"
+        onOpenApproval={onOpenApproval}
+      />
 
       <div className="mt-4 rounded-lg border border-[#e4e0d6] bg-white px-4 py-4">
         <p className="text-sm font-semibold text-[#142b45]">

@@ -53,6 +53,33 @@ class ValidationTests(unittest.TestCase):
         self.assertFalse(result.blocking_issues)
         self.assertEqual(result.document_checks[0].status, 'matched')
 
+    def _candidate_run(self, cin_value):
+        # Simulate the reader having pattern-matched a CIN in the uploaded file
+        # (unverified). extractedData stays None because extraction never
+        # "succeeded"; the comparison must run off candidateData.
+        self.request['project']['cin'] = 'U17110MH2024PTC098765'
+        self.evaluation['approvals'][0]['documents'][0]['fieldsToCompare'] = ['cin']
+        doc = self.request['documents'][0]
+        doc['extractionStatus'] = 'review_required'
+        doc['extractedData'] = None
+        doc['candidateData'] = {'cin': cin_value}
+        return self.run_validation()
+
+    def test_candidate_identifier_mismatch_blocks(self):
+        # A wrong document (different CIN read from the file) must NOT pass.
+        result = self._candidate_run('U27100MH2021PTC044231')
+        self.assertTrue(any(i.code == 'DOCUMENT_DATA_MISMATCH' for i in result.blocking_issues))
+        self.assertTrue(any(c.field == 'cin' and c.status == 'mismatched' for c in result.document_checks))
+        self.assertEqual(result.validation_status, 'review_required')
+
+    def test_candidate_identifier_match_is_never_auto_confirmed(self):
+        # A matching but unverified read is reported for review, never "matched".
+        result = self._candidate_run('U17110MH2024PTC098765')
+        self.assertFalse(any(i.code == 'DOCUMENT_DATA_MISMATCH' for i in result.blocking_issues))
+        self.assertFalse(any(c.field == 'cin' and c.status == 'matched' for c in result.document_checks))
+        self.assertTrue(any(c.field == 'cin' and c.status == 'review_required' for c in result.document_checks))
+        self.assertEqual(result.validation_status, 'review_required')
+
     def test_old_research_errors_move_to_review_and_missing_file_stays_error(self):
         self.evaluation['blockingIssues'] = [{'code': 'REGULATORY_REVIEW_REQUIRED', 'severity': 'error', 'field': 'regulatory.annualTurnover', 'approvalKey': 'food-licence', 'documentKey': None, 'documentId': None, 'message': 'Departmental eligibility needs review.', 'suggestedAction': 'Officer to confirm.'}]
         self.request['documents'] = []

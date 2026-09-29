@@ -167,6 +167,11 @@ class UploadedDocument(ContractModel):
     file_read_status: Literal["not_checked", "readable", "unreadable", "password_protected"]
     extraction_status: Literal["not_run", "succeeded", "failed", "review_required"]
     extracted_data: ExtractedCredentials | None
+    # Unverified identifiers matched by pattern in the document text. These are
+    # NEVER treated as trusted/authentic — they are used only to detect a
+    # mismatch against the application (which blocks), so a wrong document cannot
+    # pass as "verified". A match on candidate data never auto-confirms anything.
+    candidate_data: ExtractedCredentials | None = None
     expires_on: date | None
     content: Base64Content | None = None
 

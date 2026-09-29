@@ -202,11 +202,20 @@ def validate_application(request, evaluation, *, evaluated_at=None, policy=None)
                 check(doc, None, "unavailable", "Extraction does not establish usable document content.")
 
             if requirement.fields_to_compare:
-                if doc.extraction_status != "succeeded" or doc.extracted_data is None:
+                # Prefer trusted extraction; otherwise fall back to pattern-matched
+                # candidate identifiers. A candidate MISMATCH still blocks (a wrong
+                # document must not pass); a candidate match is reported but never
+                # treated as authenticated (reason text makes this explicit).
+                if doc.extraction_status == "succeeded" and doc.extracted_data is not None:
+                    extracted, trusted = doc.extracted_data.model_dump(by_alias=True), True
+                elif doc.candidate_data is not None:
+                    extracted, trusted = doc.candidate_data.model_dump(by_alias=True), False
+                else:
+                    extracted, trusted = None, False
+                if extracted is None:
                     issue("DOCUMENT_EXTRACTION_REVIEW_NEEDED", "review", "Required details could not be reliably extracted.", "Upload a clearer document or request manual review.", doc=doc)
                     check(doc, None, "unavailable", "Credential comparison could not be performed.")
                 else:
-                    extracted = doc.extracted_data.model_dump(by_alias=True)
                     for field in dict.fromkeys(requirement.fields_to_compare):
                         actual, expected = extracted.get(field), project.get(field)
                         if actual is None or expected is None:
@@ -222,12 +231,19 @@ def validate_application(request, evaluation, *, evaluated_at=None, policy=None)
                                 label = FIELD_LABELS.get(field, field)
                                 issue("DOCUMENT_DATA_MISMATCH", "error", f"The entered {label} differs from the document's {label}.", f"Compare the {label} against the original document. Correct the entered value or upload the correct business document; if extraction is wrong, request review rather than changing a correct answer.", field="project." + field, doc=doc)
                                 check(doc, field, "mismatched", "Values differ after trimming and capitalization.")
-                            else:
+                            elif trusted:
                                 comparable[(approval_key, document_key, field)].append((doc, actual))
                                 check(doc, field, "matched", "Identifier values match; authenticity was not verified.")
+                            else:
+                                # A pattern-matched (uncertain) identifier that agrees is
+                                # reported for officer confirmation — never auto-confirmed.
+                                comparable[(approval_key, document_key, field)].append((doc, actual))
+                                check(doc, field, "review_required", "Document identifier matches the answer, but the reading is unverified; confirm authenticity.")
                         elif normalize_text(actual) == normalize_text(expected):
                             comparable[(approval_key, document_key, field)].append((doc, normalize_text(actual)))
-                            check(doc, field, "matched", "Values match after case and whitespace normalization.")
+                            check(doc, field, "matched" if trusted else "review_required",
+                                  "Values match after case and whitespace normalization." if trusted
+                                  else "Extracted text agrees with the answer, but the reading is unverified.")
                         else:
                             comparable[(approval_key, document_key, field)].append((doc, normalize_text(actual)))
                             label = FIELD_LABELS.get(field, field)

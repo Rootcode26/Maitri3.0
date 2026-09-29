@@ -564,9 +564,12 @@ describe("NewProjectWizard — generated checklist result", () => {
 
     await u.click(screen.getByRole("button", { name: /^check documents$/i }));
 
-    // No blocking issues -> the backend "verified" state with a friendly summary
-    // of which officers review what, plus any optional double-check warnings.
-    expect(await screen.findByText(/verified by our system/i)).toBeInTheDocument();
+    // No blocking issues, but there are officer-review items, so we show the
+    // honest "no blocking problems" state (not a full "verified" claim).
+    expect(
+      await screen.findByText(/no blocking problems found/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/an officer will review these/i)).toBeInTheDocument();
     expect(screen.getByText(/what happens after you submit/i)).toBeInTheDocument();
     expect(screen.getByText(/the pan in the document looks different/i)).toBeInTheDocument();
     expect(
@@ -576,7 +579,9 @@ describe("NewProjectWizard — generated checklist result", () => {
     ).toBe(true);
 
     // The "Review documents" shortcut jumps straight to that approval's uploads.
-    await u.click(screen.getByRole("button", { name: /review documents/i }));
+    await u.click(
+      screen.getAllByRole("button", { name: /review documents/i })[0],
+    );
     expect(screen.getByRole("heading", { name: /^required documents$/i })).toBeInTheDocument();
   });
 

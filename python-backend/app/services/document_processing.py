@@ -38,7 +38,7 @@ def process_document(upload: UploadedDocument, content: bytes, *, inspector=None
     data = {
         **upload.model_dump(
             by_alias=True,
-            exclude={'extraction_status', 'extracted_data', 'expires_on', 'content'},
+            exclude={'extraction_status', 'extracted_data', 'candidate_data', 'expires_on', 'content'},
         ),
         'sizeBytes': len(content), 'detectedMimeType': None, 'fileReadStatus': 'not_checked',
         'declaredDocumentType': upload.document_key, 'detectedDocumentType': None,

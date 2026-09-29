@@ -128,7 +128,10 @@
       ],
       "jurisdiction": "MH",
       "requirementBasis": "REGULATORY_REQUIREMENT",
-      "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
+      "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist.",
+      "fieldsToCompare": [
+        "pan"
+      ]
     },
     {
       "key": "land-ownership",
@@ -156,7 +159,10 @@
       ],
       "jurisdiction": "MH",
       "requirementBasis": "REGULATORY_REQUIREMENT",
-      "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
+      "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist.",
+      "fieldsToCompare": [
+        "pincode"
+      ]
     },
     {
       "key": "industry-registration",
@@ -184,7 +190,11 @@
       ],
       "jurisdiction": "MH",
       "requirementBasis": "REGULATORY_REQUIREMENT",
-      "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
+      "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist.",
+      "fieldsToCompare": [
+        "cin",
+        "gstin"
+      ]
     },
     {
       "key": "pollution-control",

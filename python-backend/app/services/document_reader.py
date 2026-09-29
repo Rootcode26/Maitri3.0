@@ -90,7 +90,7 @@ def _skeleton(upload: UploadedDocument, status: str, notes: list[str]) -> Docume
     return DocumentProcessingResult.model_validate({
         **upload.model_dump(
             by_alias=True,
-            exclude={'extraction_status', 'extracted_data', 'expires_on', 'content'},
+            exclude={'extraction_status', 'extracted_data', 'candidate_data', 'expires_on', 'content'},
         ),
         'detectedMimeType': None,
         'fileReadStatus': 'not_checked',

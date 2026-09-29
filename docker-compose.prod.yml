@@ -51,6 +51,10 @@ x-app-env: &app-env
   CLAMAV_HOST: ""
   # Background the S3 put via the worker process.
   ASYNC_DOCUMENT_STORAGE: "true"
+  # Send document bytes to the Python decision service so it reads uploaded PDFs
+  # and compares identifiers against the application (blocks mismatched docs).
+  # Requires DOCUMENT_READER_ENABLED=true on the rules service below.
+  VALIDATION_INCLUDE_DOCUMENT_BYTES: "true"
 
 services:
   postgres:
@@ -134,6 +138,9 @@ services:
     init: true
     environment:
       INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?set INTERNAL_API_TOKEN}
+      # Turn on the document reader so uploaded PDFs are inspected and their
+      # identifiers compared against the application (wrong documents are flagged).
+      DOCUMENT_READER_ENABLED: "true"
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health').status==200 else 1)\""]
       interval: 10s

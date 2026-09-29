@@ -32,6 +32,14 @@ def validate(payload: ValidateRequest, request: Request) -> ValidateResponse:
         result = validate_application(processed, evaluation, policy=getattr(request.app.state, 'document_validation_policy', None))
         advisories = build_document_advisories(request.app, payload)
         if advisories:
+            # Don't also warn about a field that is already a hard blocking mismatch.
+            blocked = {
+                (item.document_id, item.field)
+                for item in result.blocking_issues
+                if item.code == 'DOCUMENT_DATA_MISMATCH'
+            }
+            advisories = [a for a in advisories if (a.document_id, a.field) not in blocked]
+        if advisories:
             result = result.model_copy(update={'warnings': [*result.warnings, *advisories]})
         assessment = calculate_attention_assessment(processed.project, result)
         return ValidateResponse.model_validate({
