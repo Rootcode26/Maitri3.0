@@ -186,6 +186,7 @@ describe("inspector workflow", () => {
   it("loads the application and starts a pending review", async () => {
     let started = false;
     const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      void init;
       if (String(url).includes("/officers")) {
         return { ok: true, json: async () => ({ data: { officers: [] } }) };
       }
@@ -260,6 +261,7 @@ describe("inspector workflow", () => {
       },
     ];
     const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      void init;
       if (String(url).includes("/officers")) {
         return { ok: true, json: async () => ({ data: { officers: [] } }) };
       }
@@ -275,9 +277,9 @@ describe("inspector workflow", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
     renderWithQuery(<InspectorApplicationView projectId={projectId} />);
-    const input = await screen.findByPlaceholderText(
-      "Explain what information or correction is needed.",
-    );
+    const input = await screen.findByRole("textbox", {
+      name: /your message to the applicant/i,
+    });
     await userEvent.type(
       input,
       "Please confirm the furnace capacity shown in the plan.",

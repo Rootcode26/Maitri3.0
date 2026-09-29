@@ -1,7 +1,22 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+const themeChangeEvent = "udyogsetu:theme-change";
+
+function subscribeToThemeChange(onStoreChange: () => void) {
+  document.addEventListener(themeChangeEvent, onStoreChange);
+  return () => document.removeEventListener(themeChangeEvent, onStoreChange);
+}
+
+function getThemeSnapshot() {
+  return document.documentElement.classList.contains("dark");
+}
+
+function getServerThemeSnapshot() {
+  return false;
+}
 
 /**
  * Toggles the `.dark` class on <html> and persists the choice. The initial class
@@ -9,11 +24,11 @@ import { useEffect, useState } from "react";
  * mirrors and flips it — no flash, no hydration mismatch.
  */
 export function ThemeToggle({ className = "" }: { className?: string }) {
-  const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
-  }, []);
+  const dark = useSyncExternalStore(
+    subscribeToThemeChange,
+    getThemeSnapshot,
+    getServerThemeSnapshot,
+  );
 
   function toggle() {
     const next = !document.documentElement.classList.contains("dark");
@@ -23,7 +38,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     } catch {
       /* storage unavailable (private mode) — the class still applies for this session */
     }
-    setDark(next);
+    document.dispatchEvent(new Event(themeChangeEvent));
   }
 
   return (
