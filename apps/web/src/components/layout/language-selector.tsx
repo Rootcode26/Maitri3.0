@@ -15,7 +15,7 @@ export function LanguageSelector() {
         className="min-h-10 cursor-pointer rounded-md border border-current/40 bg-transparent px-3 py-2 text-current transition-colors hover:bg-current/5 focus-visible:outline-3 focus-visible:outline-offset-2"
       >
         {languages.map((item) => (
-          <option key={item.code} value={item.code} className="text-slate-900">
+          <option key={item.code} value={item.code} className="text-foreground">
             {item.label}
           </option>
         ))}

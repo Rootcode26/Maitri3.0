@@ -120,6 +120,39 @@
       "jurisdiction": "MH",
       "requirementBasis": "APPLICATION_POLICY",
       "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits. This is not a complete departmental checklist."
+    },
+    {
+      "key": "company-registration",
+      "name": "Company / business registration certificate",
+      "description": "Incorporation or registration certificate showing the business's CIN/GSTIN, used to confirm the uploaded document belongs to this applicant.",
+      "reason": "Prototype preparation item; obtain the department's current checklist before requiring submission.",
+      "required": true,
+      "when": null,
+      "formats": [
+        "PDF"
+      ],
+      "maxSizeMb": 5,
+      "filesRequired": 1,
+      "mustInclude": [],
+      "quality": [
+        "Provide a legible complete file that clearly shows the registration identifiers."
+      ],
+      "verification": "NEEDS_REVIEW",
+      "sources": [
+        {
+          "organization": "Ministry of Corporate Affairs",
+          "title": "Company registration / incorporation records",
+          "url": "https://www.mca.gov.in/",
+          "notes": "Prototype preparation item; not a statutory checklist."
+        }
+      ],
+      "jurisdiction": "IN",
+      "requirementBasis": "APPLICATION_POLICY",
+      "policyNote": "PDF, 5 MB and one electronic file are prototype application policies, not statutory limits.",
+      "fieldsToCompare": [
+        "cin",
+        "gstin"
+      ]
     }
   ]
 }

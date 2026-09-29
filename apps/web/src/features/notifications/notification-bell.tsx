@@ -64,7 +64,7 @@ export function NotificationBell({
         aria-label={t("dashboard.notifications")}
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        className="relative grid size-10 place-items-center rounded-full border border-[#e4e0d6] text-slate-600 transition-colors hover:bg-white focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="relative grid size-10 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-card focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <Bell className="size-5" aria-hidden="true" />
         {unread > 0 ? (
@@ -83,9 +83,9 @@ export function NotificationBell({
             className="fixed inset-0 z-40 cursor-default"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-lg border border-[#e4e0d6] bg-white shadow-lg duration-200 animate-in fade-in slide-in-from-top-1">
-            <div className="flex items-center justify-between border-b border-[#efece4] px-4 py-3">
-              <p className="text-sm font-semibold text-[#142b45]">
+          <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-lg border border-border bg-card shadow-lg duration-200 animate-in fade-in slide-in-from-top-1">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <p className="text-sm font-semibold text-foreground">
                 {t("notification.title")}
               </p>
               {unread > 0 ? (
@@ -103,11 +103,11 @@ export function NotificationBell({
 
             <div className="max-h-96 overflow-y-auto">
               {notifications.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-slate-500">
+                <p className="px-4 py-8 text-center text-sm text-muted-foreground">
                   {t("notification.empty")}
                 </p>
               ) : (
-                <ul className="divide-y divide-[#f2efe8]">
+                <ul className="divide-y divide-border">
                   {notifications.map((notification) => (
                     <li key={notification.id}>
                       <Link
@@ -116,7 +116,7 @@ export function NotificationBell({
                           if (!notification.read) markRead.mutate(notification.id);
                           setOpen(false);
                         }}
-                        className={`flex gap-3 px-4 py-3 transition-colors hover:bg-[#faf8f3] ${
+                        className={`flex gap-3 px-4 py-3 transition-colors hover:bg-muted ${
                           notification.read ? "" : "bg-primary/5"
                         }`}
                       >
@@ -127,10 +127,10 @@ export function NotificationBell({
                           aria-hidden="true"
                         />
                         <span className="min-w-0">
-                          <span className="block text-sm text-[#142b45]">
+                          <span className="block text-sm text-foreground">
                             {t(messageKey[notification.type], notification.data)}
                           </span>
-                          <span className="mt-0.5 block text-xs text-slate-400">
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
                             {formatDate(notification.createdAt, language)}
                           </span>
                         </span>

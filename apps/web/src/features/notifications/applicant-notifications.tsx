@@ -45,8 +45,8 @@ export function ApplicantNotifications() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-7 sm:px-6 sm:py-9">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[#e4e0d6] pb-6">
-        <h1 className="font-heading text-3xl font-bold tracking-tight text-[#142b45]">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
+        <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
           {t("notification.title")}
         </h1>
         {unread > 0 ? (
@@ -54,7 +54,7 @@ export function ApplicantNotifications() {
             type="button"
             onClick={() => markAll.mutate()}
             disabled={markAll.isPending}
-            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-[#cfd4dc] bg-white px-4 text-sm font-semibold text-[#142b45] transition-colors hover:bg-[#f7f6f2] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <CheckCheck className="size-4" aria-hidden="true" />
             {t("notification.markAllRead")}
@@ -64,16 +64,16 @@ export function ApplicantNotifications() {
 
       <div className="mt-6">
         {feed.isPending ? (
-          <div className="flex items-center gap-3 rounded-md border border-[#e4e0d6] bg-white p-6 text-slate-600">
+          <div className="flex items-center gap-3 rounded-md border border-border bg-card p-6 text-muted-foreground">
             <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("common.loading")}
           </div>
         ) : notifications.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-[#e4e0d6] bg-white py-16 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card py-16 text-center">
             <Bell className="size-10 text-slate-300" aria-hidden="true" />
-            <p className="text-sm text-slate-500">{t("notification.empty")}</p>
+            <p className="text-sm text-muted-foreground">{t("notification.empty")}</p>
           </div>
         ) : (
-          <ul className="divide-y divide-[#eee] overflow-hidden rounded-lg border border-[#e4e0d6] bg-white">
+          <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
             {notifications.map((notification) => (
               <li key={notification.id}>
                 <Link
@@ -85,7 +85,7 @@ export function ApplicantNotifications() {
                   onClick={() => {
                     if (!notification.read) markRead.mutate(notification.id);
                   }}
-                  className={`flex gap-3 px-5 py-4 transition-colors hover:bg-[#faf8f3] ${
+                  className={`flex gap-3 px-5 py-4 transition-colors hover:bg-muted ${
                     notification.read ? "" : "bg-primary/5"
                   }`}
                 >
@@ -96,10 +96,10 @@ export function ApplicantNotifications() {
                     aria-hidden="true"
                   />
                   <span className="min-w-0">
-                    <span className="block text-sm text-[#142b45]">
+                    <span className="block text-sm text-foreground">
                       {t(messageKey[notification.type], notification.data)}
                     </span>
-                    <span className="mt-0.5 block text-xs text-slate-400">
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
                       {formatDate(notification.createdAt, language)}
                     </span>
                   </span>

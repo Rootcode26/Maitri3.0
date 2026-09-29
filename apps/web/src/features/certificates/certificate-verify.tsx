@@ -18,13 +18,13 @@ export function CertificateVerify({ code }: { code: string }) {
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-4 py-16">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-[#142b45]">{t("certificate.verifyTitle")}</h1>
-        <p className="mt-1 text-sm text-slate-600">{t("certificate.verifySubtitle")}</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("certificate.verifyTitle")}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t("certificate.verifySubtitle")}</p>
       </div>
 
-      <div className="rounded-lg border border-[#d8d3c8] bg-white p-6 shadow-sm transition-shadow duration-300 hover:shadow-md">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-sm transition-shadow duration-300 hover:shadow-md">
         {query.isLoading ? (
-          <div className="flex items-center justify-center gap-2 py-8 text-slate-500">
+          <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
             <Loader2 className="size-5 animate-spin" aria-hidden="true" />
             {t("certificate.verifyChecking")}
           </div>
@@ -51,7 +51,7 @@ export function CertificateVerify({ code }: { code: string }) {
                 <p className="text-lg font-bold">{t("certificate.verifyRevoked")}</p>
               </div>
             )}
-            <dl className="divide-y divide-[#eee] text-sm">
+            <dl className="divide-y divide-border text-sm">
               <Row label={t("certificate.number")} value={query.data.certificateNumber} />
               <Row label={t("certificate.enterprise")} value={query.data.enterpriseName} />
               <Row label={t("certificate.district")} value={query.data.district} />
@@ -70,8 +70,8 @@ export function CertificateVerify({ code }: { code: string }) {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 py-2">
-      <dt className="text-slate-500">{label}</dt>
-      <dd className="font-medium text-[#142b45]">{value}</dd>
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-medium text-foreground">{value}</dd>
     </div>
   );
 }

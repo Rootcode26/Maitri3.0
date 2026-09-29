@@ -28,23 +28,23 @@ export function ApplicantVerifyCertificate() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-7 sm:px-6 sm:py-9">
-      <header className="border-b border-[#e4e0d6] pb-6">
-        <h1 className="font-heading text-3xl font-bold tracking-tight text-[#142b45]">
+      <header className="border-b border-border pb-6">
+        <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
           {t("certificate.verifyTitle")}
         </h1>
-        <p className="mt-2 text-slate-600">{t("certificate.verifyIntro")}</p>
+        <p className="mt-2 text-muted-foreground">{t("certificate.verifyIntro")}</p>
       </header>
 
       <form onSubmit={submit} className="mt-6 flex flex-wrap items-end gap-3">
         <label className="min-w-0 flex-1">
-          <span className="mb-1 block text-sm font-medium text-[#142b45]">
+          <span className="mb-1 block text-sm font-medium text-foreground">
             {t("certificate.verifyCodeLabel")}
           </span>
           <input
             value={input}
             onChange={(event) => setInput(event.target.value)}
             placeholder={t("certificate.verifyCodePlaceholder")}
-            className="h-11 w-full rounded-md border border-[#cfd4dc] bg-white px-3 text-sm text-[#142b45] transition-colors hover:border-[#94a3b8] focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
+            className="h-11 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground transition-colors hover:border-border focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
           />
         </label>
         <button
@@ -58,9 +58,9 @@ export function ApplicantVerifyCertificate() {
       </form>
 
       {code ? (
-        <div className="mt-6 rounded-lg border border-[#d8d3c8] bg-white p-6 shadow-sm">
+        <div className="mt-6 rounded-lg border border-border bg-card p-6 shadow-sm">
           {query.isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-6 text-slate-500">
+            <div className="flex items-center justify-center gap-2 py-6 text-muted-foreground">
               <Loader2 className="size-5 animate-spin" aria-hidden="true" />
               {t("certificate.verifyChecking")}
             </div>
@@ -86,7 +86,7 @@ export function ApplicantVerifyCertificate() {
                   <p className="text-lg font-bold">{t("certificate.verifyRevoked")}</p>
                 </div>
               )}
-              <dl className="divide-y divide-[#eee] text-sm">
+              <dl className="divide-y divide-border text-sm">
                 <Row label={t("certificate.number")} value={query.data.certificateNumber} />
                 <Row label={t("certificate.enterprise")} value={query.data.enterpriseName} />
                 <Row label={t("certificate.district")} value={query.data.district} />
@@ -106,8 +106,8 @@ export function ApplicantVerifyCertificate() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 py-2">
-      <dt className="text-slate-500">{label}</dt>
-      <dd className="font-medium text-[#142b45]">{value}</dd>
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-medium text-foreground">{value}</dd>
     </div>
   );
 }

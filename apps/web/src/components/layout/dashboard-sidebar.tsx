@@ -127,15 +127,15 @@ export function DashboardSidebar({
     <aside
       id={id}
       className={cn(
-        "flex h-svh w-72 shrink-0 flex-col overflow-hidden border-r border-[#e4e0d6] bg-[#f7f6f2] lg:sticky lg:top-0",
+        "flex h-svh w-72 shrink-0 flex-col overflow-hidden border-r border-border bg-muted lg:sticky lg:top-0",
         className,
       )}
     >
       {/* Brand */}
-      <div className="flex flex-col gap-1 border-b border-[#e4e0d6] px-6 py-5">
+      <div className="flex flex-col gap-1 border-b border-border px-6 py-5">
         <div className="flex items-center justify-between gap-3">
           <span
-            className="inline-flex items-center gap-2 text-[#17345a]"
+            className="inline-flex items-center gap-2 text-foreground"
             translate="no"
           >
             <Image
@@ -153,20 +153,20 @@ export function DashboardSidebar({
               type="button"
               aria-label={t("dashboard.closeNavigation")}
               onClick={onClose}
-              className="grid size-10 shrink-0 place-items-center rounded-md border border-[#e4e0d6] text-slate-600 hover:bg-white focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary lg:hidden"
+              className="grid size-10 shrink-0 place-items-center rounded-md border border-border text-muted-foreground hover:bg-card focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary lg:hidden"
             >
               <X className="size-5" aria-hidden="true" />
             </button>
           ) : null}
         </div>
-        <span className="text-sm text-slate-500">
+        <span className="text-sm text-muted-foreground">
           {workspace === "inspector" ? t("nav.inspectorPortal") : t("nav.applicantPortal")}
         </span>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-4 py-6" aria-label={t("nav.workspace")}>
-        <p className="px-2 pb-3 text-xs font-semibold tracking-wide text-slate-400 uppercase">
+        <p className="px-2 pb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           {t("nav.workspace")}
         </p>
         <ul className="space-y-1">
@@ -178,11 +178,11 @@ export function DashboardSidebar({
                 <li key={item.href}>
                   <span
                     aria-disabled="true"
-                    className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-md px-3 text-sm font-medium text-slate-400"
+                    className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground"
                   >
                     <Icon className="size-5 shrink-0" aria-hidden="true" />
                     <span className="flex-1">{item.label}</span>
-                    <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-400">
+                    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                       {t("nav.soon")}
                     </span>
                   </span>
@@ -198,7 +198,7 @@ export function DashboardSidebar({
                   className={`flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors ${
                     active
                       ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-slate-600 hover:bg-muted hover:text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   <Icon className="size-5 shrink-0" aria-hidden="true" />
@@ -211,15 +211,15 @@ export function DashboardSidebar({
       </nav>
 
       {/* User */}
-      <div className="flex items-center gap-3 border-t border-[#e4e0d6] px-6 py-4">
+      <div className="flex items-center gap-3 border-t border-border px-6 py-4">
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
           <UserRound className="size-5" aria-hidden="true" />
         </span>
         <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold text-[#142b45]">
+          <span className="block truncate text-sm font-semibold text-foreground">
             {t("nav.yourAccount")}
           </span>
-          <span className="block truncate text-xs text-slate-500">
+          <span className="block truncate text-xs text-muted-foreground">
             {workspace === "inspector"
               ? t("nav.inspectorAccount")
               : t("nav.applicantAccount")}

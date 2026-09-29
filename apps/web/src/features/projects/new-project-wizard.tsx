@@ -567,7 +567,7 @@ function FieldControl({
 }) {
   const { t, text } = useLanguage();
   const base =
-    "w-full rounded-lg border bg-white px-3.5 text-base text-[#142b45] transition-colors outline-none placeholder:text-slate-400 focus-visible:ring-3 focus-visible:ring-primary/40 focus-visible:border-primary aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-destructive/25";
+    "w-full rounded-lg border bg-card px-3.5 text-base text-foreground transition-colors outline-none placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-primary/40 focus-visible:border-primary aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-destructive/25";
   const invalid = Boolean(error);
   const common = {
     id: field.name,
@@ -605,7 +605,7 @@ function FieldControl({
           ))}
         </select>
         <ArrowRight
-          className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 rotate-90 text-slate-400"
+          className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 rotate-90 text-muted-foreground"
           aria-hidden="true"
         />
       </div>
@@ -634,10 +634,10 @@ function ApprovalCard({
   const { text } = useLanguage();
   const required = approval.status === "required";
   return (
-    <article className="flex flex-col rounded-xl bg-white p-6 ring-1 ring-[#e4e0d6] transition-shadow hover:ring-2 hover:ring-primary/50 focus-within:ring-2 focus-within:ring-primary">
+    <article className="flex flex-col rounded-xl bg-card p-6 ring-1 ring-border transition-shadow hover:ring-2 hover:ring-primary/50 focus-within:ring-2 focus-within:ring-primary">
       <div className="flex items-start justify-between">
         <span
-          className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold capitalize ${required ? "bg-primary/10 text-primary" : "bg-slate-100 text-slate-600"}`}
+          className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold capitalize ${required ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
         >
           <span
             className={`size-2 rounded-full ${required ? "bg-primary" : "bg-slate-500"}`}
@@ -649,27 +649,27 @@ function ApprovalCard({
           {String(index + 1).padStart(2, "0")}
         </span>
       </div>
-      <h3 className="mt-4 font-heading text-xl font-semibold text-[#142b45]">
+      <h3 className="mt-4 font-heading text-xl font-semibold text-foreground">
         {text(approval.title)}
       </h3>
       <div className="mt-2">
-        <p className="text-xs font-medium text-slate-500">
+        <p className="text-xs font-medium text-muted-foreground">
           {text("Assigned department")}
         </p>
-        <div className="mt-1 flex min-h-10 items-center gap-2 rounded-md border border-[#e4e0d6] bg-[#faf9f6] px-3 py-2 text-sm font-medium text-[#142b45]">
+        <div className="mt-1 flex min-h-10 items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-sm font-medium text-foreground">
           <Building2 className="size-4 shrink-0 text-primary" aria-hidden="true" />
           <span>{text(approval.department.name)}</span>
         </div>
       </div>
       {approval.reason ? (
-        <p className="mt-2 text-sm text-slate-500">{text(approval.reason)}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{text(approval.reason)}</p>
       ) : null}
-      <hr className="my-4 border-[#e4e0d6]" />
+      <hr className="my-4 border-border" />
       <div className="flex items-center justify-between gap-4 text-sm">
-        <span className="text-slate-600">
+        <span className="text-muted-foreground">
           {approval.documents.map((document) => text(document.name)).join(", ")}
         </span>
-        <span className="shrink-0 font-semibold text-[#142b45]">
+        <span className="shrink-0 font-semibold text-foreground">
           {text("{{count}} days", { count: approval.processingDays })}
         </span>
       </div>
@@ -699,22 +699,22 @@ function ChecklistSkeleton() {
     >
       <div className="h-4 w-40 rounded bg-slate-200" />
       <div className="mt-3 h-10 w-72 rounded bg-slate-200" />
-      <div className="mt-3 h-4 w-96 max-w-full rounded bg-slate-100" />
-      <hr className="my-6 border-[#e4e0d6]" />
+      <div className="mt-3 h-4 w-96 max-w-full rounded bg-muted" />
+      <hr className="my-6 border-border" />
       <div className="grid gap-5 sm:grid-cols-2">
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            className="rounded-xl bg-white p-6 ring-1 ring-[#e4e0d6]"
+            className="rounded-xl bg-card p-6 ring-1 ring-border"
           >
             <div className="flex items-start justify-between">
               <div className="h-6 w-24 rounded-full bg-slate-200" />
-              <div className="h-8 w-8 rounded bg-slate-100" />
+              <div className="h-8 w-8 rounded bg-muted" />
             </div>
             <div className="mt-4 h-6 w-3/4 rounded bg-slate-200" />
-            <div className="mt-3 h-9 w-full rounded-md bg-slate-100" />
-            <hr className="my-4 border-[#e4e0d6]" />
-            <div className="h-4 w-full rounded bg-slate-100" />
+            <div className="mt-3 h-9 w-full rounded-md bg-muted" />
+            <hr className="my-4 border-border" />
+            <div className="h-4 w-full rounded bg-muted" />
             <div className="mt-4 h-4 w-40 rounded bg-slate-200" />
           </div>
         ))}
@@ -739,7 +739,7 @@ function IssueList({
   const toneClass = {
     error: "border-destructive/30 bg-destructive/5 text-destructive",
     warning: "border-amber-300 bg-amber-50 text-amber-900",
-    review: "border-slate-200 bg-slate-50 text-slate-700",
+    review: "border-border bg-muted text-foreground",
   }[tone];
   return (
     <div className={`mt-4 rounded-lg border px-4 py-3 ${toneClass}`}>
@@ -866,11 +866,11 @@ function ValidationReport({
         onOpenApproval={onOpenApproval}
       />
 
-      <div className="mt-4 rounded-lg border border-[#e4e0d6] bg-white px-4 py-4">
-        <p className="text-sm font-semibold text-[#142b45]">
+      <div className="mt-4 rounded-lg border border-border bg-card px-4 py-4">
+        <p className="text-sm font-semibold text-foreground">
           {text("What happens after you submit")}
         </p>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-muted-foreground">
           {text(
             "Each department’s officer will review the documents assigned to them:",
           )}
@@ -884,17 +884,17 @@ function ValidationReport({
             return (
               <li
                 key={approval.approvalKey}
-                className="rounded-md bg-[#faf9f6] px-3 py-3 ring-1 ring-[#eee9dd]"
+                className="rounded-md bg-muted px-3 py-3 ring-1 ring-border"
               >
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <Building2
-                    className="size-4 shrink-0 text-[#142b45]"
+                    className="size-4 shrink-0 text-foreground"
                     aria-hidden="true"
                   />
-                  <span className="text-sm font-semibold text-[#142b45]">
+                  <span className="text-sm font-semibold text-foreground">
                     {approval.department?.name ?? text("Assigned department")}
                   </span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-muted-foreground">
                     · {text("for")} {text(approval.title)}
                   </span>
                 </div>
@@ -902,7 +902,7 @@ function ValidationReport({
                   {docs.map((doc) => (
                     <li
                       key={doc.key}
-                      className="flex items-center gap-2 text-sm text-slate-700"
+                      className="flex items-center gap-2 text-sm text-foreground"
                     >
                       <Check
                         className="size-3.5 shrink-0 text-emerald-600"
@@ -916,7 +916,7 @@ function ValidationReport({
             );
           })}
         </ul>
-        <p className="mt-3 flex items-start gap-2 text-xs text-slate-500">
+        <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
           <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
           {text(
             "Our system confirms your files are present and readable. An officer always verifies the actual contents — this review step is normal and needs nothing further from you.",
@@ -927,7 +927,7 @@ function ValidationReport({
   );
 }
 
-function ChecklistResult({ project }: { project: Project }) {
+export function ChecklistResult({ project }: { project: Project }) {
   const { t, text } = useLanguage();
   const [savedProject, setSavedProject] = useState(project);
   const approvals = project.approvals;
@@ -1012,20 +1012,20 @@ function ChecklistResult({ project }: { project: Project }) {
     <div>
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-slate-500">
+          <p className="text-sm font-semibold text-muted-foreground">
             {text("Checklist generated")}
           </p>
-          <h2 className="mt-1 font-heading text-4xl font-bold tracking-tight text-[#142b45] sm:text-5xl">
+          <h2 className="mt-1 font-heading text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             {text("{{count}} approvals recommended", { count: approvals.length })}
           </h2>
-          <p className="mt-2 text-base text-slate-600">
+          <p className="mt-2 text-base text-muted-foreground">
             {project.enterpriseName} · {text(project.primaryActivity)} ·{" "}
             {text("{{district}} district", { district: text(project.district) })}
           </p>
         </div>
       </header>
 
-      <hr className="my-6 border-[#e4e0d6]" />
+      <hr className="my-6 border-border" />
 
       <section
         aria-label={t("wizard.checklist")}
@@ -1045,13 +1045,13 @@ function ChecklistResult({ project }: { project: Project }) {
         <strong>{t("wizard.whyApprovals")}</strong> {t("wizard.approvalRationale")}
       </aside>
 
-      <section className="mt-6 rounded-2xl bg-white p-6 ring-1 ring-[#e4e0d6] sm:p-7">
+      <section className="mt-6 rounded-2xl bg-card p-6 ring-1 ring-border sm:p-7">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="font-heading text-xl font-semibold text-[#142b45]">
+            <h3 className="font-heading text-xl font-semibold text-foreground">
               {t("wizard.checkDocuments")}
             </h3>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               {text("Run a pre-submission check on the documents you have uploaded so far.")}
             </p>
           </div>
@@ -1101,15 +1101,15 @@ function ChecklistResult({ project }: { project: Project }) {
         )}
       </section>
 
-      <section className="mt-6 border border-[#d8d3c8] bg-[#faf9f6] p-6 sm:p-7">
+      <section className="mt-6 border border-border bg-muted p-6 sm:p-7">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="font-heading text-xl font-semibold text-[#142b45]">
+            <h3 className="font-heading text-xl font-semibold text-foreground">
               {savedProject.status === "draft"
                 ? t("wizard.submitForReview")
                 : t("wizard.applicationSubmitted")}
             </h3>
-            <p className="mt-1 max-w-2xl text-sm text-slate-600">
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               {savedProject.status === "draft"
                 ? t("wizard.documentsReady")
                 : t("wizard.departmentsCanReview")}
@@ -1147,7 +1147,7 @@ function ChecklistResult({ project }: { project: Project }) {
             {submissionError}
           </p>
         ) : savedProject.status === "draft" && !canSubmit ? (
-          <p className="mt-4 text-sm text-slate-600">
+          <p className="mt-4 text-sm text-muted-foreground">
             {validation === null
               ? "Run “Check documents” above before submitting."
               : "Resolve the blocking issues above, then re-check to enable submission."}
@@ -1339,7 +1339,7 @@ export function NewProjectWizard() {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-white shadow-[0_20px_50px_-24px_rgba(20,43,69,0.35)] ring-1 ring-[#e4e0d6] md:grid md:grid-cols-[19rem_1fr]">
+    <div className="overflow-hidden rounded-2xl bg-card shadow-[0_20px_50px_-24px_rgba(20,43,69,0.35)] ring-1 ring-border md:grid md:grid-cols-[19rem_1fr]">
       {/* Stepper rail */}
       <div className="bg-[#142b45] px-6 py-7 text-white sm:px-8">
         <div className="mb-7">
@@ -1348,7 +1348,7 @@ export function NewProjectWizard() {
             <span>{progress}%</span>
           </div>
           <div
-            className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/15"
+            className="mt-2 h-1.5 overflow-hidden rounded-full bg-card/15"
             role="progressbar"
             aria-valuenow={progress}
             aria-valuemin={0}
@@ -1384,7 +1384,7 @@ export function NewProjectWizard() {
                   <span
                     className={`grid size-7 shrink-0 place-items-center rounded-full border text-sm font-semibold ${
                       isCurrent
-                        ? "border-white bg-white text-primary"
+                        ? "border-white bg-primary-foreground text-primary"
                         : isDone
                           ? "border-amber-400 text-amber-400"
                           : "border-white/40 text-slate-200"
@@ -1412,13 +1412,13 @@ export function NewProjectWizard() {
       <div className="px-6 py-7 sm:px-10 sm:py-9">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-slate-500">
+            <p className="text-sm font-medium text-muted-foreground">
               {t("wizard.stepOf", { current: current + 1, total: totalSteps })}
             </p>
-            <h2 className="mt-1 font-heading text-2xl font-semibold text-[#142b45] sm:text-3xl">
+            <h2 className="mt-1 font-heading text-2xl font-semibold text-foreground sm:text-3xl">
               {isChecklist ? t("wizard.checklist") : text(step.title)}
             </h2>
-            <p className="mt-1.5 text-sm text-slate-500">
+            <p className="mt-1.5 text-sm text-muted-foreground">
               {isChecklist
                 ? t("wizard.confirmClearances")
                 : text(step.description)}
@@ -1437,23 +1437,23 @@ export function NewProjectWizard() {
           </span>
         </div>
 
-        <hr className="my-6 border-[#e4e0d6]" />
+        <hr className="my-6 border-border" />
 
         {isChecklist && submitting ? (
           <ChecklistSkeleton />
         ) : isChecklist ? (
-          <div className="rounded-2xl border border-[#e4e0d6] bg-[#faf9f6] px-6 py-7 sm:px-8">
-            <h3 className="font-heading text-xl font-semibold text-[#142b45]">
+          <div className="rounded-2xl border border-border bg-muted px-6 py-7 sm:px-8">
+            <h3 className="font-heading text-xl font-semibold text-foreground">
               {t("wizard.readyToGenerate")}
             </h3>
-            <p className="mt-3 max-w-2xl leading-relaxed text-slate-600">
+            <p className="mt-3 max-w-2xl leading-relaxed text-muted-foreground">
               {t("wizard.projectComplete")}
             </p>
             <dl className="mt-6 grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2">
               {summary.map((item) => (
                 <div key={item.label}>
-                  <dt className="text-sm text-slate-500">{text(item.label)}</dt>
-                  <dd className="mt-1 font-semibold text-[#142b45]">
+                  <dt className="text-sm text-muted-foreground">{text(item.label)}</dt>
+                  <dd className="mt-1 font-semibold text-foreground">
                     {item.value === "—" ? item.value : text(item.value)}
                   </dd>
                 </div>
@@ -1477,11 +1477,11 @@ export function NewProjectWizard() {
               const describedBy = [errorId, helperId].filter(Boolean).join(" ");
               const sectionHeader = field.sectionStart ? (
                 <div className="flex items-center gap-3 pt-2 sm:col-span-2">
-                  <span className="text-xs font-semibold tracking-wide text-slate-400 uppercase">
+                  <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                     {text(field.sectionStart)}
                   </span>
                   <span
-                    className="h-px flex-1 bg-[#e4e0d6]"
+                    className="h-px flex-1 bg-border"
                     aria-hidden="true"
                   />
                 </div>
@@ -1495,14 +1495,14 @@ export function NewProjectWizard() {
                     : null;
                 return (
                   <fieldset key={field.name} className="sm:col-span-2">
-                    <legend className="mb-3 text-sm font-semibold text-[#142b45]">
+                    <legend className="mb-3 text-sm font-semibold text-foreground">
                       {text(field.label)}
                     </legend>
                     <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
                       {field.options?.map((opt) => (
                         <label
                           key={opt}
-                          className="flex items-center gap-3 text-sm text-[#142b45]"
+                          className="flex items-center gap-3 text-sm text-foreground"
                         >
                           <input
                             type="checkbox"
@@ -1531,7 +1531,7 @@ export function NewProjectWizard() {
                   >
                     <label
                       htmlFor={field.name}
-                      className="text-sm font-semibold text-[#142b45]"
+                      className="text-sm font-semibold text-foreground"
                     >
                       {text(field.label)}
                       {field.required && (
@@ -1545,7 +1545,7 @@ export function NewProjectWizard() {
                       defaultValue={answers[field.name]}
                     />
                     {field.helper && !error && (
-                      <p id={helperId} className="text-xs text-slate-500">
+                      <p id={helperId} className="text-xs text-muted-foreground">
                         {text(field.helper)}
                       </p>
                     )}
@@ -1564,7 +1564,7 @@ export function NewProjectWizard() {
           </form>
         )}
 
-        <hr className="my-7 border-[#e4e0d6]" />
+        <hr className="my-7 border-border" />
 
         {submitError && (
           <p

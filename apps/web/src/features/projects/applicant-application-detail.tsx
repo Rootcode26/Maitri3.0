@@ -84,7 +84,7 @@ function CorrectDocument({
         {upload.isPending ? t("application.uploading") : t("application.uploadCorrected")}
       </Button>
       {message ? (
-        <p role="status" className="mt-2 text-sm font-medium text-slate-700">
+        <p role="status" className="mt-2 text-sm font-medium text-foreground">
           {message}
         </p>
       ) : null}
@@ -114,7 +114,7 @@ function ApplicantCertificateCard({ projectId }: { projectId: string }) {
     <Card className="mt-6 rounded-md border-emerald-300 bg-emerald-50/60 duration-500 animate-in fade-in slide-in-from-bottom-1">
       <CardHeader className="flex-row items-center gap-2 space-y-0">
         <Award className="size-5 text-emerald-600" aria-hidden="true" />
-        <CardTitle className="text-xl text-[#142b45]">
+        <CardTitle className="text-xl text-foreground">
           {t("certificate.applicantTitle")}
         </CardTitle>
       </CardHeader>
@@ -124,22 +124,22 @@ function ApplicantCertificateCard({ projectId }: { projectId: string }) {
             {t("certificate.applicantRevoked")}
           </p>
         ) : (
-          <p className="text-sm text-slate-700">{t("certificate.applicantReady")}</p>
+          <p className="text-sm text-foreground">{t("certificate.applicantReady")}</p>
         )}
         <dl className="grid gap-4 sm:grid-cols-2">
           <div>
-            <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+            <dt className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               {t("certificate.number")}
             </dt>
-            <dd className="mt-1 text-sm font-medium text-[#142b45]">
+            <dd className="mt-1 text-sm font-medium text-foreground">
               {certificate.certificateNumber}
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+            <dt className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               {t("certificate.issuedOn")}
             </dt>
-            <dd className="mt-1 text-sm font-medium text-[#142b45]">
+            <dd className="mt-1 text-sm font-medium text-foreground">
               {formatDate(certificate.issuedAt, language)}
             </dd>
           </div>
@@ -201,7 +201,7 @@ export function ApplicantApplicationDetail({
 
   if (query.isPending)
     return (
-      <div className="m-6 flex items-center gap-3 border border-[#e4e0d6] p-8 text-slate-600">
+      <div className="m-6 flex items-center gap-3 border border-border p-8 text-muted-foreground">
         <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("application.loading")}
       </div>
     );
@@ -237,15 +237,15 @@ export function ApplicantApplicationDetail({
       >
         <ArrowLeft className="size-4" aria-hidden="true" /> {t("application.backApplications")}
       </Link>
-      <header className="mt-5 flex flex-wrap items-start justify-between gap-4 border-b border-[#e4e0d6] pb-6">
+      <header className="mt-5 flex flex-wrap items-start justify-between gap-4 border-b border-border pb-6">
         <div>
           <p className="text-sm font-semibold text-primary">
             {t("application.details")}
           </p>
-          <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-[#142b45] sm:text-4xl">
+          <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             {application.enterpriseName}
           </h1>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-muted-foreground">
             {text(humanizeStatus(application.industry))} · {text(application.district)} ·{" "}
             {text(application.primaryActivity)}
           </p>
@@ -255,6 +255,28 @@ export function ApplicantApplicationDetail({
           className="min-h-9 px-3 text-sm"
         />
       </header>
+      {application.status === "draft" ? (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-l-4 border-primary bg-primary/5 px-5 py-4">
+          <div>
+            <h2 className="font-semibold text-foreground">
+              {text("This application is still a draft")}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {text(
+                "Reopen the checklist to upload the remaining documents and submit when ready.",
+              )}
+            </p>
+          </div>
+          <Button
+            render={<Link href={`/applicant/projects/${projectId}/checklist`} />}
+            nativeButton={false}
+            className="h-11 shrink-0 rounded-md px-5"
+          >
+            {text("Continue application")}
+          </Button>
+        </div>
+      ) : null}
+
       {application.status === "correction_required" ? (
         <div className="mt-6 border-l-4 border-amber-500 bg-amber-50 px-5 py-4">
           <h2 className="font-semibold text-amber-950">
@@ -271,19 +293,19 @@ export function ApplicantApplicationDetail({
       ) : null}
 
       <section className="mt-7">
-        <h2 className="text-2xl font-bold text-[#142b45]">
+        <h2 className="text-2xl font-bold text-foreground">
           {t("application.departmentProgress")}
         </h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           {application.approvals.map((approval) => (
-            <Card key={approval.id} className="rounded-md border-[#d8d3c8]">
-              <CardHeader className="border-b border-[#e4e0d6]">
+            <Card key={approval.id} className="rounded-md border-border">
+              <CardHeader className="border-b border-border">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <CardTitle className="text-lg text-[#142b45]">
+                    <CardTitle className="text-lg text-foreground">
                       {text(approval.title)}
                     </CardTitle>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {text(approval.department.name)}
                     </p>
                   </div>
@@ -291,11 +313,11 @@ export function ApplicantApplicationDetail({
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-muted-foreground">
                   {t("application.processingTime", { days: approval.processingDays })}
                 </p>
                 {approval.decisionNote ? (
-                  <p className="mt-3 border-l-4 border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                  <p className="mt-3 border-l-4 border-border bg-muted px-3 py-2 text-sm text-foreground">
                     {approval.decisionNote}
                   </p>
                 ) : null}
@@ -308,8 +330,8 @@ export function ApplicantApplicationDetail({
       <section className="mt-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-          <h2 className="text-2xl font-bold text-[#142b45]">{t("application.documents")}</h2>
-            <p className="mt-1 text-sm text-slate-600">
+          <h2 className="text-2xl font-bold text-foreground">{t("application.documents")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               {t("application.latestDocuments")}
             </p>
           </div>
@@ -330,14 +352,14 @@ export function ApplicantApplicationDetail({
             latestDocuments.map((document) => (
               <article
                 key={document.id}
-                className="border border-[#d8d3c8] p-4"
+                className="border border-border p-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-semibold text-[#142b45]">
+                    <p className="font-semibold text-foreground">
                       {document.documentName ? text(document.documentName) : document.fileName}
                     </p>
-                    <p className="mt-1 break-all text-sm text-slate-600">
+                    <p className="mt-1 break-all text-sm text-muted-foreground">
                       {document.fileName} · {t("application.version", { version: document.version })} ·{" "}
                       {(document.sizeBytes / 1_000_000).toFixed(2)} MB
                     </p>
@@ -362,14 +384,14 @@ export function ApplicantApplicationDetail({
                 ) ? (
                   <CorrectDocument projectId={projectId} document={document} />
                 ) : document.review?.comment ? (
-                  <p className="mt-3 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  <p className="mt-3 bg-muted px-4 py-3 text-sm text-foreground">
                     {document.review.comment}
                   </p>
                 ) : null}
               </article>
             ))
           ) : (
-            <p className="border border-dashed border-[#aeb7c4] p-6 text-sm text-slate-600">
+            <p className="border border-dashed border-input p-6 text-sm text-muted-foreground">
               {t("application.noDocuments")}
             </p>
           )}
@@ -377,9 +399,9 @@ export function ApplicantApplicationDetail({
       </section>
 
       <section className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <Card className="rounded-md border-[#d8d3c8]">
+        <Card className="rounded-md border-border">
           <CardHeader>
-            <CardTitle className="text-xl text-[#142b45]">
+            <CardTitle className="text-xl text-foreground">
               {t("application.questionnaire")}
             </CardTitle>
           </CardHeader>
@@ -387,10 +409,10 @@ export function ApplicantApplicationDetail({
             <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
               {questionnaire.map(([key, value]) => (
                 <div key={key}>
-                  <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                  <dt className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                     {humanizeStatus(key.replace(/([a-z])([A-Z])/g, "$1 $2"))}
                   </dt>
-                  <dd className="mt-1 break-words text-sm font-medium text-[#142b45]">
+                  <dd className="mt-1 break-words text-sm font-medium text-foreground">
                     {Array.isArray(value) ? value.join(", ") : String(value)}
                   </dd>
                 </div>
@@ -398,9 +420,9 @@ export function ApplicantApplicationDetail({
             </dl>
           </CardContent>
         </Card>
-        <Card className="rounded-md border-[#d8d3c8]">
+        <Card className="rounded-md border-border">
           <CardHeader>
-            <CardTitle className="text-xl text-[#142b45]">
+            <CardTitle className="text-xl text-foreground">
               {t("application.timeline")}
             </CardTitle>
           </CardHeader>
@@ -410,27 +432,27 @@ export function ApplicantApplicationDetail({
                 {application.timeline.map((event) => (
                   <li
                     key={event.id}
-                    className="relative border-l-2 border-[#d8d3c8] pl-4"
+                    className="relative border-l-2 border-border pl-4"
                   >
                     <span
                       className="absolute top-1 -left-[5px] size-2 rounded-full bg-primary"
                       aria-hidden="true"
                     />
-                    <p className="font-semibold text-[#142b45]">
+                    <p className="font-semibold text-foreground">
                       {humanizeStatus(event.toStatus)}
                     </p>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {event.approvalTitle ? `${event.approvalTitle} · ` : ""}
                       {event.note ?? `Updated by ${event.actorName}`}
                     </p>
-                    <time className="mt-1 block text-xs text-slate-500">
+                    <time className="mt-1 block text-xs text-muted-foreground">
                       {formatDate(event.createdAt, language)}
                     </time>
                   </li>
                 ))}
               </ol>
             ) : (
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 {t("application.noTimeline")}
               </p>
             )}

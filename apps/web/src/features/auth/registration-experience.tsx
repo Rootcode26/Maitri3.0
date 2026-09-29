@@ -92,10 +92,10 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
     : ["registration.addInspectorDetails", "registration.confirmNumber", "registration.openWorkspaceDescription"] as const;
 
   return (
-    <div className="min-h-dvh bg-background text-[#142b45]">
+    <div className="min-h-dvh bg-background text-foreground">
       <a
         href="#registration-form"
-        className="sr-only z-50 bg-white p-3 text-[#142b45] focus:fixed focus:top-4 focus:left-4 focus:not-sr-only"
+        className="sr-only z-50 bg-card p-3 text-foreground focus:fixed focus:top-4 focus:left-4 focus:not-sr-only"
       >
         {t("registration.skip")}
       </a>
@@ -117,11 +117,11 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
           </p>
           <h1
             id="registration-heading"
-            className="mt-3 max-w-xl text-pretty text-4xl leading-[1.08] font-semibold tracking-[-0.035em] text-[#142b45] sm:text-5xl"
+            className="mt-3 max-w-xl text-pretty text-4xl leading-[1.08] font-semibold tracking-[-0.035em] text-foreground sm:text-5xl"
           >
             {t(mode === "applicant" ? "registration.applicantTitle" : "registration.inspectorTitle")}
           </h1>
-          <p className="mt-5 max-w-xl text-pretty text-base leading-7 text-slate-600 sm:text-lg">
+          <p className="mt-5 max-w-xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg">
             {t(mode === "applicant" ? "registration.applicantDescription" : "registration.inspectorDescription")}
           </p>
 
@@ -134,7 +134,7 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
               return (
                 <li
                   key={step.title}
-                  className="relative flex min-w-0 flex-col items-center gap-2 rounded-md border border-slate-200 bg-white p-3 text-center lg:grid lg:grid-cols-[2.75rem_1fr] lg:gap-4 lg:border-0 lg:bg-transparent lg:p-0 lg:pb-6 lg:text-left lg:last:pb-0"
+                  className="relative flex min-w-0 flex-col items-center gap-2 rounded-md border border-border bg-card p-3 text-center lg:grid lg:grid-cols-[2.75rem_1fr] lg:gap-4 lg:border-0 lg:bg-transparent lg:p-0 lg:pb-6 lg:text-left lg:last:pb-0"
                 >
                   {index < page.steps.length - 1 && (
                     <span
@@ -142,14 +142,14 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
                       aria-hidden="true"
                     />
                   )}
-                  <span className="relative z-10 grid size-9 place-items-center rounded-full bg-blue-50 text-primary lg:size-11 lg:border lg:border-slate-200 lg:bg-white">
+                  <span className="relative z-10 grid size-9 place-items-center rounded-full bg-blue-50 text-primary lg:size-11 lg:border lg:border-border lg:bg-card">
                     <Icon className="size-4 lg:size-5" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 lg:pt-1">
-                    <h2 className="text-xs leading-4 font-semibold text-[#142b45] sm:text-sm lg:text-base lg:leading-normal">
+                    <h2 className="text-xs leading-4 font-semibold text-foreground sm:text-sm lg:text-base lg:leading-normal">
                       {index + 1}. {t(stepKeys[index])}
                     </h2>
-                    <p className="mt-1 hidden text-sm leading-6 text-slate-600 lg:block">
+                    <p className="mt-1 hidden text-sm leading-6 text-muted-foreground lg:block">
                       {t(descriptionKeys[index])}
                     </p>
                   </div>
@@ -162,9 +162,9 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
         <section
           id="registration-form"
           aria-labelledby="form-heading"
-          className="border border-slate-200 bg-white shadow-[0_18px_55px_rgba(20,43,69,0.08)]"
+          className="border border-border bg-card shadow-[0_18px_55px_rgba(20,43,69,0.08)]"
         >
-          <header className="border-b border-slate-200 px-5 py-5 sm:px-8 sm:py-7">
+          <header className="border-b border-border px-5 py-5 sm:px-8 sm:py-7">
             <div className="flex items-start gap-4">
               <span className="grid size-11 shrink-0 place-items-center rounded-md bg-blue-50 text-primary">
                 <FormIcon className="size-5" aria-hidden="true" />
@@ -175,11 +175,11 @@ export function RegistrationExperience({ mode }: { mode: RegistrationMode }) {
                 </p>
                 <h2
                   id="form-heading"
-                  className="mt-1 text-2xl font-semibold tracking-tight text-[#142b45] sm:text-3xl"
+                  className="mt-1 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
                 >
                   {t("registration.accountDetails")}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {t("registration.requiredAndVerify")}
                 </p>
               </div>

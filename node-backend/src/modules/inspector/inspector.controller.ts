@@ -94,6 +94,7 @@ export class InspectorController {
       request.user!.departmentId,
       projectId,
       documentId,
+      { inline: request.query.inline === 'true' },
     );
     response.status(200).json({ status: 'success', data: { url } });
   };

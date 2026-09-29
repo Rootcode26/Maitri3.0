@@ -37,7 +37,7 @@ export function StatusBadge({
           ? "border-amber-300 bg-amber-50 text-amber-900"
           : status === "under_review" || status === "responded"
             ? "border-blue-300 bg-blue-50 text-blue-800"
-            : "border-slate-300 bg-slate-50 text-slate-700";
+            : "border-border bg-muted text-foreground";
   return (
     <span
       className={cn(

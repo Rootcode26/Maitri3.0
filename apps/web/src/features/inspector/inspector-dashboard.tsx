@@ -80,15 +80,15 @@ export function InspectorDashboard() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-primary">{t("inspector.departmentReview")}</p>
-          <h1 className="mt-1 font-heading text-4xl font-bold tracking-tight text-[#142b45]">
+          <h1 className="mt-1 font-heading text-4xl font-bold tracking-tight text-foreground">
             {t("inspector.queue")}
           </h1>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-muted-foreground">
             {t("inspector.queueDescription")}
           </p>
         </div>
         {query.data ? (
-          <span className="border border-[#d8d3c8] bg-[#faf9f6] px-4 py-2 text-sm font-semibold text-[#142b45]">
+          <span className="border border-border bg-muted px-4 py-2 text-sm font-semibold text-foreground">
             {t("common.assigned", { count: query.data.pagination.total })}
           </span>
         ) : null}
@@ -109,7 +109,7 @@ export function InspectorDashboard() {
       </div>
 
       {query.isPending ? (
-        <div className="mt-8 flex items-center gap-3 border border-[#e4e0d6] p-6 text-slate-600">
+        <div className="mt-8 flex items-center gap-3 border border-border p-6 text-muted-foreground">
           <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loading")}
         </div>
       ) : query.isError ? (
@@ -120,19 +120,19 @@ export function InspectorDashboard() {
           </Button>
         </div>
       ) : query.data.applications.length === 0 ? (
-        <div className="mt-8 rounded-md border border-dashed border-[#cbd2dc] bg-[#faf9f6] p-8 text-center sm:p-10">
-          <ClipboardCheck className="mx-auto size-10 text-slate-400" aria-hidden="true" />
-          <h2 className="mt-4 text-xl font-semibold text-[#142b45]">{t("inspector.noApplications")}</h2>
-          <p className="mt-2 text-sm text-slate-500">{t("inspector.emptyQueue")}</p>
+        <div className="mt-8 rounded-md border border-dashed border-border bg-muted p-8 text-center sm:p-10">
+          <ClipboardCheck className="mx-auto size-10 text-muted-foreground" aria-hidden="true" />
+          <h2 className="mt-4 text-xl font-semibold text-foreground">{t("inspector.noApplications")}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{t("inspector.emptyQueue")}</p>
         </div>
       ) : (
         <div className="mt-8 space-y-4">
           {query.data.applications.map((application) => (
-            <Card key={application.approvalId} className="rounded-md border-[#d8d3c8] bg-white">
+            <Card key={application.approvalId} className="rounded-md border-border bg-card">
               <CardContent className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="border border-[#d8d3c8] bg-[#faf9f6] px-2 py-1 text-xs font-semibold text-slate-700">
+                    <span className="border border-border bg-muted px-2 py-1 text-xs font-semibold text-foreground">
                       {translateStatus(t, application.reviewStatus)}
                     </span>
                     {application.attentionLevel ? (
@@ -142,15 +142,15 @@ export function InspectorDashboard() {
                         t={t}
                       />
                     ) : null}
-                    <span className="text-xs font-medium text-slate-500 capitalize">
+                    <span className="text-xs font-medium text-muted-foreground capitalize">
                       {text(application.industry)} · {text(application.district)}
                     </span>
                   </div>
-                  <h2 className="mt-3 text-xl font-semibold text-[#142b45]">
+                  <h2 className="mt-3 text-xl font-semibold text-foreground">
                     {application.enterpriseName}
                   </h2>
-                  <p className="mt-1 text-sm text-slate-600">{application.approvalTitle}</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-sm text-muted-foreground">{application.approvalTitle}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {t("common.applicant", { name: application.applicantName })} · {t("common.submitted", { date: formatDate(application.submittedAt, language) })}
                   </p>
                 </div>

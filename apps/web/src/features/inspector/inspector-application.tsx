@@ -66,10 +66,10 @@ function AttentionCard({
   t: (key: TranslationKey) => string;
 }) {
   return (
-    <Card className="rounded-md border-[#d8d3c8]">
+    <Card className="rounded-md border-border">
       <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
-        <CardTitle className="flex items-center gap-2 text-xl text-[#142b45]">
-          <Gauge className="size-5 text-slate-500" aria-hidden="true" />
+        <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+          <Gauge className="size-5 text-muted-foreground" aria-hidden="true" />
           {t("attention.title")}
         </CardTitle>
         <span
@@ -82,24 +82,24 @@ function AttentionCard({
       <CardContent>
         {attention.factors.length > 0 ? (
           <>
-            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               {t("attention.heading")}
             </p>
-            <ul className="mt-3 divide-y divide-[#e4e0d6] rounded-lg ring-1 ring-[#e4e0d6]">
+            <ul className="mt-3 divide-y divide-border rounded-lg ring-1 ring-border">
               {attention.factors.map((factor) => (
                 <li
                   key={factor.code}
                   className="flex items-start justify-between gap-4 px-4 py-3"
                 >
                   <span className="min-w-0">
-                    <span className="block text-sm font-medium text-[#142b45]">
+                    <span className="block text-sm font-medium text-foreground">
                       {factor.label}
                     </span>
-                    <span className="mt-0.5 block text-xs text-slate-500">
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
                       {factor.explanation}
                     </span>
                   </span>
-                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+                  <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-foreground">
                     +{factor.points}
                   </span>
                 </li>
@@ -107,9 +107,9 @@ function AttentionCard({
             </ul>
           </>
         ) : (
-          <p className="text-sm text-slate-600">{t("attention.noFactors")}</p>
+          <p className="text-sm text-muted-foreground">{t("attention.noFactors")}</p>
         )}
-        <p className="mt-3 text-xs text-slate-500">{t("attention.tooltip")}</p>
+        <p className="mt-3 text-xs text-muted-foreground">{t("attention.tooltip")}</p>
       </CardContent>
     </Card>
   );
@@ -128,7 +128,7 @@ const checkStatusStyle: Record<
     labelKey: "validation.checkMismatched",
   },
   unavailable: {
-    className: "bg-slate-100 text-slate-600",
+    className: "bg-muted text-muted-foreground",
     labelKey: "validation.checkUnavailable",
   },
   review_required: {
@@ -147,15 +147,15 @@ function FlagList({
   if (flags.length === 0) return null;
   return (
     <div className="mt-4 first:mt-0">
-      <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+      <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
         {heading}
       </p>
       <ul className="mt-2 space-y-2">
         {flags.map((flag, index) => (
           <li key={`${flag.code}-${index}`} className="text-sm">
-            <span className="font-medium text-[#142b45]">{flag.message}</span>
+            <span className="font-medium text-foreground">{flag.message}</span>
             {flag.suggestedAction ? (
-              <span className="mt-0.5 block text-xs text-slate-500">
+              <span className="mt-0.5 block text-xs text-muted-foreground">
                 {flag.suggestedAction}
               </span>
             ) : null}
@@ -181,16 +181,16 @@ function ValidationFlagsCard({
     validation.documentChecks.length === 0;
 
   return (
-    <Card className="rounded-md border-[#d8d3c8]">
+    <Card className="rounded-md border-border">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl text-[#142b45]">
-          <FileCheck2 className="size-5 text-slate-500" aria-hidden="true" />
+        <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+          <FileCheck2 className="size-5 text-muted-foreground" aria-hidden="true" />
           {t("validation.title")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {isClean ? (
-          <p className="text-sm text-slate-600">{t("validation.clean")}</p>
+          <p className="text-sm text-muted-foreground">{t("validation.clean")}</p>
         ) : (
           <>
             <FlagList
@@ -203,10 +203,10 @@ function ValidationFlagsCard({
             />
             {validation.documentChecks.length > 0 ? (
               <div className="mt-4">
-                <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   {t("validation.checksHeading")}
                 </p>
-                <ul className="mt-2 divide-y divide-[#e4e0d6] rounded-lg ring-1 ring-[#e4e0d6]">
+                <ul className="mt-2 divide-y divide-border rounded-lg ring-1 ring-border">
                   {validation.documentChecks.map((check, index) => {
                     const style = checkStatusStyle[check.status];
                     return (
@@ -215,10 +215,10 @@ function ValidationFlagsCard({
                         className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm"
                       >
                         <span className="min-w-0">
-                          <span className="block truncate font-medium text-[#142b45]">
+                          <span className="block truncate font-medium text-foreground">
                             {text(check.documentKey)}
                           </span>
-                          <span className="block truncate text-xs text-slate-500">
+                          <span className="block truncate text-xs text-muted-foreground">
                             {check.reason}
                           </span>
                         </span>
@@ -298,8 +298,8 @@ function ClarificationPanel({
   });
 
   return (
-    <section className="border-t border-[#e4e0d6] pt-5">
-      <h3 className="flex items-center gap-2 font-semibold text-[#142b45]">
+    <section className="border-t border-border pt-5">
+      <h3 className="flex items-center gap-2 font-semibold text-foreground">
         <MessageSquareText className="size-4" aria-hidden="true" />{" "}
         {t("inspector.requestClarification")}
       </h3>
@@ -308,14 +308,14 @@ function ClarificationPanel({
           {clarifications.map((clarification) => (
             <article
               key={clarification.id}
-              className="border border-[#d8d3c8] bg-white p-4"
+              className="border border-border bg-card p-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-medium text-[#142b45]">
+                  <p className="font-medium text-foreground">
                     {clarification.message}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {translateStatus(t, clarification.status)} ·{" "}
                     {formatDate(clarification.createdAt, language)}
                     {clarification.dueAt
@@ -338,39 +338,39 @@ function ClarificationPanel({
               {clarification.responses.map((response) => (
                 <div
                   key={response.id}
-                  className="mt-3 border-l-4 border-primary/40 bg-slate-50 px-4 py-3 text-sm"
+                  className="mt-3 border-l-4 border-primary/40 bg-muted px-4 py-3 text-sm"
                 >
-                  <p className="font-semibold text-[#142b45]">
+                  <p className="font-semibold text-foreground">
                     {response.applicantName}
                   </p>
-                  <p className="mt-1 text-slate-700">{response.message}</p>
+                  <p className="mt-1 text-foreground">{response.message}</p>
                 </div>
               ))}
             </article>
           ))}
         </div>
       ) : (
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-muted-foreground">
           {t("documents.empty")}
         </p>
       )}
 
       {enabled ? (
-        <div className="mt-4 grid gap-3 border border-[#d8d3c8] bg-[#faf9f6] p-4 sm:grid-cols-2">
-          <label className="sm:col-span-2 text-sm font-medium text-[#142b45]">
+        <div className="mt-4 grid gap-3 border border-border bg-muted p-4 sm:grid-cols-2">
+          <label className="sm:col-span-2 text-sm font-medium text-foreground">
             {t("inspector.applicant")}
             <textarea
-              className="mt-1 min-h-24 w-full rounded-md border border-[#aeb7c4] bg-white p-3"
+              className="mt-1 min-h-24 w-full rounded-md border border-input bg-card p-3"
               value={message}
               maxLength={2000}
               onChange={(event) => setMessage(event.target.value)}
               placeholder={t("inspector.clarificationPlaceholder")}
             />
           </label>
-          <label className="text-sm font-medium text-[#142b45]">
+          <label className="text-sm font-medium text-foreground">
             {t("documents.document")} {t("inspector.optional")}
             <select
-              className="mt-1 h-10 w-full rounded-md border border-[#aeb7c4] bg-white px-3"
+              className="mt-1 h-10 w-full rounded-md border border-input bg-card px-3"
               value={documentId}
               onChange={(event) => setDocumentId(event.target.value)}
             >
@@ -382,11 +382,11 @@ function ClarificationPanel({
               ))}
             </select>
           </label>
-          <label className="text-sm font-medium text-[#142b45]">
+          <label className="text-sm font-medium text-foreground">
             {t("inspector.dateDue", { date: "" })}
             <input
               type="date"
-              className="mt-1 h-10 w-full rounded-md border border-[#aeb7c4] bg-white px-3"
+              className="mt-1 h-10 w-full rounded-md border border-input bg-card px-3"
               value={dueDate}
               onChange={(event) => setDueDate(event.target.value)}
             />
@@ -528,7 +528,11 @@ function DocumentReviewCard({
     }
     setMessage(null);
     try {
-      setPreviewUrl(await getInspectorDocumentDownload(projectId, document.id));
+      setPreviewUrl(
+        await getInspectorDocumentDownload(projectId, document.id, {
+          inline: true,
+        }),
+      );
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : t("inspector.openDocumentError"),
@@ -537,7 +541,7 @@ function DocumentReviewCard({
   }
 
   return (
-    <div className="border border-[#d8d3c8] bg-[#faf9f6] p-4">
+    <div className="border border-border bg-muted p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -555,7 +559,7 @@ function DocumentReviewCard({
             {text(document.documentKey)} · {t("application.version", { version: document.version })} ·{" "}
             {(document.sizeBytes / 1_000_000).toFixed(2)} MB
           </p>
-          <p className="mt-1 text-xs font-medium text-slate-600">
+          <p className="mt-1 text-xs font-medium text-muted-foreground">
             {t("inspector.currentReview", { status: translateStatus(t, document.review.status) })}
           </p>
         </div>
@@ -583,14 +587,14 @@ function DocumentReviewCard({
         <iframe
           src={previewUrl}
           title={document.fileName}
-          className="mt-4 h-[32rem] w-full rounded-md border border-[#d8d3c8] bg-white"
+          className="mt-4 h-[32rem] w-full rounded-md border border-border bg-card"
         />
       ) : null}
       <div className="mt-4 grid gap-3 sm:grid-cols-[13rem_1fr_auto] sm:items-end">
-        <label className="text-sm font-medium text-[#142b45]">
+        <label className="text-sm font-medium text-foreground">
           {t("inspector.reviewResult")}
           <select
-            className="mt-1 block h-10 w-full rounded-md border border-[#aeb7c4] bg-white px-3"
+            className="mt-1 block h-10 w-full rounded-md border border-input bg-card px-3"
             value={status}
             onChange={(event) => setStatus(event.target.value as typeof status)}
             disabled={!reviewEnabled || review.isPending}
@@ -600,10 +604,10 @@ function DocumentReviewCard({
             <option value="rejected">{t("inspector.reject")}</option>
           </select>
         </label>
-        <label className="text-sm font-medium text-[#142b45]">
+        <label className="text-sm font-medium text-foreground">
           {t("inspector.comment")} {status !== "accepted" ? t("inspector.required") : t("inspector.optional")}
           <input
-            className="mt-1 block h-10 w-full rounded-md border border-[#aeb7c4] bg-white px-3"
+            className="mt-1 block h-10 w-full rounded-md border border-input bg-card px-3"
             value={comment}
             maxLength={2000}
             onChange={(event) => setComment(event.target.value)}
@@ -624,7 +628,7 @@ function DocumentReviewCard({
         </Button>
       </div>
       {message ? (
-        <p className="mt-3 text-sm text-slate-600" role="status">
+        <p className="mt-3 text-sm text-muted-foreground" role="status">
           {message}
         </p>
       ) : null}
@@ -656,13 +660,13 @@ function ApprovalAssignControl({
 
   return (
     <label className="flex items-center gap-2 text-sm">
-      <UserCog className="size-4 text-slate-500" aria-hidden="true" />
-      <span className="text-slate-500">{t("assignment.assignedTo")}</span>
+      <UserCog className="size-4 text-muted-foreground" aria-hidden="true" />
+      <span className="text-muted-foreground">{t("assignment.assignedTo")}</span>
       <select
         value={assignedTo ?? ""}
         disabled={assign.isPending || officers.isPending}
         onChange={(event) => assign.mutate(event.target.value || null)}
-        className="h-9 cursor-pointer rounded-md border border-[#cfd4dc] bg-white px-2 text-sm text-[#142b45] transition-colors hover:border-[#94a3b8] focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+        className="h-9 cursor-pointer rounded-md border border-border bg-card px-2 text-sm text-foreground transition-colors hover:border-border focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
       >
         <option value="">{t("assignment.unassigned")}</option>
         {(officers.data ?? []).map((officer) => (
@@ -683,10 +687,10 @@ function ActivityTimelineCard({
   const { t, language } = useLanguage();
   if (timeline.length === 0) return null;
   return (
-    <Card className="rounded-md border-[#d8d3c8]">
+    <Card className="rounded-md border-border">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl text-[#142b45]">
-          <History className="size-5 text-slate-500" aria-hidden="true" />
+        <CardTitle className="flex items-center gap-2 text-xl text-foreground">
+          <History className="size-5 text-muted-foreground" aria-hidden="true" />
           {t("activity.title")}
         </CardTitle>
       </CardHeader>
@@ -699,9 +703,9 @@ function ActivityTimelineCard({
                 aria-hidden="true"
               />
               <div className="min-w-0">
-                <p className="text-sm text-[#142b45]">
+                <p className="text-sm text-foreground">
                   <span className="font-semibold">{event.actorName}</span>{" "}
-                  <span className="text-slate-600">
+                  <span className="text-muted-foreground">
                     {t(
                       event.actorRole === "inspector"
                         ? "activity.byInspector"
@@ -713,13 +717,13 @@ function ActivityTimelineCard({
                     {translateStatus(t, event.toStatus)}
                   </span>
                   {event.approvalTitle ? (
-                    <span className="text-slate-600"> · {event.approvalTitle}</span>
+                    <span className="text-muted-foreground"> · {event.approvalTitle}</span>
                   ) : null}
                 </p>
                 {event.note ? (
-                  <p className="mt-0.5 text-sm text-slate-600">{event.note}</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{event.note}</p>
                 ) : null}
-                <p className="mt-0.5 text-xs text-slate-400">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {formatDate(event.createdAt, language)}
                 </p>
               </div>
@@ -766,9 +770,9 @@ function InspectorCertificateCard({ projectId }: { projectId: string }) {
   const certificate = query.data;
 
   return (
-    <Card className="rounded-md border-[#d8d3c8] duration-500 animate-in fade-in">
+    <Card className="rounded-md border-border duration-500 animate-in fade-in">
       <CardHeader className="flex-row items-center justify-between gap-3 space-y-0">
-        <CardTitle className="flex items-center gap-2 text-xl text-[#142b45]">
+        <CardTitle className="flex items-center gap-2 text-xl text-foreground">
           <Award className="size-5 text-emerald-600" aria-hidden="true" />
           {t("certificate.title")}
         </CardTitle>
@@ -790,28 +794,28 @@ function InspectorCertificateCard({ projectId }: { projectId: string }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {query.isLoading ? (
-          <p className="flex items-center gap-2 text-sm text-slate-500">
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             {t("certificate.loading")}
           </p>
         ) : !certificate ? (
-          <p className="text-sm text-slate-600">{t("certificate.pending")}</p>
+          <p className="text-sm text-muted-foreground">{t("certificate.pending")}</p>
         ) : (
           <>
             <dl className="grid gap-4 sm:grid-cols-2">
               <div>
-                <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                <dt className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   {t("certificate.number")}
                 </dt>
-                <dd className="mt-1 text-sm font-medium text-[#142b45]">
+                <dd className="mt-1 text-sm font-medium text-foreground">
                   {certificate.certificateNumber}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                <dt className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   {t("certificate.issuedOn")}
                 </dt>
-                <dd className="mt-1 text-sm font-medium text-[#142b45]">
+                <dd className="mt-1 text-sm font-medium text-foreground">
                   {formatDate(certificate.issuedAt, language)}
                 </dd>
               </div>
@@ -844,10 +848,10 @@ function InspectorCertificateCard({ projectId }: { projectId: string }) {
               ) : null}
             </div>
             {revoking ? (
-              <div className="space-y-2 rounded-md border border-[#e4e0d6] bg-[#faf8f3] p-3">
+              <div className="space-y-2 rounded-md border border-border bg-muted p-3">
                 <label
                   htmlFor="revoke-reason"
-                  className="text-sm font-medium text-[#142b45]"
+                  className="text-sm font-medium text-foreground"
                 >
                   {t("certificate.revokeReason")}
                 </label>
@@ -856,7 +860,7 @@ function InspectorCertificateCard({ projectId }: { projectId: string }) {
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
                   rows={3}
-                  className="w-full rounded-md border border-[#d8d3c8] px-3 py-2 text-sm transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none"
                 />
                 <Button
                   type="button"
@@ -950,9 +954,9 @@ function ReviewContent({
 
   return (
     <div className="space-y-6">
-      <Card className="rounded-md border-[#d8d3c8]">
+      <Card className="rounded-md border-border">
         <CardHeader>
-          <CardTitle className="text-xl text-[#142b45]">
+          <CardTitle className="text-xl text-foreground">
             {t("inspector.applicantProject")}
           </CardTitle>
         </CardHeader>
@@ -966,10 +970,10 @@ function ReviewContent({
             [t("inspector.projectStatus"), translateStatus(t, application.projectStatus)],
           ].map(([label, value]) => (
             <div key={label}>
-              <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                 {label}
               </p>
-              <p className="mt-1 text-sm font-medium text-[#142b45]">{value}</p>
+              <p className="mt-1 text-sm font-medium text-foreground">{value}</p>
             </div>
           ))}
         </CardContent>
@@ -991,9 +995,9 @@ function ReviewContent({
         <InspectorCertificateCard projectId={projectId} />
       ) : null}
 
-      <Card className="rounded-md border-[#d8d3c8]">
+      <Card className="rounded-md border-border">
         <CardHeader>
-          <CardTitle className="text-xl text-[#142b45]">
+          <CardTitle className="text-xl text-foreground">
             {t("inspector.questionnaire")}
           </CardTitle>
         </CardHeader>
@@ -1001,10 +1005,10 @@ function ReviewContent({
           <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
             {questionnaire.map(([key, value]) => (
               <div key={key}>
-                <dt className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                <dt className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   {text(humanize(key.replace(/([a-z])([A-Z])/g, "$1 $2")))}
                 </dt>
-                <dd className="mt-1 break-words text-sm font-medium text-[#142b45]">
+                <dd className="mt-1 break-words text-sm font-medium text-foreground">
                   {Array.isArray(value)
                     ? value.map((item) => text(String(item))).join(", ")
                     : text(String(value))}
@@ -1037,14 +1041,14 @@ function ReviewContent({
         );
         const note = decisionNotes[approval.id] ?? approval.decisionNote ?? "";
         return (
-          <Card key={approval.id} className="rounded-md border-[#d8d3c8]">
-            <CardHeader className="border-b border-[#e4e0d6]">
+          <Card key={approval.id} className="rounded-md border-border">
+            <CardHeader className="border-b border-border">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold tracking-wide text-primary uppercase">
                     {translateStatus(t, approval.reviewStatus)}
                   </p>
-                  <CardTitle className="mt-2 text-2xl text-[#142b45]">
+                  <CardTitle className="mt-2 text-2xl text-foreground">
                     {text(approval.title)}
                   </CardTitle>
                 </div>
@@ -1069,7 +1073,7 @@ function ReviewContent({
             </CardHeader>
             <CardContent className="space-y-4 p-6">
               <div>
-                <h3 className="font-semibold text-[#142b45]">{t("inspector.documents")}</h3>
+                <h3 className="font-semibold text-foreground">{t("inspector.documents")}</h3>
                 <div className="mt-3 space-y-3">
                   {documents.length ? (
                     documents.map((document) => (
@@ -1099,11 +1103,11 @@ function ReviewContent({
               />
 
               {reviewEnabled ? (
-                <div className="border-t border-[#e4e0d6] pt-5">
-                  <label className="block text-sm font-semibold text-[#142b45]">
+                <div className="border-t border-border pt-5">
+                  <label className="block text-sm font-semibold text-foreground">
                     {t("inspector.decisionNote")}
                     <textarea
-                      className="mt-2 min-h-24 w-full rounded-md border border-[#aeb7c4] bg-white p-3 font-normal"
+                      className="mt-2 min-h-24 w-full rounded-md border border-input bg-card p-3 font-normal"
                       maxLength={2000}
                       value={note}
                       onChange={(event) =>
@@ -1160,7 +1164,7 @@ function ReviewContent({
                   </div>
                 </div>
               ) : approval.decisionNote ? (
-                <p className="border-l-4 border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                <p className="border-l-4 border-border bg-muted px-4 py-3 text-sm text-foreground">
                   {approval.decisionNote}
                 </p>
               ) : null}
@@ -1183,12 +1187,12 @@ export function InspectorApplicationView({ projectId }: { projectId: string }) {
     <div className="mx-auto w-full max-w-6xl px-6 py-8">
       <Link
         href="/inspector/dashboard"
-        className="inline-flex h-10 items-center gap-2 rounded-md border border-[#d8d3c8] bg-white px-4 text-sm font-semibold text-[#142b45] shadow-sm hover:bg-slate-50 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="inline-flex h-10 items-center gap-2 rounded-md border border-border bg-card px-4 text-sm font-semibold text-foreground shadow-sm hover:bg-muted focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <ArrowLeft aria-hidden="true" /> {t("inspector.backQueue")}
       </Link>
       {query.isPending ? (
-        <div className="mt-8 flex items-center gap-3 border border-[#e4e0d6] p-8 text-slate-600">
+        <div className="mt-8 flex items-center gap-3 border border-border p-8 text-muted-foreground">
           <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {t("inspector.loadingApplication")}
         </div>
       ) : query.isError ? (
@@ -1205,10 +1209,10 @@ export function InspectorApplicationView({ projectId }: { projectId: string }) {
             <p className="text-sm font-semibold text-primary">
               {t("inspector.applicationReview")}
             </p>
-            <h1 className="mt-1 font-heading text-4xl font-bold tracking-tight text-[#142b45]">
+            <h1 className="mt-1 font-heading text-4xl font-bold tracking-tight text-foreground">
               {query.data.enterpriseName}
             </h1>
-            <p className="mt-2 text-slate-600">
+            <p className="mt-2 text-muted-foreground">
               {t("common.submitted", { date: formatDate(query.data.submittedAt, language) })}
             </p>
           </header>

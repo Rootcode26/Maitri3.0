@@ -70,24 +70,24 @@ export function ApplicantDocuments() {
         <p className="text-sm font-semibold text-primary">
           {text("Applicant workspace")}
         </p>
-        <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-[#142b45] sm:text-4xl">
+        <h1 className="mt-1 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           {t("documents.title")}
         </h1>
-        <p className="mt-2 max-w-2xl text-slate-600">
+        <p className="mt-2 max-w-2xl text-muted-foreground">
           {t("documents.description")}
         </p>
       </header>
-      <div className="mt-7 grid gap-3 border-y border-[#e4e0d6] py-4 md:grid-cols-[1fr_15rem]">
+      <div className="mt-7 grid gap-3 border-y border-border py-4 md:grid-cols-[1fr_15rem]">
         <label className="relative">
           <span className="sr-only">{t("documents.search")}</span>
           <Search
-            className="pointer-events-none absolute top-3 left-3 size-5 text-slate-400"
+            className="pointer-events-none absolute top-3 left-3 size-5 text-muted-foreground"
             aria-hidden="true"
           />
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            className="h-11 w-full rounded-md border border-[#aeb7c4] pr-3 pl-10 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="h-11 w-full rounded-md border border-input pr-3 pl-10 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
             placeholder={t("documents.searchPlaceholder")}
           />
         </label>
@@ -96,7 +96,7 @@ export function ApplicantDocuments() {
           <select
             value={status}
             onChange={(event) => setStatus(event.target.value)}
-            className="h-11 w-full rounded-md border border-[#aeb7c4] bg-white px-3 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="h-11 w-full rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <option value="all">{t("documents.allStatuses")}</option>
             <option value="pending">{text("Pending")}</option>
@@ -115,7 +115,7 @@ export function ApplicantDocuments() {
         </p>
       ) : null}
       {pending ? (
-        <div className="mt-8 flex items-center gap-3 border border-[#e4e0d6] p-8 text-slate-600">
+        <div className="mt-8 flex items-center gap-3 border border-border p-8 text-muted-foreground">
           <Loader2 className="size-5 animate-spin" aria-hidden="true" /> {text("Loading documents…")}
         </div>
       ) : failed ? (
@@ -137,14 +137,14 @@ export function ApplicantDocuments() {
           </Button>
         </div>
       ) : filtered.length ? (
-        <div className="mt-6 overflow-hidden border border-[#d8d3c8]">
-          <div className="hidden grid-cols-[1.4fr_1fr_0.7fr_auto] gap-4 bg-[#f7f6f2] px-5 py-3 text-xs font-semibold tracking-wide text-slate-500 uppercase md:grid">
+        <div className="mt-6 overflow-hidden border border-border">
+          <div className="hidden grid-cols-[1.4fr_1fr_0.7fr_auto] gap-4 bg-muted px-5 py-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase md:grid">
             <span>{t("documents.document")}</span>
             <span>{t("documents.application")}</span>
             <span>{t("documents.review")}</span>
             <span>{t("documents.action")}</span>
           </div>
-          <ul className="divide-y divide-[#e4e0d6]">
+          <ul className="divide-y divide-border">
             {filtered.map((document) => {
               const projectId = document.projectId ?? "";
               return (
@@ -153,15 +153,15 @@ export function ApplicantDocuments() {
                   className="grid gap-4 px-5 py-4 md:grid-cols-[1.4fr_1fr_0.7fr_auto] md:items-center"
                 >
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-[#142b45]">
+                    <p className="truncate font-semibold text-foreground">
                       {document.documentName ? text(document.documentName) : document.fileName}
                     </p>
-                    <p className="mt-1 break-all text-xs text-slate-500">
+                    <p className="mt-1 break-all text-xs text-muted-foreground">
                       {document.fileName} · v{document.version} ·{" "}
                       {(document.sizeBytes / 1_000_000).toFixed(2)} MB
                     </p>
                     {document.review?.comment ? (
-                      <p className="mt-2 text-sm text-slate-700">
+                      <p className="mt-2 text-sm text-foreground">
                         {document.review.comment}
                       </p>
                     ) : null}
@@ -173,7 +173,7 @@ export function ApplicantDocuments() {
                     >
                       {projectNames.get(projectId) ?? t("documents.openApplication")}
                     </Link>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {document.departmentName ? text(document.departmentName) : "—"}
                     </p>
                   </div>
@@ -192,22 +192,22 @@ export function ApplicantDocuments() {
           </ul>
         </div>
       ) : (
-        <div className="mt-8 rounded-md border border-dashed border-[#aeb7c4] bg-[#faf9f6] p-8 text-center sm:p-10">
+        <div className="mt-8 rounded-md border border-dashed border-input bg-muted p-8 text-center sm:p-10">
           <FileSearch
-            className="mx-auto size-8 text-slate-400"
+            className="mx-auto size-8 text-muted-foreground"
             aria-hidden="true"
           />
-          <h2 className="mt-3 text-lg font-semibold text-[#142b45]">
+          <h2 className="mt-3 text-lg font-semibold text-foreground">
             {t("documents.empty")}
           </h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             {t("documents.emptyHint")}
           </p>
           <Button
             render={<Link href="/applicant/projects/new" />}
             nativeButton={false}
             variant="outline"
-            className="mt-5 h-10 bg-white px-5"
+            className="mt-5 h-10 bg-card px-5"
           >
             {text("Create new project")}
           </Button>

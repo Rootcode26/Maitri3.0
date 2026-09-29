@@ -34,11 +34,11 @@ export function ForgotPasswordForm() {
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
-      <p className="text-sm leading-6 text-slate-600">{t("auth.forgotDescription")}</p>
+      <p className="text-sm leading-6 text-muted-foreground">{t("auth.forgotDescription")}</p>
       <FormStatus message={serverError} />
       <div className="space-y-1.5">
         <Label htmlFor="recovery-phone">{t("auth.mobile")}</Label>
-        <div className="flex"><span className="flex h-11 items-center rounded-l-md border border-r-0 border-input bg-slate-50 px-3 text-sm text-slate-600" aria-hidden="true">+91</span><Input id="recovery-phone" type="tel" inputMode="numeric" autoComplete="tel-national" maxLength={10} className="h-11 rounded-l-none bg-white" aria-invalid={Boolean(errors.phone)} aria-describedby={errors.phone ? "recovery-phone-error" : undefined} {...register("phone")} /></div>
+        <div className="flex"><span className="flex h-11 items-center rounded-l-md border border-r-0 border-input bg-muted px-3 text-sm text-muted-foreground" aria-hidden="true">+91</span><Input id="recovery-phone" type="tel" inputMode="numeric" autoComplete="tel-national" maxLength={10} className="h-11 rounded-l-none bg-card" aria-invalid={Boolean(errors.phone)} aria-describedby={errors.phone ? "recovery-phone-error" : undefined} {...register("phone")} /></div>
         <FieldError id="recovery-phone-error" message={errors.phone?.message} />
       </div>
       <Button type="submit" size="lg" className="h-11 w-full" disabled={isSubmitting} aria-busy={isSubmitting}>{isSubmitting ? t("auth.sendingCode") : t("auth.sendResetCode")} <ArrowRight aria-hidden="true" /></Button>

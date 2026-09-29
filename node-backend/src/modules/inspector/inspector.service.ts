@@ -184,7 +184,12 @@ export class InspectorService {
     return application;
   }
 
-  async getDownloadUrl(departmentId: string | null, projectId: string, documentId: string) {
+  async getDownloadUrl(
+    departmentId: string | null,
+    projectId: string,
+    documentId: string,
+    options?: { inline?: boolean },
+  ) {
     if (!this.storage) {
       throw new AppError('Document storage is not configured', {
         statusCode: 503,
@@ -202,7 +207,11 @@ export class InspectorService {
         code: 'DOCUMENT_NOT_FOUND',
       });
     }
-    return this.storage.signedGetUrl(document.storage_key, document.file_name);
+    return this.storage.signedGetUrl(
+      document.storage_key,
+      document.file_name,
+      options?.inline ? 'inline' : 'attachment',
+    );
   }
 
   async startReview(

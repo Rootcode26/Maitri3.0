@@ -265,7 +265,11 @@ describe('InspectorService', () => {
     await expect(service.getDownloadUrl('department-1', 'project-1', 'doc-1')).resolves.toBe(
       'https://storage.example/signed',
     );
-    expect(signedGetUrl).toHaveBeenCalledWith('projects/p1/plan.pdf', 'plan.pdf');
+    expect(signedGetUrl).toHaveBeenCalledWith(
+      'projects/p1/plan.pdf',
+      'plan.pdf',
+      'attachment',
+    );
   });
 
   it('requires review to start before a document decision', async () => {
