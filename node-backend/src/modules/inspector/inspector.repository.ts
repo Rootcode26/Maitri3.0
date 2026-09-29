@@ -130,6 +130,26 @@ const toValidationFlags = (value: unknown): ValidationFlags | null => {
   };
 };
 
+/**
+ * The stored validation snapshot covers the whole application (every
+ * department's documents). An inspector must only see findings for their own
+ * department, so keep document checks whose approval is in this department and
+ * warnings/review items that are either project-level (no approval) or in it.
+ */
+const scopeValidationToDepartment = (
+  flags: ValidationFlags | null,
+  approvalKeys: ReadonlySet<string>,
+): ValidationFlags | null => {
+  if (!flags) return null;
+  const keep = <T extends { approvalKey: string | null }>(items: T[]): T[] =>
+    items.filter((item) => item.approvalKey === null || approvalKeys.has(item.approvalKey));
+  return {
+    warnings: keep(flags.warnings),
+    reviewItems: keep(flags.reviewItems),
+    documentChecks: flags.documentChecks.filter((check) => approvalKeys.has(check.approvalKey)),
+  };
+};
+
 interface ClarificationRow {
   id: string;
   project_id: string;
@@ -851,7 +871,10 @@ export class InspectorRepository {
         project.attention_level,
         project.attention_factors,
       ),
-      validation: toValidationFlags(project.validation_flags),
+      validation: scopeValidationToDepartment(
+        toValidationFlags(project.validation_flags),
+        new Set(approvals.rows.map((row) => row.approval_key)),
+      ),
       approvals: approvals.rows.map(mapApproval),
       documents: documents.rows.map(mapDocument),
       clarifications: mapClarifications(clarifications.rows, clarificationResponses.rows),
