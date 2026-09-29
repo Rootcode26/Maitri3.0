@@ -255,6 +255,7 @@ describe("inspector workflow", () => {
 
     expect(await screen.findByText("Reviewed")).toBeInTheDocument();
     expect(screen.getByText("1 of 1 documents reviewed")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Update review" })).toBeInTheDocument();
     expect(
       screen.getByRole("progressbar", { name: "Document review progress" }),
     ).toHaveAttribute("aria-valuenow", "1");

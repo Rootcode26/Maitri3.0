@@ -495,26 +495,29 @@ function DocumentReviewProgress({
 
   return (
     <section
-      className="rounded-md border border-[#cbd8e3] bg-white px-5 py-4"
+      className="rounded-md border border-border bg-card px-5 py-4"
       aria-labelledby="document-review-progress-title"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2
             id="document-review-progress-title"
-            className="flex items-center gap-2 font-semibold text-[#142b45]"
+            className="flex items-center gap-2 font-semibold text-foreground"
           >
-            <FileCheck2 className="size-5 text-emerald-700" aria-hidden="true" />
+            <FileCheck2
+              className="size-5 text-emerald-700 dark:text-emerald-400"
+              aria-hidden="true"
+            />
             {t("inspector.reviewProgress")}
           </h2>
-          <p className="mt-1 text-sm text-slate-600">{progressText}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{progressText}</p>
         </div>
-        <span className="text-lg font-bold tabular-nums text-[#142b45]">
+        <span className="text-lg font-bold tabular-nums text-foreground">
           {percentage}%
         </span>
       </div>
       <div
-        className="mt-3 h-3 overflow-hidden rounded-full bg-slate-200"
+        className="mt-3 h-3 overflow-hidden rounded-full bg-muted"
         role="progressbar"
         aria-label={t("inspector.reviewProgress")}
         aria-valuemin={0}
@@ -523,7 +526,7 @@ function DocumentReviewProgress({
         aria-valuetext={progressText}
       >
         <div
-          className="h-full rounded-full bg-emerald-600 transition-[width] duration-300 motion-reduce:transition-none"
+          className="h-full rounded-full bg-emerald-600 transition-[width] duration-300 motion-reduce:transition-none dark:bg-emerald-500"
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -605,17 +608,17 @@ function DocumentReviewCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="min-w-0 truncate font-semibold text-[#142b45]">
+            <p className="min-w-0 truncate font-semibold text-foreground">
               {document.fileName}
             </p>
             {reviewed ? (
-              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                 <FileCheck2 className="size-3.5" aria-hidden="true" />
                 {t("inspector.reviewed")}
               </span>
             ) : null}
           </div>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-muted-foreground">
             {text(document.documentKey)} · {t("application.version", { version: document.version })} ·{" "}
             {(document.sizeBytes / 1_000_000).toFixed(2)} MB
           </p>
@@ -684,7 +687,11 @@ function DocumentReviewCard({
             (status !== "accepted" && !comment.trim())
           }
         >
-          {review.isPending ? t("inspector.saving") : t("inspector.saveReview")}
+          {review.isPending
+            ? t("inspector.saving")
+            : reviewed
+              ? t("inspector.updateReview")
+              : t("inspector.saveReview")}
         </Button>
       </div>
       {message ? (
