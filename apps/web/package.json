@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "validate": "eslint . && tsc --noEmit && vitest run && next build"
+    "validate": "eslint . && tsc --noEmit && vitest run && pnpm build"
   },
   "dependencies": {
     "@base-ui/react": "1.8.0",

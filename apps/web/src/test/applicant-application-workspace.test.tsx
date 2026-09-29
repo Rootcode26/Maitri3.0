@@ -165,7 +165,8 @@ describe("applicant application workspace", () => {
       approvals: application.approvals,
       createdAt: summary.createdAt,
     };
-    const fetchMock = vi.fn(async (url: string, _init?: RequestInit) => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      void init;
       if (String(url).endsWith("/documents"))
         return { ok: true, json: async () => ({ data: { documents: [] } }) };
       return { ok: true, json: async () => ({ data: { project: draftProject } }) };

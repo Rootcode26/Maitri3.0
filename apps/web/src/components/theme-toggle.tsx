@@ -3,13 +3,11 @@
 import { Moon, Sun } from "lucide-react";
 import { useSyncExternalStore } from "react";
 
-function subscribeToTheme(onStoreChange: () => void) {
-  const observer = new MutationObserver(onStoreChange);
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["class"],
-  });
-  return () => observer.disconnect();
+const themeChangeEvent = "udyogsetu:theme-change";
+
+function subscribeToThemeChange(onStoreChange: () => void) {
+  document.addEventListener(themeChangeEvent, onStoreChange);
+  return () => document.removeEventListener(themeChangeEvent, onStoreChange);
 }
 
 function getThemeSnapshot() {
@@ -27,7 +25,7 @@ function getServerThemeSnapshot() {
  */
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const dark = useSyncExternalStore(
-    subscribeToTheme,
+    subscribeToThemeChange,
     getThemeSnapshot,
     getServerThemeSnapshot,
   );
@@ -40,6 +38,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     } catch {
       /* storage unavailable (private mode) — the class still applies for this session */
     }
+    document.dispatchEvent(new Event(themeChangeEvent));
   }
 
   return (

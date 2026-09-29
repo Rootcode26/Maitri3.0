@@ -145,15 +145,32 @@ function FlagList({
   flags: ValidationFlag[];
 }) {
   if (flags.length === 0) return null;
+  // The same generic finding is emitted once per document, so collapse identical
+  // messages into a single line with a count instead of a long repeated list.
+  const unique = new Map<string, { flag: ValidationFlag; count: number }>();
+  for (const flag of flags) {
+    const key = `${flag.message}||${flag.suggestedAction ?? ""}`;
+    const existing = unique.get(key);
+    if (existing) existing.count += 1;
+    else unique.set(key, { flag, count: 1 });
+  }
   return (
     <div className="mt-4 first:mt-0">
       <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
         {heading}
       </p>
       <ul className="mt-2 space-y-2">
-        {flags.map((flag, index) => (
+        {[...unique.values()].map(({ flag, count }, index) => (
           <li key={`${flag.code}-${index}`} className="text-sm">
-            <span className="font-medium text-foreground">{flag.message}</span>
+            <span className="font-medium text-foreground">
+              {flag.message}
+              {count > 1 ? (
+                <span className="font-normal text-muted-foreground">
+                  {" "}
+                  · {count} documents
+                </span>
+              ) : null}
+            </span>
             {flag.suggestedAction ? (
               <span className="mt-0.5 block text-xs text-muted-foreground">
                 {flag.suggestedAction}
@@ -179,6 +196,49 @@ function ValidationFlagsCard({
     validation.warnings.length === 0 &&
     validation.reviewItems.length === 0 &&
     validation.documentChecks.length === 0;
+
+  // Collapse the many per-field checks into one clear line per document. Generic
+  // boilerplate rows (no field) are dropped; only real signals are summarised.
+  const fieldLabel = (field: string): string =>
+    (
+      ({
+        cin: "CIN",
+        gstin: "GSTIN",
+        pan: "PAN",
+        udyam: "Udyam number",
+        pincode: "PIN code",
+        enterpriseName: "business name",
+      }) as Record<string, string>
+    )[field] ?? field;
+
+  const documentSummaries = Object.entries(
+    validation.documentChecks.reduce<
+      Record<string, (typeof validation.documentChecks)[number][]>
+    >((acc, check) => {
+      (acc[check.documentKey] ??= []).push(check);
+      return acc;
+    }, {}),
+  ).map(([documentKey, checks]) => {
+    const mismatched = checks.filter((c) => c.status === "mismatched" && c.field);
+    const agreed = checks.filter(
+      (c) => c.field && c.status !== "mismatched" && c.status !== "unavailable",
+    );
+    let status: ValidationCheckStatus;
+    let reason: string;
+    if (mismatched.length) {
+      status = "mismatched";
+      const names = mismatched.map((c) => fieldLabel(c.field!)).join(", ");
+      reason = `${names} on the document ${mismatched.length > 1 ? "differ" : "differs"} from the application.`;
+    } else if (agreed.length) {
+      status = "review_required";
+      const names = agreed.map((c) => fieldLabel(c.field!)).join(", ");
+      reason = `${names} match the application — confirm the document is genuine.`;
+    } else {
+      status = "unavailable";
+      reason = "No details could be auto-checked — review this document manually.";
+    }
+    return { documentKey, status, reason };
+  });
 
   return (
     <Card className="rounded-md border-border">
@@ -207,19 +267,19 @@ function ValidationFlagsCard({
                   {t("validation.checksHeading")}
                 </p>
                 <ul className="mt-2 divide-y divide-border rounded-lg ring-1 ring-border">
-                  {validation.documentChecks.map((check, index) => {
-                    const style = checkStatusStyle[check.status];
+                  {documentSummaries.map((summary) => {
+                    const style = checkStatusStyle[summary.status];
                     return (
                       <li
-                        key={`${check.documentKey}-${check.field ?? index}`}
+                        key={summary.documentKey}
                         className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm"
                       >
                         <span className="min-w-0">
                           <span className="block truncate font-medium text-foreground">
-                            {text(check.documentKey)}
+                            {text(summary.documentKey)}
                           </span>
-                          <span className="block truncate text-xs text-muted-foreground">
-                            {check.reason}
+                          <span className="block text-xs text-muted-foreground">
+                            {text(summary.reason)}
                           </span>
                         </span>
                         <span
