@@ -1377,14 +1377,14 @@ export function NewProjectWizard() {
                     isCurrent
                       ? "bg-primary shadow-sm"
                       : reachable
-                        ? "hover:bg-card/10"
+                        ? "hover:bg-white/10"
                         : "cursor-not-allowed opacity-55"
                   }`}
                 >
                   <span
                     className={`grid size-7 shrink-0 place-items-center rounded-full border text-sm font-semibold ${
                       isCurrent
-                        ? "border-white bg-card text-primary"
+                        ? "border-white bg-primary-foreground text-primary"
                         : isDone
                           ? "border-amber-400 text-amber-400"
                           : "border-white/40 text-slate-200"
