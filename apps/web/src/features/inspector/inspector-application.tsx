@@ -145,15 +145,32 @@ function FlagList({
   flags: ValidationFlag[];
 }) {
   if (flags.length === 0) return null;
+  // The same generic finding is emitted once per document, so collapse identical
+  // messages into a single line with a count instead of a long repeated list.
+  const unique = new Map<string, { flag: ValidationFlag; count: number }>();
+  for (const flag of flags) {
+    const key = `${flag.message}||${flag.suggestedAction ?? ""}`;
+    const existing = unique.get(key);
+    if (existing) existing.count += 1;
+    else unique.set(key, { flag, count: 1 });
+  }
   return (
     <div className="mt-4 first:mt-0">
       <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
         {heading}
       </p>
       <ul className="mt-2 space-y-2">
-        {flags.map((flag, index) => (
+        {[...unique.values()].map(({ flag, count }, index) => (
           <li key={`${flag.code}-${index}`} className="text-sm">
-            <span className="font-medium text-foreground">{flag.message}</span>
+            <span className="font-medium text-foreground">
+              {flag.message}
+              {count > 1 ? (
+                <span className="font-normal text-muted-foreground">
+                  {" "}
+                  · {count} documents
+                </span>
+              ) : null}
+            </span>
             {flag.suggestedAction ? (
               <span className="mt-0.5 block text-xs text-muted-foreground">
                 {flag.suggestedAction}
