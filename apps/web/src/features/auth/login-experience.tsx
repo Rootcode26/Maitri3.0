@@ -152,29 +152,29 @@ export function LoginExperience({ mode }: { mode: LoginMode }) {
             <p className="text-base font-bold tracking-wide text-primary">
               {text(content.eyebrow)}
             </p>
-            <h1 className="mt-2 text-pretty text-4xl leading-tight font-semibold tracking-[-0.035em] text-[#122a4c] sm:text-5xl">
+            <h1 className="mt-2 text-pretty text-4xl leading-tight font-semibold tracking-[-0.035em] text-foreground sm:text-5xl">
               {text(content.title)}
             </h1>
-            <p className="mt-3 max-w-lg text-pretty text-base leading-7 text-[#58657a]">
+            <p className="mt-3 max-w-lg text-pretty text-base leading-7 text-muted-foreground">
               {text(content.description)}
             </p>
             <nav
               aria-label={text("Choose a sign-in workspace")}
-              className="mt-5 grid grid-cols-2 gap-1 rounded-md border border-border bg-[#e9e9e7] p-1.5 shadow-sm"
+              className="mt-5 grid grid-cols-2 gap-1 rounded-md border border-border bg-muted p-1.5 shadow-sm"
             >
               {workspaceLinks.map((workspace) => (
                 <Link
                   key={workspace.mode}
                   href={workspace.href}
                   aria-current={workspace.mode === mode ? "page" : undefined}
-                  className="flex min-h-13 items-center justify-center rounded-sm border border-transparent px-2 text-base font-semibold text-[#4c586b] transition-[background-color,border-color,color,box-shadow] hover:border-[#c4cbd5] hover:bg-card hover:text-foreground focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#315f9f] aria-[current=page]:border-[#214d90] aria-[current=page]:bg-[#315f9f] aria-[current=page]:text-white aria-[current=page]:shadow-[0_4px_10px_rgba(49,95,159,0.24)]"
+                  className="flex min-h-13 items-center justify-center rounded-sm border border-transparent px-2 text-base font-semibold text-muted-foreground transition-[background-color,border-color,color,box-shadow] hover:border-border hover:bg-card hover:text-foreground focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#315f9f] aria-[current=page]:border-[#214d90] aria-[current=page]:bg-[#315f9f] aria-[current=page]:text-white aria-[current=page]:shadow-[0_4px_10px_rgba(49,95,159,0.24)]"
                 >
                   {text(workspace.label)}
                 </Link>
               ))}
             </nav>
             <section
-              className="mt-3 flex items-center gap-3 border border-border bg-[#f2f4f6] px-4 py-3"
+              className="mt-3 flex items-center gap-3 border border-border bg-muted px-4 py-3"
               aria-label={`${text(content.label)} ${t("nav.workspace")}`}
             >
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-card text-primary shadow-sm">
@@ -184,7 +184,7 @@ export function LoginExperience({ mode }: { mode: LoginMode }) {
                 <h2 className="font-semibold text-foreground">
                   {text(`${content.label} Workspace`)}
                 </h2>
-                <p className="text-sm leading-5 text-[#5c6778]">
+                <p className="text-sm leading-5 text-muted-foreground">
                   {text(content.note)}
                 </p>
               </div>

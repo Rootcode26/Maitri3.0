@@ -884,7 +884,7 @@ function ValidationReport({
             return (
               <li
                 key={approval.approvalKey}
-                className="rounded-md bg-muted px-3 py-3 ring-1 ring-[#eee9dd]"
+                className="rounded-md bg-muted px-3 py-3 ring-1 ring-border"
               >
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <Building2

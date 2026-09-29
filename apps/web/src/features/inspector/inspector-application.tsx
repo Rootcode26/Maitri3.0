@@ -598,7 +598,7 @@ function ApprovalAssignControl({
         value={assignedTo ?? ""}
         disabled={assign.isPending || officers.isPending}
         onChange={(event) => assign.mutate(event.target.value || null)}
-        className="h-9 cursor-pointer rounded-md border border-border bg-card px-2 text-sm text-foreground transition-colors hover:border-[#94a3b8] focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+        className="h-9 cursor-pointer rounded-md border border-border bg-card px-2 text-sm text-foreground transition-colors hover:border-border focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
       >
         <option value="">{t("assignment.unassigned")}</option>
         {(officers.data ?? []).map((officer) => (

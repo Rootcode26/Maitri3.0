@@ -160,7 +160,7 @@ export function InspectorApplicationsPage() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t("inspector.searchPlaceholder")}
-            className="h-11 w-full rounded-md border border-border bg-card pr-3 pl-10 text-sm text-foreground transition-colors hover:border-[#94a3b8] focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
+            className="h-11 w-full rounded-md border border-border bg-card pr-3 pl-10 text-sm text-foreground transition-colors hover:border-border focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
           />
         </label>
 
@@ -802,7 +802,7 @@ export function InspectorReportsPage() {
 
           <section className="border border-border bg-card p-6">
             <h2 className="font-semibold text-foreground">{t("reports.waiting")}</h2>
-            <div className="mt-6 grid grid-cols-2 gap-px border border-border bg-[#d8d3c8]">
+            <div className="mt-6 grid grid-cols-2 gap-px border border-border bg-muted">
               {waiting.map(([value, label]) => (
                 <div key={label} className="bg-muted p-5">
                   <p className="text-3xl font-bold text-foreground">{value}</p>

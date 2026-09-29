@@ -84,7 +84,7 @@ export function NotificationBell({
             onClick={() => setOpen(false)}
           />
           <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-lg border border-border bg-card shadow-lg duration-200 animate-in fade-in slide-in-from-top-1">
-            <div className="flex items-center justify-between border-b border-[#efece4] px-4 py-3">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <p className="text-sm font-semibold text-foreground">
                 {t("notification.title")}
               </p>

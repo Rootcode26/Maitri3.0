@@ -44,7 +44,7 @@ export function ApplicantVerifyCertificate() {
             value={input}
             onChange={(event) => setInput(event.target.value)}
             placeholder={t("certificate.verifyCodePlaceholder")}
-            className="h-11 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground transition-colors hover:border-[#94a3b8] focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
+            className="h-11 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground transition-colors hover:border-border focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-primary"
           />
         </label>
         <button
