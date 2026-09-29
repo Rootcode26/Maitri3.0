@@ -16,10 +16,7 @@ import {
   inspectorRegisterFormSchema,
   type RegisterFormValues,
 } from "@/features/auth/auth-form-schemas";
-import {
-  allInspectorDepartments,
-  industryLabels,
-} from "@/features/auth/auth-options";
+import { allInspectorDepartments } from "@/features/auth/auth-options";
 import { FieldError, FormStatus } from "@/features/auth/form-message";
 import { authRequest, getAuthErrorMessage } from "@/lib/auth-api";
 import { useLanguage } from "@/components/providers/language-provider";
@@ -118,38 +115,6 @@ export function RegisterForm({ inspector = false }: { inspector?: boolean }) {
             id="department-error"
             message={errors.department?.message}
           />
-        </div>
-      )}
-      {!inspector && (
-        <div className="space-y-1.5">
-          <Label htmlFor="register-industry">{t("auth.industry")}</Label>
-          <Controller
-            name="industry"
-            control={control}
-            render={({ field }) => (
-              <select
-                id="register-industry"
-                className={nativeSelectClass}
-                value={field.value}
-                onChange={(event) => field.onChange(event.target.value)}
-                onBlur={field.onBlur}
-                aria-invalid={Boolean(errors.industry)}
-                aria-describedby={
-                  errors.industry ? "industry-error" : "industry-hint"
-                }
-              >
-                {Object.entries(industryLabels).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            )}
-          />
-          <p className="text-xs text-muted-foreground">
-            {t("auth.industryHint")}
-          </p>
-          <FieldError id="industry-error" message={errors.industry?.message} />
         </div>
       )}
       <div className="space-y-1.5">

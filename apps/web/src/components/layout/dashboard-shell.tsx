@@ -195,7 +195,7 @@ export function DashboardShell({
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [navigationOpen]);
   return (
-    <div className="flex min-h-svh overflow-x-hidden bg-[#f7f6f2]">
+    <div className="flex min-h-svh overflow-x-clip bg-[#f7f6f2]">
       <a
         href="#main-content"
         className="sr-only z-[60] rounded-md bg-white px-4 py-3 font-semibold text-[#17345a] shadow-lg focus:fixed focus:top-4 focus:left-4 focus:not-sr-only focus-visible:outline-3 focus-visible:outline-primary"
