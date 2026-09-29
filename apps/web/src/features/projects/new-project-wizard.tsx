@@ -999,14 +999,20 @@ export function ChecklistResult({ project }: { project: Project }) {
           (doc) => doc.approvalKey === openApproval.approvalKey,
         )}
         onBack={() => setOpenApproval(null)}
-        onUploadedChange={(next) =>
+        onUploadedChange={(next) => {
           setDocuments((current) => [
             ...current.filter(
               (doc) => doc.approvalKey !== openApproval.approvalKey,
             ),
             ...next,
-          ])
-        }
+          ]);
+          // A validation result belongs to the exact document versions that
+          // were checked. Replacing or removing a file makes that result stale,
+          // so require the applicant to run Check documents again.
+          setValidation(null);
+          setValidationError(null);
+          setSubmissionError(null);
+        }}
       />
     );
   }

@@ -301,6 +301,94 @@ describe("applicant application workspace", () => {
     ).toBe(false);
   });
 
+  it("invalidates a passed correction check when a document is replaced", async () => {
+    const correctionProject = {
+      id: projectId,
+      enterpriseName: summary.enterpriseName,
+      industry: summary.industry,
+      district: summary.district,
+      primaryActivity: summary.primaryActivity,
+      status: "correction_required",
+      approvals: application.approvals,
+      createdAt: summary.createdAt,
+    };
+    const replacement = {
+      ...application.documents[0],
+      id: "replacement-document",
+      version: 2,
+      fileName: "replacement.pdf",
+      review: { status: "pending", comment: null, reviewedAt: null },
+    };
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      const target = String(url);
+      if (target.endsWith("/validate") && init?.method === "POST")
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              validation: {
+                validationStatus: "complete",
+                blockingIssues: [],
+                warnings: [],
+                reviewItems: [],
+                documentChecks: [],
+              },
+            },
+          }),
+        };
+      if (target.endsWith("/documents") && init?.method === "POST")
+        return {
+          ok: true,
+          json: async () => ({ data: { document: replacement } }),
+        };
+      if (target.endsWith("/documents"))
+        return {
+          ok: true,
+          json: async () => ({ data: { documents: application.documents } }),
+        };
+      return {
+        ok: true,
+        json: async () => ({ data: { project: correctionProject } }),
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithQuery(<ResumeChecklist projectId={projectId} />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: /check documents/i }),
+    );
+    expect(
+      screen.getByRole("button", { name: /resubmit corrections/i }),
+    ).toBeEnabled();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: /view 1 document requirement/i }),
+    );
+    const input = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    await userEvent.upload(
+      input,
+      new File(["%PDF-1.7 replacement"], "replacement.pdf", {
+        type: "application/pdf",
+      }),
+    );
+    expect(await screen.findByText("replacement.pdf")).toBeInTheDocument();
+    await userEvent.click(
+      screen.getAllByRole("button", { name: /back to approvals/i })[0]!,
+    );
+
+    expect(
+      screen.getByRole("button", { name: /resubmit corrections/i }),
+    ).toBeDisabled();
+    expect(
+      screen.getByText(/run “check documents” above before submitting/i),
+    ).toBeInTheDocument();
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).endsWith("/submit")),
+    ).toBe(false);
+  });
+
   it("lists all document versions with their application and review state", async () => {
     vi.stubGlobal(
       "fetch",
