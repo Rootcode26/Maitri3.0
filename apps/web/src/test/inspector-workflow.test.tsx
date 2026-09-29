@@ -324,6 +324,9 @@ describe("inspector workflow", () => {
       ),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("button", { name: "Clarification sent" }),
+    ).toBeDisabled();
+    expect(
       fetchMock.mock.calls.some(([callUrl, callInit]) =>
         String(callUrl).includes("/clarifications") &&
         (callInit as RequestInit | undefined)?.method === "POST",

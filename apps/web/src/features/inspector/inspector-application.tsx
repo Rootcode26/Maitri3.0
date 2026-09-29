@@ -423,7 +423,10 @@ function ClarificationPanel({
               className="mt-1 min-h-24 w-full rounded-md border border-input bg-card p-3"
               value={message}
               maxLength={2000}
-              onChange={(event) => setMessage(event.target.value)}
+              onChange={(event) => {
+                if (create.isSuccess) create.reset();
+                setMessage(event.target.value);
+              }}
               placeholder={t("inspector.clarificationPlaceholder")}
             />
           </label>
@@ -443,10 +446,10 @@ function ClarificationPanel({
             </select>
           </label>
           <label className="text-sm font-medium text-foreground">
-            {t("inspector.dateDue", { date: "" })}
+            {t("inspector.dueDate")}
             <input
               type="date"
-              className="mt-1 h-10 w-full rounded-md border border-input bg-card px-3"
+              className="mt-1 h-10 w-full rounded-md border border-input bg-card px-3 dark:[color-scheme:dark]"
               value={dueDate}
               onChange={(event) => setDueDate(event.target.value)}
             />
@@ -454,10 +457,21 @@ function ClarificationPanel({
           <Button
             type="button"
             className="h-10 rounded-md sm:col-span-2 sm:justify-self-start"
-            disabled={create.isPending || message.trim().length < 10}
+            disabled={
+              create.isPending || create.isSuccess || message.trim().length < 10
+            }
             onClick={() => create.mutate()}
           >
-            {create.isPending ? t("inspector.sending") : t("inspector.requestClarification")}
+            {create.isPending ? (
+              t("inspector.sending")
+            ) : create.isSuccess ? (
+              <>
+                <FileCheck2 aria-hidden="true" />
+                {t("inspector.clarificationSent")}
+              </>
+            ) : (
+              t("inspector.requestClarification")
+            )}
           </Button>
         </div>
       ) : null}
