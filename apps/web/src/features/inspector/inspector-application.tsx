@@ -687,7 +687,11 @@ function DocumentReviewCard({
             (status !== "accepted" && !comment.trim())
           }
         >
-          {review.isPending ? t("inspector.saving") : t("inspector.saveReview")}
+          {review.isPending
+            ? t("inspector.saving")
+            : reviewed
+              ? t("inspector.updateReview")
+              : t("inspector.saveReview")}
         </Button>
       </div>
       {message ? (
