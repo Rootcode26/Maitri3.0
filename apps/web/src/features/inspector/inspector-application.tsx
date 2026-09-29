@@ -472,7 +472,11 @@ function DocumentReviewCard({
     }
     setMessage(null);
     try {
-      setPreviewUrl(await getInspectorDocumentDownload(projectId, document.id));
+      setPreviewUrl(
+        await getInspectorDocumentDownload(projectId, document.id, {
+          inline: true,
+        }),
+      );
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : t("inspector.openDocumentError"),

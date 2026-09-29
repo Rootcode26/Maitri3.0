@@ -448,9 +448,12 @@ export async function decideInspectorApproval(
 export async function getInspectorDocumentDownload(
   projectId: string,
   documentId: string,
+  options?: { inline?: boolean },
 ) {
   const response = await request<{ data: { url: string } }>(
-    `/applications/${projectId}/documents/${documentId}/download`,
+    `/applications/${projectId}/documents/${documentId}/download${
+      options?.inline ? "?inline=true" : ""
+    }`,
   );
   return response.data.url;
 }

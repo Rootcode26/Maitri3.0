@@ -12,7 +12,11 @@ export interface ObjectStorage {
   put(key: string, body: Buffer, contentType: string): Promise<void>;
   get(key: string): Promise<Buffer>;
   delete(key: string): Promise<void>;
-  signedGetUrl(key: string, fileName?: string): Promise<string>;
+  signedGetUrl(
+    key: string,
+    fileName?: string,
+    disposition?: 'attachment' | 'inline',
+  ): Promise<string>;
 }
 
 export interface ObjectStorageConfig {
@@ -48,13 +52,19 @@ class S3ObjectStorage implements ObjectStorage {
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
   }
 
-  async signedGetUrl(key: string, fileName?: string): Promise<string> {
+  async signedGetUrl(
+    key: string,
+    fileName?: string,
+    disposition: 'attachment' | 'inline' = 'attachment',
+  ): Promise<string> {
     return getSignedUrl(
       this.client,
       new GetObjectCommand({
         Bucket: this.bucket,
         Key: key,
-        ResponseContentDisposition: `attachment${fileName ? `; filename="${fileName}"` : ''}`,
+        // 'inline' lets the browser render the file in a preview iframe;
+        // 'attachment' forces a download.
+        ResponseContentDisposition: `${disposition}${fileName ? `; filename="${fileName}"` : ''}`,
       }),
       { expiresIn: this.signedUrlTtlSeconds },
     );
