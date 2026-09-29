@@ -180,6 +180,49 @@ function ValidationFlagsCard({
     validation.reviewItems.length === 0 &&
     validation.documentChecks.length === 0;
 
+  // Collapse the many per-field checks into one clear line per document. Generic
+  // boilerplate rows (no field) are dropped; only real signals are summarised.
+  const fieldLabel = (field: string): string =>
+    (
+      ({
+        cin: "CIN",
+        gstin: "GSTIN",
+        pan: "PAN",
+        udyam: "Udyam number",
+        pincode: "PIN code",
+        enterpriseName: "business name",
+      }) as Record<string, string>
+    )[field] ?? field;
+
+  const documentSummaries = Object.entries(
+    validation.documentChecks.reduce<
+      Record<string, (typeof validation.documentChecks)[number][]>
+    >((acc, check) => {
+      (acc[check.documentKey] ??= []).push(check);
+      return acc;
+    }, {}),
+  ).map(([documentKey, checks]) => {
+    const mismatched = checks.filter((c) => c.status === "mismatched" && c.field);
+    const agreed = checks.filter(
+      (c) => c.field && c.status !== "mismatched" && c.status !== "unavailable",
+    );
+    let status: ValidationCheckStatus;
+    let reason: string;
+    if (mismatched.length) {
+      status = "mismatched";
+      const names = mismatched.map((c) => fieldLabel(c.field!)).join(", ");
+      reason = `${names} on the document ${mismatched.length > 1 ? "differ" : "differs"} from the application.`;
+    } else if (agreed.length) {
+      status = "review_required";
+      const names = agreed.map((c) => fieldLabel(c.field!)).join(", ");
+      reason = `${names} match the application — confirm the document is genuine.`;
+    } else {
+      status = "unavailable";
+      reason = "No details could be auto-checked — review this document manually.";
+    }
+    return { documentKey, status, reason };
+  });
+
   return (
     <Card className="rounded-md border-border">
       <CardHeader>
@@ -207,19 +250,19 @@ function ValidationFlagsCard({
                   {t("validation.checksHeading")}
                 </p>
                 <ul className="mt-2 divide-y divide-border rounded-lg ring-1 ring-border">
-                  {validation.documentChecks.map((check, index) => {
-                    const style = checkStatusStyle[check.status];
+                  {documentSummaries.map((summary) => {
+                    const style = checkStatusStyle[summary.status];
                     return (
                       <li
-                        key={`${check.documentKey}-${check.field ?? index}`}
+                        key={summary.documentKey}
                         className="flex items-center justify-between gap-4 px-4 py-2.5 text-sm"
                       >
                         <span className="min-w-0">
                           <span className="block truncate font-medium text-foreground">
-                            {text(check.documentKey)}
+                            {text(summary.documentKey)}
                           </span>
-                          <span className="block truncate text-xs text-muted-foreground">
-                            {check.reason}
+                          <span className="block text-xs text-muted-foreground">
+                            {text(summary.reason)}
                           </span>
                         </span>
                         <span
