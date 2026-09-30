@@ -48,16 +48,24 @@ export function authRequest<T>(path: string, body: unknown): Promise<T> {
   return apiRequest<T>(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 }
 
+// Treat "no usable session" uniformly: not authenticated (401) or an account
+// the backend refuses to sign in — e.g. pending verification / suspended (403).
+// Either way there is no signed-in user, so the UI must show a logged-out state
+// rather than an error banner.
+const isLoggedOut = (cause: unknown): boolean =>
+  cause instanceof AuthApiError && (cause.status === 401 || cause.status === 403);
+
 export async function getCurrentSession(): Promise<AuthUser | null> {
   try {
     return (await apiRequest<AuthResponse>("/me", { method: "GET" })).data.user;
   } catch (cause) {
+    if (cause instanceof AuthApiError && cause.status === 403) return null;
     if (!(cause instanceof AuthApiError) || cause.status !== 401) throw cause;
   }
   try {
     return (await authRequest<AuthResponse>("/refresh", undefined)).data.user;
   } catch (cause) {
-    if (cause instanceof AuthApiError && cause.status === 401) return null;
+    if (isLoggedOut(cause)) return null;
     throw cause;
   }
 }

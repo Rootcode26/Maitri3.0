@@ -27,6 +27,10 @@ export class AuthController {
       registerSchema.parse(request.body),
       request.ip ?? 'unknown',
     );
+    // Registering must never leave a prior session active. Without this, a
+    // browser that still holds a valid cookie from an earlier login would keep
+    // showing the new applicant as "signed in" before they verify their OTP.
+    clearAuthCookies(response);
     response.status(201).json({ status: 'success', data: result });
   };
 

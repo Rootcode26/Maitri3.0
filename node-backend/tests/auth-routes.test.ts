@@ -76,19 +76,28 @@ describe('authentication routes', () => {
     expect(service.getCurrentUser).toHaveBeenCalledWith(authResult.user.id);
   });
 
-  it('registers an applicant pending OTP verification without issuing cookies', async () => {
+  it('registers an applicant pending OTP verification and clears any prior session', async () => {
     const { app, service } = createTestApp();
-    const response = await request(app).post('/api/v1/auth/register').send({
-      name: 'Applicant One',
-      phoneNumber: '+919876543210',
-      password: 'strong-password',
-      role: 'applicant',
-      industry: 'steel',
-    });
+    const response = await request(app)
+      .post('/api/v1/auth/register')
+      .set('Cookie', 'access_token=stale-access; refresh_token=stale-refresh')
+      .send({
+        name: 'Applicant One',
+        phoneNumber: '+919876543210',
+        password: 'strong-password',
+        role: 'applicant',
+        industry: 'steel',
+      });
 
     expect(response.status).toBe(201);
     expect(response.body.data).toEqual({ user: authResult.user, verificationRequired: true });
-    expect(response.headers['set-cookie']).toBeUndefined();
+    // No session is issued, and any cookie the browser already held is expired so
+    // a stale login can never masquerade as the freshly-registered (unverified) user.
+    const cookies = (response.headers['set-cookie'] as unknown as string[]) ?? [];
+    expect(cookies.some((cookie) => /access_token=[^;]/.test(cookie))).toBe(false);
+    expect(cookies.some((cookie) => /refresh_token=[^;]/.test(cookie))).toBe(false);
+    expect(cookies.some((cookie) => cookie.startsWith('access_token=;'))).toBe(true);
+    expect(cookies.some((cookie) => cookie.startsWith('refresh_token=;'))).toBe(true);
     expect(service.register).toHaveBeenCalledOnce();
   });
 
