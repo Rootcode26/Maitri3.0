@@ -363,6 +363,9 @@ function ClarificationPanel({
         <MessageSquareText className="size-4" aria-hidden="true" />{" "}
         {t("inspector.requestClarification")}
       </h3>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+        {t("inspector.clarificationIntro")}
+      </p>
       {clarifications.length ? (
         <div className="mt-3 space-y-3">
           {clarifications.map((clarification) => (
@@ -410,15 +413,15 @@ function ClarificationPanel({
           ))}
         </div>
       ) : (
-        <p className="mt-2 text-sm text-muted-foreground">
-          {t("documents.empty")}
+        <p className="mt-3 text-sm text-muted-foreground">
+          {t("inspector.noClarifications")}
         </p>
       )}
 
       {enabled ? (
         <div className="mt-4 grid gap-3 border border-border bg-muted p-4 sm:grid-cols-2">
           <label className="sm:col-span-2 text-sm font-medium text-foreground">
-            {t("inspector.applicant")}
+            {t("inspector.clarificationMessageLabel")}
             <textarea
               className="mt-1 min-h-24 w-full rounded-md border border-input bg-card p-3"
               value={message}
@@ -429,9 +432,12 @@ function ClarificationPanel({
               }}
               placeholder={t("inspector.clarificationPlaceholder")}
             />
+            <span className="mt-1 block text-xs font-normal text-muted-foreground">
+              {t("inspector.clarificationMessageHint")}
+            </span>
           </label>
           <label className="text-sm font-medium text-foreground">
-            {t("documents.document")} {t("inspector.optional")}
+            {t("inspector.clarificationDocLabel")} {t("inspector.optional")}
             <select
               className="mt-1 h-10 w-full rounded-md border border-input bg-card px-3"
               value={documentId}
@@ -446,7 +452,7 @@ function ClarificationPanel({
             </select>
           </label>
           <label className="text-sm font-medium text-foreground">
-            {t("inspector.dueDate")}
+            {t("inspector.clarificationDueLabel")} {t("inspector.optional")}
             <input
               type="date"
               className="mt-1 h-10 w-full rounded-md border border-input bg-card px-3 dark:[color-scheme:dark]"
