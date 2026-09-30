@@ -6,7 +6,15 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { AlertCircle, Loader2, MessageSquareText } from "lucide-react";
+import {
+  AlertCircle,
+  BadgeCheck,
+  Clock3,
+  FolderKanban,
+  Loader2,
+  MessageSquareText,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -177,11 +185,13 @@ export function ApplicantDashboard() {
       label: "applicant.projects",
       value: String(projects.data.length),
       note: "applicant.allStages",
+      icon: FolderKanban,
     },
     {
       label: "applicant.approvalsInProgress",
       value: String(active),
       note: "applicant.processing",
+      icon: Clock3,
     },
     {
       label: "applicant.actionNeeded",
@@ -189,6 +199,7 @@ export function ApplicantDashboard() {
       note: actionNeeded
         ? "applicant.clarificationNeeded"
         : "applicant.noAttention",
+      icon: AlertCircle,
     },
     {
       label: "applicant.approvedProjects",
@@ -196,17 +207,18 @@ export function ApplicantDashboard() {
         projects.data.filter((project) => project.status === "approved").length,
       ),
       note: "applicant.completedReview",
+      icon: BadgeCheck,
     },
   ];
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+    <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-6 sm:py-10">
+      <header className="flex flex-wrap items-center justify-between gap-5 border-b border-border pb-7">
+        <div className="max-w-2xl">
+          <h1 className="font-heading text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             {t("applicant.welcome")}
           </h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 text-base leading-7 text-muted-foreground">
             {t("applicant.dashboardDescription")}
           </p>
         </div>
@@ -218,20 +230,37 @@ export function ApplicantDashboard() {
         >
           {t("applicant.createProject")}
         </Button>
-      </div>
-      <section className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card
-            key={stat.label}
-            className="rounded-md border-l-4 border-amber-500 bg-card"
-          >
-            <CardContent className="space-y-2 px-5 py-5">
-              <p className="text-sm font-medium text-muted-foreground">{t(stat.label as TranslationKey)}</p>
-              <p className="text-4xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{t(stat.note as TranslationKey)}</p>
+      </header>
+      <section
+        className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        aria-label={t("applicant.projects")}
+      >
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Card
+              key={stat.label}
+              className="rounded-lg bg-card py-0 shadow-sm ring-border/80"
+            >
+              <CardContent className="flex min-h-40 flex-col px-5 py-5">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="pt-1 text-sm font-semibold text-muted-foreground">
+                    {t(stat.label as TranslationKey)}
+                  </p>
+                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <Icon className="size-4.5" aria-hidden="true" />
+                  </span>
+                </div>
+                <p className="mt-4 font-heading text-4xl leading-none font-bold tracking-tight text-foreground">
+                  {stat.value}
+                </p>
+                <p className="mt-auto pt-3 text-sm leading-5 text-muted-foreground">
+                  {t(stat.note as TranslationKey)}
+                </p>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </section>
       {actionNeeded ? (
         <section className="mt-7">
@@ -254,13 +283,16 @@ export function ApplicantDashboard() {
           </div>
         </section>
       ) : null}
-      <Card className="mt-7 rounded-md bg-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl text-foreground">
-            <MessageSquareText className="size-5" /> {t("applicant.currentApplications")}
+      <Card className="mt-7 gap-0 rounded-lg bg-card py-0 shadow-sm ring-border/80">
+        <CardHeader className="border-b border-border px-5 py-5 sm:px-6">
+          <CardTitle className="flex items-center gap-3 text-xl font-semibold text-foreground">
+            <span className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
+              <MessageSquareText className="size-4.5" aria-hidden="true" />
+            </span>
+            {t("applicant.currentApplications")}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-5 py-5 sm:px-6">
           {projects.data.length ? (
             <div className="divide-y divide-border">
               {projects.data.map((project) => (
@@ -282,10 +314,16 @@ export function ApplicantDashboard() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-start justify-between gap-4 rounded-md border border-dashed border-border bg-muted px-5 py-5 sm:flex-row sm:items-center">
-              <p className="text-sm leading-6 text-muted-foreground">
-                {t("applicant.noApplications")}
-              </p>
+            <div className="flex flex-col items-start justify-between gap-5 rounded-lg border border-dashed border-primary/25 bg-primary/[0.04] px-5 py-5 sm:flex-row sm:items-center">
+              <div className="flex items-start gap-3">
+                <Sparkles
+                  className="mt-0.5 size-5 shrink-0 text-primary"
+                  aria-hidden="true"
+                />
+                <p className="text-sm leading-6 text-muted-foreground">
+                  {t("applicant.noApplications")}
+                </p>
+              </div>
               <Button
                 render={<Link href="/applicant/projects/new" />}
                 nativeButton={false}
