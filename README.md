@@ -21,6 +21,10 @@ government departments.
 
 <p align="center"><em>One digital journey from industrial project profile to department decision and clearance certificate.</em></p>
 
+<p align="center">
+  <a href="https://13-63-115-92.sslip.io"><strong>🔗 Live demo → https://13-63-115-92.sslip.io</strong></a>
+</p>
+
 ---
 
 ## Why UdyogSetu?
